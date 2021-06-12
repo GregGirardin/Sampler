@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample Player Creator</title>
+<style>
+
+.css_librarySample
+{
+  border: 2px solid white;
+  background-color: #def;
+  color: #444;
+  padding: 6px;
+  text-align: left;
+  font-size: 10px;
+}
+
+.css_librarySample:hover { border: 2px solid black; }
+
+.css_sampleListSample
+{
+  border: 2px solid white;
+  background-color: #def;
+  color: #444;
+  padding: 6px;
+  text-align: left;
+  font-size: 10px;
+}
+
+.css_menuButton
+{
+  border: 2px solid white;
+  background-color: #ddf;
+  color: #444;
+  padding: 6px;
+  text-align: left;
+  font-size: 10px;
+}
+
+.css_menuButton:hover { border: 2px solid black; }
+
+.css_modeButton
+{
+  border: 2px solid white;
+  background-color: #bbf;
+  color: #444;
+  padding: 6px;
+  text-align: left;
+  font-size: 10px;
+}
+
+.css_modeButton:hover { border: 2px solid black; }
+
+.css_setClass
+{
+  border: 2px solid white;
+  background-color: #ccf;
+  color: #000;
+  padding: 2px;
+  text-align: center;
+  font-size: 16px;
+}
+
+.css_Clipboard
+{
+  border: 1px solid black;
+  background-color: #fff;
+  color: #000;
+  padding: 2px;
+  text-align: center;
+  font-size: 16px;
+}
+
+#sampleListName { font-size: 20px; }
+
+.css_medleyStart
+{
+  position:relative;
+  overflow:hidden;
+  background: #ddf;
+  clip-path: polygon( 0% 0%, 80% 0, 100% 50%, 80% 100%, 0% 100%, 5% 50% );
+}
+
+.css_medleyCont
+{
+  position:relative;
+  overflow:hidden;
+  background: #ddf;
+  clip-path: polygon( 0 15%, 95% 15%, 95% 85%, 0% 85% );
+}
+
+.css_medleyEnd
+{
+  position:relative;
+  overflow:hidden;
+  background: #ddf;
+  clip-path: polygon( 0% 0%, 90% 0%, 80% 50%, 90% 100%, 0% 100% );
+}
+
+.css_s_highlight { color: #f00; }
+.css_highlight { background-color: #f00; }
+
+.css_topButtons
+{
+  background-color: #fdd;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.css_sampleList_pane
+{
+  align-items: left;
+  margin: 0;
+  padding: 0;
+  width: 49.5%;
+  background-color: #f1f1f1;
+  height: 50%;
+  overflow: auto;
+  border: 1px solid black;
+  float: left
+}
+
+.css_library_pane
+{
+  align-items: left;
+  margin: 0;
+  padding: 0;
+  width: 49.5%;
+  background-color: #f1f1f1;
+  border: 1px solid black;
+  float: right
+}
+
+.css_library
+{
+  overflow: scroll;
+  height: 90vh;
+}
+
+.css_editSample
+{
+  padding: 10px;
+  font-size: 14px;
+  text-align: left;
+  background-color: #ddf;
+  border: 1px solid black;
+  font-family: "Lucida Console", "Courier New", monospace;
+}
+
+#trashCan
+{
+  display: block;
+  height: 40px;  
+  width: 30px;
+}
+
+</style>
+</head>
+<body align="left">
+<section>
+<div id='samplesPane' class='css_sampleList_pane'>
+<input contenteditable='true' id='serverURL' value='URL'>
+<button class='css_menuButton' id='saveSampleListButton'  onclick='saveSamplelist();'>Save</button>
+
+<button class='css_modeButton' id='modeMedleyButton'    onclick='changeMode( MODE_MEDLEY );'>Medley</button>
+<button class='css_modeButton' id='modeHighlightButton' onclick='changeMode( MODE_HIGHLIGHT );'>Highlight</button>
+<button class='css_modeButton' id='clipboard'           onclick='changeMode( MODE_CLIPBOARD );'>Add To Clipboard</button>
+<button class='css_modeButton' id='Help'                onclick='toggleHelp();'>Help</button>
+<hr>
+<div id='setlist'> </div>
+<div id='multiuse'></div>
+</div>
+
+<div id='library_pane' class='css_library_pane'>
+<button class='css_menuButton' id='addLibSongButton'  onclick='changeMode( MODE_ADD_LIB );'>+</button>
+<hr>
+<div id='libraryDiv' class='css_library'> </div>
+</div>
+</section>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+
+//var serverURL = 'http://192.168.0.2:8080/'; // this is where samples.json and all the samples live.
+var serverURL = 'https://greggirardin.github.io/samples/';
+// Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
+var slEditedFlag = false;
+var libEditedFlag = false;
+var sampleLibrary = {}; // object of LibrarySample
+var curSampleList; // a Sample List
+var editSample; // LibrarySample we're editing if MODE_EDIT
+
+// Constants.
+const MAX_GROUPS      = 20;
+
+const MODE_NONE       = 0;
+const MODE_MEDLEY     = 1;
+const MODE_HIGHLIGHT  = 2;
+const MODE_CLIPBOARD  = 3;
+
+const MODE_EDIT       = 10;
+const MODE_DEL_LIB    = 11;
+const MODE_ADD_LIB    = 12;
+
+var operationMode = MODE_NONE;
+
+//////////////////////////// //////////////////////////// ////////////////////////////
+class LibrarySample
+{
+  constructor( url="", displayName=undefined )
+  {
+    this.url = url; // location
+    this.displayName = displayName ? displayName : url;
+    this.sampleLength = undefined;
+    this.sampleVolume = undefined;
+  }
+}
+
+class SampleListSample
+{
+  constructor( displayName )
+  {
+    this.displayName = displayName;
+    this.url = undefined;
+    this.css_highlight = false;
+    this.medley = false;
+  }
+}
+
+class Group
+{
+  constructor( name )
+  {
+    if( !name )
+      name = "Sample Group";
+    this.name = name;
+    this.samples = []; // SampleListSample[]
+  }
+}
+
+class SampleList
+{
+  constructor( sampListName )
+  {
+    this.sampListName = sampListName;
+    this.sampleBaseURL = undefined; // The prefix of the path to all the samples
+    this.groups = [];
+    this.groups.push( new Group() );
+    this.groups.push( new Group( "Clipboard") );
+  }
+}
+
+//////////////////////////// //////////////////////////// ////////////////////////////
+//////////////////////////// //////////////////////////// ////////////////////////////
+window.onload = sampleListInit;
+
+function changeURL()
+{
+  serverURL = document.getElementById( 'serverURL' ).value;
+  console.log( "URL=" + serverURL );
+}
+
+/////////////// /////////////// /////////////// ///////////////
+function sampleListInit()
+{
+  const urlParams = new URLSearchParams( window.location.search );
+  var server = urlParams.get( 'serverURL' );
+  if( server )
+    serverURL = server;
+
+  newSampleList();
+  getFileFromServer( "samples.json", gotSamples, false );
+
+  document.getElementById( 'serverURL' ).value = serverURL;
+  document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
+
+  document.addEventListener( 'keydown', keyPressedHandler );
+  document.addEventListener( 'keyup', keyRelHandler );
+
+  footSwitchButtons[ 0 ] = new FootSwitchButton( 0 );
+  footSwitchButtons[ 1 ] = new FootSwitchButton( 1 );
+}
+
+///////////////////////// ///////////////////////// /////////////////////////
+///////////////////////// ///////////////////////// /////////////////////////
+/* Foot switch handling for two buttons. Assume the bottns are mapped to
+   UP and DOWN.
+  8 functions: Tap L+R, Double Tap L+R, Hold L+R, Both Tap, Both hold
+
+                              Hold Timer
+  Time -----------------------|
+    Press---------------------^ Hold
+    P ------------_           ^ Single Tap
+    P ---_  P^ Double Tap 
+*/
+
+
+var footSwitchButtons = []; // array of buttons
+var bothHeldTimer;
+
+const clickHoldTO = 250;
+const EVENT_BOTH = 0;
+const EVENT_BOTH_HOLD = 1;
+const EVENT_TAP = 2;
+const EVENT_DTAP = 3;
+const EVENT_HOLD = 4;
+
+function buttonEvent( event, buttonIx )
+{
+  var str = "?";
+
+  switch( event )
+  {
+    case EVENT_BOTH:      str = "Both";                   break;
+    case EVENT_BOTH_HOLD: str = "Both Hold";              break;
+    case EVENT_TAP:       str = "Tap " + buttonIx;        break;
+    case EVENT_DTAP:      str = "Double Tap " + buttonIx; break;
+    case EVENT_HOLD:      str = "Hold " + buttonIx;       break;
+  }
+
+  console.log( str );
+}
+
+function bothHoldTimerCB()
+{
+  // Both buttons were held.
+  // clearTimeout( bothHeldTimer );
+  bothHeldTimer = undefined;
+  buttonEvent( EVENT_BOTH_HOLD, undefined );
+  footSwitchButtons[ 0 ].pressedState = false;
+  footSwitchButtons[ 1 ].pressedState = false;
+}
+
+class FootSwitchButton
+{
+  constructor( index )
+  {
+    this.buttonIndex = index;
+    this.buttonState = false;
+    this.holdFlag = false;
+    this.pressedState = false;
+    this.holdTimer = undefined;
+  }
+
+  clearTimer()
+  {
+    clearTimeout( this.holdTimer );
+    this.holdTimer = undefined;
+  }
+
+  setState( newState )
+  {
+    if( newState != this.buttonState )
+    {
+      this.buttonState = newState;
+
+      if( newState ) // true = 'down'
+      {
+        // Check for both buttons pressed
+        var otherButtonIx = 1 - this.buttonIndex;
+        if( footSwitchButtons[ otherButtonIx ].buttonState ) // both pressed ?
+        {
+          this.clearTimer(); // clear existing timers and set the 'both' timer.
+          footSwitchButtons[ otherButtonIx ].clearTimer();
+          bothHeldTimer = setTimeout( bothHoldTimerCB, clickHoldTO );
+        }
+        else
+        {
+          if( !this.pressedState ) 
+          { // first click
+            this.holdFlag = true;
+            this.pressedState = true; 
+            this.holdTimer = setTimeout( holdTimerCB, clickHoldTO, this.buttonIndex );
+          }
+          else 
+          { // this is the second click.
+            this.clearTimer();
+            this.pressedState = false;
+            buttonEvent( EVENT_DTAP, this.buttonIndex );
+          }
+        }
+      }
+      else // up
+      {
+        this.holdFlag = false;
+
+        if( bothHeldTimer ) // both aren't pressed but they were previously
+        {
+          var otherButtonIx = 1 - this.buttonIndex;
+          clearTimeout( bothHeldTimer );
+          bothHeldTimer = undefined;
+          this.clearTimer()
+          this.pressedState = false; 
+
+          footSwitchButtons[ otherButtonIx ].clearTimer();
+          footSwitchButtons[ otherButtonIx ].pressedState = false;
+          buttonEvent( EVENT_BOTH, undefined );
+        }
+      }
+    }
+  }
+
+  holdTimerCB()
+  {
+    this.pressedState = false;
+    this.holdTimer = undefined;
+    if( this.holdFlag )
+      buttonEvent( EVENT_HOLD, this.buttonIndex );
+    else
+      buttonEvent( EVENT_TAP, this.buttonIndex );
+  }
+}
+
+function holdTimerCB( ix ) { footSwitchButtons[ ix ].holdTimerCB(); }
+function dcTimerCB( ix ) { footSwitchButtons[ ix ].dcTimerCB(); }
+
+function keyPressedHandler( e ) // down / pressed
+{
+  var ix;
+
+  switch( e.code )
+  {
+    case 'ArrowUp':   ix = 0; break;
+    case 'ArrowDown': ix = 1; break;
+    default: return;
+  }
+  footSwitchButtons[ ix ].setState( true );
+}
+
+function keyRelHandler( e ) // up / released
+{
+  var ix;
+
+  switch( e.code )
+  {
+    case 'ArrowUp':   ix = 0; break;
+    case 'ArrowDown': ix = 1; break;
+    default: return;
+  }
+  footSwitchButtons[ ix ].setState( false );
+}
+
+///////////////////////// ///////////////////////// /////////////////////////
+///////////////////////// ///////////////////////// /////////////////////////
+function gotSamples( file, data )
+{
+  sampleLibrary = JSON.parse( data );
+
+  for( const[ key, v ] of Object.entries( sampleLibrary ) )
+    sampleLibrary[ key ].audioFile = getFileFromServer( key, gotSample, false );
+
+  generateLibraryHTML();
+}
+
+function gotSample( name, data )
+{
+  sampleLibrary[ name ] = data;
+}
+
+function getFileFromServer( fileName, callback, binaryFlag )
+{
+  var xhr = new XMLHttpRequest();
+
+  if( binaryFlag )
+  {
+    var fullURL = 'blob:' + serverURL + filename;
+    xhr.open( 'GET', fullURL, true );
+    xhr.responseType = 'blob';
+    xhr.onload = function( e ) {
+      if( this.status == 200 )
+        callback( fileName, this.response );
+    }
+  }
+  else
+  {
+    xhr.overrideMimeType( "application/json" );
+    xhr.open( "GET", serverURL + fileName, true );
+    xhr.onreadystatechange = function() {
+      if ( xhr.readyState === 4 && xhr.status == "200" )
+        callback( fileName, xhr.responseText );
+    }
+  }
+
+  xhr.send( null );
+}
+
+
+function sl_allowDrop( ev ) { ev.preventDefault(); }
+function dragElem( ev ) { ev.dataTransfer.setData( "dragElem", ev.target.id ); }
+
+/////////////// /////////////// /////////////// ///////////////
+// Handle a song being dropped onto a setlist file.
+// Samples can be dragged from within the setlist to move them or from the Library to add them.
+/////////////// /////////////// /////////////// ///////////////
+function dropElem( ev )
+{
+  const slSample = "sampleListSample";
+  const slGroup = "sampleListGroup";
+
+  ev.preventDefault();
+  var dragElem = ev.dataTransfer.getData( "dragElem" );
+
+  if( ( dragElem.substring( 0, 9 ) == "clipboard" ) &&
+      ( ev.target.id.substring( 0, 12 ) == slSample ) ) // dropping the clipboard onto a set.
+  {
+    indexes = ev.target.id.substring( 12, ).split( "." );
+    var toGroup = parseInt( indexes[ 0 ] );
+    var toSampleIx = parseInt( indexes[ 1 ] );
+
+    if( toGroup < curSampleList.groups.length - 1 )
+      while( true )
+      {
+        var song = curSampleList.groups[ curSampleList.groups.length - 1 ].samples.pop();
+        if( song )
+          curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, song );
+        else
+          break;
+      }
+  }
+  else if( ( dragElem.substring( 0, 12 ) == slSample ) &&
+           ( ev.target.id.substring( 0, 12 ) == slSample ) ) // Moving a sample
+  {
+    var indexes = dragElem.substring( 12, ).split( "." );
+    var fromGroup = parseInt( indexes[ 0 ] );
+    var fromSampleIx = parseInt( indexes[ 1 ] );
+
+    indexes = ev.target.id.substring( 12, ).split( "." );
+    var toGroup = parseInt( indexes[ 0 ] );
+    var toSampleIx = parseInt( indexes[ 1 ] );
+
+    if( fromGroup == toGroup ) // Moving within the same set
+    {
+      if( toSampleIx < fromSongIx ) // Moved song up
+      {
+        curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleList.groups[ fromGroup ].samples[ fromSampleIx ] );
+        curSampleList.groups[ fromGroup ].samples.splice( fromSampleIx + 1, 1 );
+      }
+      else
+      {
+        curSampleList.groups[ toGroup ].samples.splice( toSampleIx + 1, 0, curSampleList.groups[ fromGroup ].samples[ fromSampleIx ] );
+        curSampleList.groups[ fromGroup ].samples.splice( fromSampleIx, 1 );
+      }
+    }
+    else // Move between groups.
+    {
+      curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleList.groups[ fromGroup ].samples[ fromSampleIx ] );
+      curSampleList.groups[ fromGroup ].samples.splice( fromSongIx, 1 );
+    }
+
+    slEditedFlag = true;
+  }
+  else if( ( dragElem.substring( 0, 8 ) == "libSample." ) &&
+           ( ev.target.id.substring( 0, 12 ) == slSample ) ) // Dropping library song into set list.
+  {
+    var songId = dragElem.substring( 8, );
+    var libSample = sampleLibrary[ songId ];
+    var newSample = new SampleListSample( libSample.name, libSample.artist );
+
+    var indexes = ev.target.id.substring( 12, ).split( "." );
+    var toGroup = parseInt( indexes[ 0 ] );
+    var toSampleIx = parseInt( indexes[ 1 ] );
+
+    curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, newSample );
+    slEditedFlag = true;
+  }
+  else if( ( dragElem.substring( 0, 11 ) == slGroup ) &&
+           ( ev.target.id.substring( 0, 11 ) == slGroup ) ) // Moving a set
+  {
+    var fromGroup = parseInt( dragElem.substring( 11, ) );
+    var toGroup = parseInt( ev.target.id.substring( 11, ) );
+
+    if( toGroup < fromGroup ) // moved set up
+    {
+      curSampleList.groups.splice( toGroup, 0, curSampleList.groups[ fromGroup ] );
+      curSampleList.groups.splice( fromGroup + 1, 1 );
+    }
+    else
+    {
+      curSampleList.groups.splice( toGroup + 1, 0, curSampleList.groups[ fromGroup ] );
+      curSampleList.groups.splice( fromGroup, 1 );
+    }
+
+    slEditedFlag = true;
+  }
+  else if( ev.target.id == "trashCan" )
+  {
+    if( dragElem.substring( 0, 12 ) == slSample )
+    {
+      var indexes = dragElem.substring( 12, ).split( "." );
+      var delGroup = parseInt( indexes[ 0 ] );
+      var delSample = parseInt( indexes[ 1 ] );
+
+      curSampleList.groups[ delGroup ].samples.splice( delSample, 1 );
+    }
+    else if( dragElem.substring( 0, 11 ) == slGroup )
+    {
+      var delGroup = parseInt( dragElem.substring( 11, ) );
+      curSampleList.groups.splice( delGroup, 1 );
+    }
+    else if( dragElem.substring( 0, 9 ) == "clipboard" )
+      curSampleList.groups[ curSampleList.groups.length - 1 ].samples = [];
+
+    slEditedFlag = true;
+  }
+
+  genSampleListHTML();
+}
+
+/////////////// /////////////// /////////////// ///////////////
+function setSampleListName()
+{
+  var name = prompt( "Enter Sample File Name:", curSampleList.name );
+  if( name )
+  {
+    curSampleList.name = name;
+    slEditedFlag = true;
+    genSampleListHTML();
+  }
+}
+
+/////////////// /////////////// /////////////// ///////////////
+function sampleClick( groupIndex, songIndex )
+{
+  var cs = curSampleList.groups[ groupIndex ].samples[ songIndex ]; // clicked song.
+  slEditedFlag = true;
+
+  if( operationMode == MODE_HIGHLIGHT )
+    cs.css_highlight = !cs.css_highlight;
+  else if( operationMode == MODE_MEDLEY )
+    cs.medley = !cs.medley;
+  else if( ( operationMode == MODE_CLIPBOARD ) && ( groupIndex < curSampleList.groups.length - 1 ) )
+  {
+    var song = curSampleList.groups[ groupIndex ].samples[ songIndex ];
+    curSampleList.groups[ curSampleList.groups.length - 1 ].samples.push( song );
+    curSampleList.groups[ groupIndex ].samples.splice( songIndex, 1 );
+  }
+  genSampleListHTML(); 
+}
+
+/////////////// /////////////// /////////////// ///////////////
+// Handle actions when a song in the library is clicked.
+// Library samples can be edited or deleted.
+/////////////// /////////////// /////////////// ///////////////
+function libSampleClick( songId )
+{
+  if( operationMode == MODE_EDIT )
+  {
+    saveSampleEdits();
+    editSample = sampleLibrary[ songId ];
+  }
+  else if( operationMode == MODE_DEL_LIB )
+  {
+    libEditedFlag = true;
+    delete( sampleLibrary[ songId ] );
+  }
+  else if( operationMode == MODE_CLIPBOARD )
+  {
+    song = new SampleListSample( sampleLibrary[ songId ].name, sampleLibrary[ songId ].artist );
+    curSampleList.groups[ curSampleList.groups.length - 1 ].samples.push( song );
+  }
+  
+  genSampleListHTML();
+  generateLibraryHTML();
+}
+
+/////////////// /////////////// /////////////// ///////////////
+function newSampleList()
+{
+  if( slEditedFlag )
+    if( !window.confirm( "Unsaved Edits. Continue?" ) )
+      return;
+
+  slEditedFlag = false;
+  curSampleList = new SampleList( "Sample List Name" );
+
+  genSampleListHTML();
+}
+
+/////////////// /////////////// /////////////// ///////////////
+function setRename( groupIndex )
+{
+  var name = prompt( "Enter Group Name:", curSampleList.groups[ groupIndex ].name );
+
+  if( name )
+  {
+    curSampleList.groups[ groupIndex ].name = name;
+    var elem = document.getElementById( "sampleListGroup." + groupIndex );
+    elem.innerHTML = name;
+  }
+
+  slEditedFlag = false;
+  genSampleListHTML();
+}
+
+/////////////// /////////////// /////////////// ///////////////
+function groupAdd()
+{
+  if( curSampleList.groups.length < MAX_GROUPS )
+  {
+    curSampleList.groups.splice( curSampleList.groups.length - 1, 0, new Group() );
+    slEditedFlag = true;
+    genSampleListHTML();
+  }
+  else
+    alert( "Max set count reached" );
+}
+
+/////////////// /////////////// /////////////// ///////////////
+var firstTimeSL = true;
+function genSampleListHTML()
+{
+  var tempHtml = "<div id='sampleListName' onClick='setSampleListName()'>" + curSampleList.name + "</div><br>";
+
+  for( var i = 0;i < curSampleList.groups.length;i++ )
+  {
+    var s = curSampleList.groups[ i ];
+    if( i == curSampleList.groups.length - 1 )
+    {
+      tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
+                  "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
+    }
+    else
+      tempHtml += "<button id='sampleListGroup." + i + "' class='css_setClass' onclick='setRename( " + i + " )' draggable='true' " +
+                  "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + s.name + "</button>\n";
+
+    var medleyState = false;
+
+    for( var j = 0;j < s.samples.length;j++ )
+    {
+      var classes = 'css_sampleListSample';
+      if( s.samples[ j ].css_highlight )
+        classes += ' css_s_highlight';
+      if( s.samples[ j ].medley && medleyState == false )
+        classes += ' css_medleyStart';
+      else if( s.samples[ j ].medley && medleyState == true ) 
+        classes += ' css_medleyCont'; 
+      else if( !s.samples[ j ].medley && medleyState == true ) 
+        classes += ' css_medleyEnd';
+      medleyState = s.samples[ j ].medley;
+
+      tempHtml += "<button id='sampleListSample." + i + "." + j + "' class='" + classes + "' onclick='sampleClick( " + i + ", " + j + " )'" +
+                  " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
+                  s.samples[ j ].name + "</button>\n";
+    }
+    if( firstTimeSL ) // a + for moving samples to the end of a set
+      tempHtml += "<button id='sampleListSample." + i + "." + j +
+                  "' class='css_sampleListSample' onclick='sampleClick( " + i + ", " + j + " )'" +
+                  "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Drop Samples Here </button>\n";
+    else
+      tempHtml += "<button id='sampleListSample." + i + "." + j +
+                  "' class='css_sampleListSample' onclick='sampleClick( " + i + ", " + j + " )'" +
+                  "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
+
+    if( s.samples.length )
+      tempHtml += "<font size='1'>" + s.samples.length + "</font>";
+    tempHtml += "<br>\n";
+  }
+
+  firstTimeSL = false;
+
+  tempHtml += "<br><button onclick='groupAdd()'> Add Group </button>\n<br>\n<br>";
+  tempHtml += "<input id='trashCan' type='image' ondragover='sl_allowDrop( event )' ondrop='dropElem( event )' src='https://greggirardin.github.io/trashcan.png'/>\n";
+
+  document.getElementById( 'setlist' ).innerHTML = tempHtml;
+
+  if( slEditedFlag )
+    document.getElementById( 'saveSampleListButton' ).classList.add( 'css_highlight' );
+  else
+    document.getElementById( 'saveSampleListButton' ).classList.remove( 'css_highlight' );
+}
+
+function saveSampleEdits()
+{
+  if( editSample )
+  {
+    delete( sampleLibrary[ editSample.id ] );
+
+    var name = document.getElementById( "editSampleName" ).value; // strip HTML tags in the name and artist
+    name = name.replace( /(<([^>]+)>)/gi, "" );
+    if( name == pruneQuote( editSample.name ) )
+      name = editSample.name; // name didn't really change. don't lose the apostrophes.
+    var artist = document.getElementById( "editSampleArtist" ).value;
+    artist = artist.replace( /(<([^>]+)>)/gi, "" );
+    if( artist == pruneQuote( editSample.artist ) )
+      artist = editSample.artist; // name didn't really change. don't lose the apostrophes.
+
+    // Allow html in the lyrics. But replace <br> with CR.
+    var editedSample = new LibrarySample( name, artist, document.getElementById( "editSampleLyrics" ).innerHTML.replace( /<br>/g, '\n' ) );
+    if( editedSample.id != "." ) // That's the default name when adding, don't add.
+    {
+      // Check for a change before setting libEditedFlag.
+      sampleLibrary[ editedSample.id ] = editedSong;
+      libEditedFlag = true;
+    }
+  }
+}
+
+///////////////////////// ///////////////////////// /////////////////////////
+function changeMode( mode )
+{
+  // We were editing a library file. Save the changes.
+  if( operationMode == MODE_EDIT && editSample )
+  {
+    saveSampleEdits();
+    document.getElementById( 'multiuse' ).innerHTML = "";
+  }
+
+  editSample = undefined;
+  operationMode = ( mode == operationMode ) ? MODE_NONE : mode;
+
+  // Adding a song to the library. Create an empty one and change to MODE_EDIT
+  if( operationMode == MODE_ADD_LIB )
+  {
+    editSample = new LibrarySample();
+    operationMode = MODE_EDIT;
+  }
+
+  var buttons = document.getElementsByClassName( 'css_modeButton' );
+  for( i = 0;i < buttons.length;i++ )
+    buttons[ i ].classList.remove( 'css_highlight' );
+  buttons = document.getElementsByClassName( 'css_menuButton' );
+  for( i = 0;i < buttons.length;i++ )
+    buttons[ i ].classList.remove( 'css_highlight' );
+
+  if( operationMode != MODE_NONE )
+  {
+    var elem;
+    switch( operationMode )
+    {
+      case MODE_MEDLEY:     elem = document.getElementById( 'modeMedleyButton' );     break;
+      case MODE_HIGHLIGHT:  elem = document.getElementById( 'modeHighlightButton' );  break;
+      case MODE_EDIT:       elem = document.getElementById( 'modeEditButton' );       break;
+      case MODE_DEL_LIB:    elem = document.getElementById( 'modeDelLibButton' );     break;
+      case MODE_CLIPBOARD:  elem = document.getElementById( 'clipboard' );            break;
+    }
+    elem.classList.add( 'css_highlight' );
+  }
+
+  genSampleListHTML();
+  generateLibraryHTML();
+}
+
+
+
+function pruneQuote( convString )
+{
+  var newString = "";
+
+  for( var i = 0;i < convString.length;i++ )
+    if( convString[ i ] != "'" )
+      newString += convString[ i ];
+
+  return newString;
+}
+
+/////////////// /////////////// /////////////// ///////////////
+// generate the library pane.
+// 1) list of samples from the library that can be dragged into the set list 
+// or
+// 2) A library song we're editing.
+/////////////// /////////////// /////////////// ///////////////
+function generateLibraryHTML()
+{
+  if( operationMode == MODE_EDIT && editSample )
+  {
+    var tmpHtml = "<hr>";
+    var songName = pruneQuote( editSample.name );
+    if( !songName )
+      songName = "Name";
+    var artist = editSample.artist;
+    if( !artist )
+      artist = "Artist";
+    else
+      artist = pruneQuote( artist ); // for strings with apostophes
+
+    var lyrics = editSample.lyrics.replace( /\n/g, "<br>" );
+    tmpHtml += "<br><div contenteditable='true' id='editSampleLyrics' class='css_editSample'>" + lyrics + "</div>";
+
+    var elem = document.getElementById( 'multiuse' ); // edit in the multiuse panel on the left
+    elem.innerHTML = tmpHtml;
+  }
+
+  // Show the library
+  var tmpHtml = "";
+  var t = []; // Array for sorting.
+
+  for( const[ key, value ] of Object.entries( sampleLibrary ) )
+    t.push( value );
+
+  t.sort( function( a, b ){ return ( a.displayName > b.displayName ) ? 1 : -1 } );
+
+  if( !t.length )
+    tmpHtml += "<h2>No Sample Library.</h2>";
+  else
+    for( var i = 0;i < t.length;i++ )
+    {
+      tmpHtml += "<button id='libSample." + t[ i ].displayName + "' class='css_librarySample' draggable='true' ondragstart='dragElem( event )'" + 
+                  "onclick='libSampleClick( \"" + t[ i ].displayName + "\")'>" + t[ i ].displayName + "</button>\n";
+    }
+
+  document.getElementById( 'libraryDiv' ).innerHTML = tmpHtml;
+}
+
+/////////////// /////////////// /////////////// ///////////////
+// This are just a couple big string literals for the generated output setlist html.
+// Put here to make the export function more readable
+/////////////// /////////////// /////////////// ///////////////
+function htmlConstStrings( index )
+{
+  switch( index )
+  {
+    case 0:
+      return( function(){/* 
+<style>
+.accordion
+{
+  border: 2px solid white;
+  background-color: #def;
+  color: #444;
+  cursor: pointer;
+  padding: 6px;
+  text-align: left;
+  outline: none;
+  font-size: 16px;
+  transition: 0.2s;
+}
+
+.fixedFont
+{
+  font-family: monospace;
+}
+
+.panel
+{
+  padding: 0 18px;
+  display: none;
+  overflow: hidden;
+  font-size: 20px;
+  background-color: #fee;
+  text-align: left;
+}
+
+.css_medleyStart
+{
+  position:relative;
+  overflow:hidden;
+  background: #ddf;
+  clip-path: polygon( 0% 0%, 90% 0, 100% 50%, 90% 100%, 0% 100%, 5% 50% );
+}
+
+.css_medleyCont
+{
+  position:relative;
+  overflow:hidden;
+  background: #ddf;
+  clip-path: polygon( 0 15%, 95% 15%, 95% 85%, 0% 85% );
+}
+
+.css_medleyEnd
+{
+  position:relative;
+  overflow:hidden;
+  background: #ddf;
+  clip-path: polygon( 0% 0%, 95% 0%, 85% 50%, 95% 100%, 0% 100% );
+}
+
+.css_highlight
+{
+  color: #d33;
+}
+
+.css_topButtons
+{
+  background-color: #fdd;
+  padding: 10px;
+  font-size: 16px;
+}
+
+</style>
+</head>
+
+<body align="center">
+<button class="css_topButtons" id="fontButtonFixed" onclick="fontFixed();">Fixed</button>
+<button class="css_topButtons" id="fontButton+" onclick="fontPlus();">Font +</button>
+<button class="css_topButtons" id="fontButton-" onclick="fontMinus();">Font -</button>
+<button id="fontSizeButton">Size</button>
+<button class="css_topButtons" id="verticalButton+" onclick="displayPlus();">Expand</button>
+<button class="css_topButtons" id="verticalButton-" onclick="displayMinus();">Shrink</button>
+<!--
+<button class="css_topButtons" id="prevSongId" onclick="changeSong( -1 );">Prev</button>
+<button class="css_topButtons" id="nextSongId" onclick="changeSong( 1 );">Next</button>
+-->
+*/}.toString().slice( 14, -3 ) ) ;
+break;
+
+  case 1:
+    return( function(){/* 
+<script>
+const minFont = 14
+const maxFont = 24;
+var fontSize = 16;
+
+var fixed = false;
+
+function fontFixed()
+{
+  fixed = !fixed;
+
+  var panels = document.getElementsByClassName( "panel" );
+
+  for( var i = 0;i < panels.length;i++ )
+    if( fixed )
+      panels[ i ].classList.add( "fixedFont" );
+    else
+      panels[ i ].classList.remove( "fixedFont" );
+}
+
+function fontPlus()
+{
+  fontSize += 2;
+  if( fontSize > maxFont )
+    fontSize = maxFont;
+
+  setFontProperty( fontSize );
+}
+
+function fontMinus()
+{
+  fontSize -= 2;
+  if( fontSize < minFont )
+    fontSize = minFont;
+
+  setFontProperty( fontSize );
+}
+
+function setFontProperty()
+{
+  var fontSizeStr = fontSize.toString() + "px";
+  var elem = document.getElementById( "fontSizeButton" );
+  elem.style.fontSize = fontSizeStr;
+  elem.innerHTML = fontSizeStr;
+
+  for( var i = 0;i < acc.length;i++ )
+    acc[ i ].nextElementSibling.style.fontSize = fontSizeStr;
+}
+
+var currentSongIx;
+
+function changeSong( delta ) // open the song 'delta' ahead of the current.
+{
+  var newSongIx = currentSongIx + delta;
+  if( newSongIx >= 0 && newSongIx <= acc.length )
+    accordionClick( acc[ newSongIx ] );
+}
+
+const DISPLAY_MIN = 0;
+const DISPLAY_MED1 = 1;
+const DISPLAY_MED2 = 2;
+const DISPLAY_LARGE = 3;
+
+var displayFormat = DISPLAY_LARGE;
+
+function displayPlus()
+{
+  if( displayFormat < DISPLAY_LARGE )
+  {
+    displayFormat++;
+    displaySet( displayFormat );
+  }
+}
+
+function displayMinus()
+{
+  if( displayFormat > DISPLAY_MIN )
+  {
+    displayFormat--;
+    displaySet( displayFormat );
+  }
+}
+
+function closeAll()
+{
+  // Close all accordions
+  for( var i = 0;i < acc.length;i++ )
+  {
+    acc[ i ].nextElementSibling.style.display = "none"; 
+    acc[ i ].classList.remove( "active" );
+  }
+}
+
+function displaySet( disFormat )
+{
+  var minWProp;
+  var fSize = "16px"; // Font size of song names in accordions
+  var slFontSize; // set list font size
+
+  closeAll();
+
+  var clipPath;
+
+  switch( disFormat )
+  {
+    case DISPLAY_MIN:
+      minWProp = "3%";
+      fSize = "20px";
+      clipPath = "polygon( 0% 0%, 60% 0, 100% 50%, 60% 100%, 0% 100% )";
+      break;
+
+    case DISPLAY_MED1:
+      minWProp = "9%";
+      fSize = "10px";
+      clipPath = "polygon( 0% 0%, 70% 0, 100% 50%, 70% 100%, 0% 100% )";
+      break;
+
+    case DISPLAY_MED2:
+      minWProp = "24%";
+      slFontSize = "100%";
+      clipPath = "polygon( 0% 0%, 85% 0, 95% 50%, 85% 100%, 0% 100% )";
+      break;
+
+    case DISPLAY_LARGE:
+      minWProp = "50%";
+      slFontSize = "150%";
+      clipPath = "polygon( 0% 0%, 85% 0, 95% 50%, 85% 100%, 0% 100% )";
+      break;
+  }
+
+  var groups = document.getElementsByClassName( "setname" );
+  for( var i = 0;i < groups.length;i++ )
+    if( slFontSize )
+    {
+      groups[ i ].style.fontSize = slFontSize;
+      groups[ i ].style.display = "block";
+    }
+    else
+      groups[ i ].style.display = "none";
+
+  for( var i = 0;i < acc.length;i++ )
+  {
+    acc[ i ].style.minWidth = minWProp;
+
+    var strName;
+    var prune = songNames[ i ][ 1 ] == '.' ? 0 : 1;
+    if( disFormat == DISPLAY_MIN )
+      strName = songNames[ i ].substr( 0, 1 + prune );
+    else if( disFormat == DISPLAY_MED1 )
+      strName = songNames[ i ].substr( 2 + prune, 10 + prune );
+    else if( disFormat == DISPLAY_MED2 )
+      strName = songNames[ i ].substr( 0, 20 );
+    else
+      strName = songNames[ i ];
+
+    acc[ i ].innerHTML = strName;
+    acc[ i ].style.fontSize = fSize;
+    if( acc[ i ].classList.contains( "css_medleyStart" ) )
+      acc[ i ].style.clipPath = clipPath;
+  }
+}
+
+var scrollToElem; 
+
+function expandSongNameByIndex( i )
+{
+  acc[ i ].innerHTML = songNames[ i ];
+  acc[ i ].style.minWidth = "96%";
+  acc[ i ].style.fontSize = "16px";
+  if( acc[ i ].classList.contains( "css_medleyStart" ) )
+    acc[ i ].style.clipPath = "polygon( 0% 0%, 85% 0, 95% 50%, 85% 100%, 0% 100% )";
+}
+
+function accordionClick( elem )
+{
+  currentSongIx = elem.accIndex;
+
+  var wasOpen = elem.classList.contains( "active" );
+
+  if( wasOpen && ( elem.classList.contains( "css_medleyCont" ) || elem.classList.contains( "css_medleyEnd" ) ) )
+  {
+    elem.scrollIntoView();
+    return;
+  }
+
+  closeAll();
+  displaySet( displayFormat ); 
+
+  if( !wasOpen )
+  {
+    scrollToElem = elem;
+
+    // Go to head of medley and open the whole thing.
+    while( elem.classList.contains( "css_medleyCont" ) || elem.classList.contains( "css_medleyEnd" ) )
+      elem = acc[ elem.accIndex - 1 ];
+
+    // Open this one if it was closed before.
+    inMedley = elem.classList.contains( "css_medleyStart" );
+
+    while( elem )
+    {
+      elem.classList.add( "active" );
+
+      // Make the song name visible in the compressed modes. Need to clear this when minimizing in displaySet() above
+      expandSongNameByIndex( elem.accIndex );
+      if( elem.accIndex < acc.length - 1 )
+        expandSongNameByIndex( elem.accIndex + 1 );
+
+      var panel = elem.nextElementSibling;
+      setFontProperty(); // w/o this changing the font only applies to the open song. Possibly desirable.
+      panel.style.display = "block";
+  
+      if( inMedley )
+      {
+        elem = acc[ elem.accIndex + 1 ];
+        if( elem.classList.contains( "css_medleyEnd" ) )
+          inMedley = false;
+      }
+      else
+        elem = undefined;
+    }
+    scrollToElem.scrollIntoView();
+    setTimeout( function() { scrollToElem.scrollIntoView(); }, 500 );
+  }
+}
+
+var acc = document.getElementsByClassName( "accordion" );
+
+songNames = [];
+
+for( var i = 0;i < acc.length;i++ )
+{
+  songNames[ i ] = acc[ i ].innerHTML;
+  acc[ i ].addEventListener( "click", function() { accordionClick( this ); } );
+  acc[ i ].nextElementSibling.addEventListener( "click", function() { this.previousElementSibling.scrollIntoView(); } );
+  acc[ i ].accIndex = i;
+}
+displaySet( DISPLAY_LARGE );
+*/}.toString().slice( 14, -3 ) + "</" + "script> </" + "body> </html>" ); // little hack because certain tags confuse the browser.
+    break;
+
+  case 2:
+    return( function(){/* 
+<h2> Sample Player Creator </h2>
+Create a new Sample List with 'New'. Add Groups with 'Add Group'. Click on names to rename.<br>
+<br>
+Drag samples from the Library in the right pane to the desired location. Samples and groups can be rearranged
+by dragging. Delete things by dragging to the Trash.<br>
+<br>
+A library can be specified by appending "?library=http://x.y.z/???.json" to this URL.
+    
+*/}.toString().slice( 14, -3 ) + "</" + "script> </" + "body> </html>" ); // little hack because certain tags confuse the browser.
+  break;
+  }
+
+  return undefined;
+}
+
+//////////////////////
+// Sample List file mgmt
+//////////////////////
+
+
+function openSampleFile( e )
+{
+  var file = e.target.files[ 0 ];
+  if( !file )
+    return;
+  var reader = new FileReader();
+  reader.onload = function( e )
+  {
+    var lines = e.target.result.split( "\n" ); // Line 2->n is JSON of the setList
+    var jsonPortion = ""; // setlist json beings with { in column 0 and ends with } in column 0.
+    var firstLine = true;
+    var success = false;
+
+    for( line of lines )
+    {
+      if( firstLine )
+      {
+        firstLine = false; // first line is opening comment
+        continue;
+      }
+
+      jsonPortion += line;
+      if( line == "}" )
+      {
+        success = true; // found the end of json.
+        break;
+      }
+    }
+    if( success )
+    {
+      try
+      {
+        var parsed = JSON.parse( jsonPortion );
+        curSampleList = parsed;
+      }
+      catch( error )
+      {
+        alert( error );
+      }
+    }
+    else
+      alert( "Unable to parse setlist" );
+
+    genSampleListHTML();
+  }
+
+  reader.readAsText( file );
+}
+
+/////////////// /////////////// /////////////// /////////////// ///////////////
+// Generate the Setlist html file and present a dialog for the user to save it.
+/////////////// /////////////// /////////////// /////////////// ///////////////
+function saveSamplelist()
+{
+  var setFile = "<!--\n" + JSON.stringify( curSampleList, null, "  " ) + "\n-->\n";
+  setFile += "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>\n";
+  setFile += "<title>" + curSampleList.name + "</title>\n";
+  setFile += htmlConstStrings( 0 );
+
+  var ffState = false; // Fixed Font state
+  var missingFiles = false;
+  // Songs
+  for( var groupIndex = 0;groupIndex < curSampleList.groups.length - 1;groupIndex++ ) // Note that we don't render the clipboard set
+  {
+    setFile += "<hr><div class='setname'>" + curSampleList.groups[ groupIndex ].name + "</div>\n";
+
+    var inMedley = false;
+    for( var songIndex = 0;songIndex < curSampleList.groups[ groupIndex ].samples.length;songIndex++ )
+    {
+      var sng = curSampleList.groups[ groupIndex ].samples[ songIndex ];
+      if( !sampleLibrary[ sng.id ] )
+      {
+        console.log( "'" + sng.id + "' not in lib." );
+        if( missingFiles == false )
+        {
+          missingFiles = true; // Only alert once
+          alert( "'" + sng.name + "' not in library." );
+        }
+        continue;
+      }
+      var fLines = sampleLibrary[ sng.id ].lyrics.split( "\n" );
+
+      var classString = "accordion";
+      if( curSampleList.groups[ groupIndex ].samples[ songIndex ].css_highlight == true )
+        classString += " css_highlight";
+
+      if( curSampleList.groups[ groupIndex ].samples[ songIndex ].medley )
+      {
+        if( !inMedley )
+        {
+          classString += " css_medleyStart";
+          inMedley = true;
+        }
+        else
+          classString += " css_medleyCont";
+      }
+      else if( inMedley )
+      {
+        classString += " css_medleyEnd";
+        inMedley = false;
+      }
+      setFile += "<button class='" + classString + "'>";
+      setFile += ( songIndex + 1 ).toString() + ". " + sng.name + "</button>\n"; // tbd, include artist if present
+      setFile += "<div class='panel'>\n";
+
+      for( line of fLines )
+      {
+        curFixedFontState = ( ( line[ 1 ] == "|" ) || ( line[ 1 ] == ":" ) ) ? true : false;
+        if( curFixedFontState != ffState )
+        {
+          if( curFixedFontState == true )
+            setFile += "<font style='font-family:courier;'>\n";
+          else
+            setFile += "</font>\n";
+          ffState = curFixedFontState;
+        }
+
+        if( line != "\n" ) // add spaces
+        {
+          var nLine = "";
+          var numSpaces = 0;
+
+          for( c of line.split( "" ) )
+          {
+            if( c == " " )
+              numSpaces += 1;
+            else
+            {
+              if( numSpaces == 1 )
+                nLine += " ";
+              else if( numSpaces > 1 )
+                for( var tmp = 0;tmp < numSpaces;tmp++ )
+                  nLine += "&nbsp"; // replace spaces in the line so the browser doesn't skip it.
+              numSpaces = 0;
+              nLine += c;
+            }
+          }
+          setFile += nLine + "<br>\n";
+        }
+      }
+      if( curFixedFontState == true ) // happens if song ends with fixed font
+      {
+        setFile += "</font>\n";
+        ffState = false;
+      }
+      setFile += "</div>\n\n";
+    }
+  }
+
+  setFile += htmlConstStrings( 1 );
+
+  // Provide URL for abuser to download it.
+  const a = document.createElement( 'a' );
+  const file = new Blob( [ setFile ], { type: 'text/plain' } );
+  
+  a.href = URL.createObjectURL( file );
+  a.download = curSampleList.name + ".html";
+  a.click();
+
+	URL.revokeObjectURL( a.href );
+
+  slEditedFlag = false;
+  genSampleListHTML();
+  return true;
+}
+
+var helpState = false;
+function toggleHelp()
+{
+  helpState = !helpState;
+  var helpHtml = "";
+
+  if( helpState )
+    helpHtml = htmlConstStrings( 2 );
+
+  var helpElem = document.getElementById( 'multiuse' );
+  helpElem.innerHTML = helpHtml;
+}
+
+</script>
+</body>
+</html>
