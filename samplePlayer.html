@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sample Player Creator</title>
+<title>Sample Player</title>
 <style>
 
 .css_librarySample
@@ -50,6 +50,18 @@
 }
 
 .css_modeButton:hover { border: 2px solid black; }
+
+.css_FSButton
+{
+  border: 2px solid white;
+  background-color: #bbf;
+  color: #444;
+  padding: 6px;
+  text-align: denter;
+  font-size: 14px;
+}
+
+.css_FSButton:hover { border: 2px solid black; }
 
 .css_setClass
 {
@@ -147,6 +159,41 @@
   font-family: "Lucida Console", "Courier New", monospace;
 }
 
+.slider
+{
+  -webkit-appearance: none;
+  width: 100%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+}
+
+.slider:hover
+{
+  opacity: 0;
+}
+
+.slider::-webkit-slider-thumb
+{
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb
+{
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
 #trashCan
 {
   display: block;
@@ -160,19 +207,35 @@
 <section>
 <div id='samplesPane' class='css_sampleList_pane'>
 <input contenteditable='true' id='serverURL' value='URL'>
-<button class='css_menuButton' id='saveSampleListButton'  onclick='saveSamplelist();'>Save</button>
-
-<button class='css_modeButton' id='modeMedleyButton'    onclick='changeMode( MODE_MEDLEY );'>Medley</button>
+<button class='css_menuButton' id='saveSampleConfigButton'  onclick='saveSamplelist();'>Save</button>
+<button class='css_modeButton' id='modeEditButton'      onclick='changeMode( MODE_EDIT );'>Edit</button>
 <button class='css_modeButton' id='modeHighlightButton' onclick='changeMode( MODE_HIGHLIGHT );'>Highlight</button>
 <button class='css_modeButton' id='clipboard'           onclick='changeMode( MODE_CLIPBOARD );'>Add To Clipboard</button>
 <button class='css_modeButton' id='Help'                onclick='toggleHelp();'>Help</button>
 <hr>
+<div id='footSwitchButtons' align='left'>
+Hold
+<button class='css_FSButton' id='fsB1Hold'  onclick='buttonEvent( EVENT_HOLD, 0 );'>&uarr;</button>
+<button class='css_FSButton' id='fsB2Hold'  onclick='buttonEvent( EVENT_HOLD, 1 );'>&darr;</button>
+<button class='css_FSButton' id='fsB12Hold' onclick='buttonEvent( EVENT_HOLD, 2 );'>Both</button>
+<br>
+Double Tap
+<button class='css_FSButton' id='fsB1DTap'  onclick='buttonEvent( EVENT_DTAP, 0 );'>&#62;</button>
+<button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( EVENT_DTAP, 1 );'>&#8800;</button>
+<br>
+Tap
+<button class='css_FSButton' id='fsB1Tap'   onclick='buttonEvent( EVENT_TAP, 0 );'>&larr;</button>
+<button class='css_FSButton' id='fsB2Tap'   onclick='buttonEvent( EVENT_TAP, 1 );'>&rarr;</button>
+<button class='css_FSButton' id='fsB12Tap'  onclick='buttonEvent( EVENT_TAP, 2 );'>Both</button>
+<hr>
+<br>
+</div>
+
 <div id='setlist'> </div>
 <div id='multiuse'></div>
 </div>
 
 <div id='library_pane' class='css_library_pane'>
-<button class='css_menuButton' id='addLibSongButton'  onclick='changeMode( MODE_ADD_LIB );'>+</button>
 <hr>
 <div id='libraryDiv' class='css_library'> </div>
 </div>
@@ -187,7 +250,7 @@ var serverURL = 'https://greggirardin.github.io/samples/';
 var slEditedFlag = false;
 var libEditedFlag = false;
 var sampleLibrary = {}; // object of LibrarySample
-var curSampleList; // a Sample List
+var curSampleConfig; // a Sample List
 var editSample; // LibrarySample we're editing if MODE_EDIT
 
 // Constants.
@@ -197,33 +260,38 @@ const MODE_NONE       = 0;
 const MODE_MEDLEY     = 1;
 const MODE_HIGHLIGHT  = 2;
 const MODE_CLIPBOARD  = 3;
+const MODE_EDIT       = 4;
 
-const MODE_EDIT       = 10;
-const MODE_DEL_LIB    = 11;
-const MODE_ADD_LIB    = 12;
+const MODE_DEFAULT    = 0;
 
 var operationMode = MODE_NONE;
+var fsMode = MODE_DEFAULT; 
+var currentGroup, currentSample; // cursor
 
 //////////////////////////// //////////////////////////// ////////////////////////////
 class LibrarySample
 {
-  constructor( url="", displayName=undefined )
+  constructor( filename )
   {
-    this.url = url; // location
-    this.displayName = displayName ? displayName : url;
-    this.sampleLength = undefined;
-    this.sampleVolume = undefined;
+    this.filename = filename;
+    // length?
+    // last change time?
+
   }
 }
 
-class SampleListSample
+class Sample
 {
-  constructor( displayName )
+  constructor( displayName, url=undefined )
   {
     this.displayName = displayName;
-    this.url = undefined;
-    this.css_highlight = false;
+    this.url = url;
+    this.highlight = false;
     this.medley = false;
+    this.fadeInTime = 0; // Milliseconds
+    this.fadeOutTime = 0;
+    this.loopCount = 1;
+    this.volume = 100;
   }
 }
 
@@ -232,17 +300,17 @@ class Group
   constructor( name )
   {
     if( !name )
-      name = "Sample Group";
+      name = "Group";
     this.name = name;
-    this.samples = []; // SampleListSample[]
+    this.samples = []; // Sample[]
   }
 }
 
-class SampleList
+class SampleConfig
 {
   constructor( sampListName )
   {
-    this.sampListName = sampListName;
+    this.name = sampListName;
     this.sampleBaseURL = undefined; // The prefix of the path to all the samples
     this.groups = [];
     this.groups.push( new Group() );
@@ -268,7 +336,7 @@ function sampleListInit()
   if( server )
     serverURL = server;
 
-  newSampleList();
+  newSampleConfig();
   getFileFromServer( "samples.json", gotSamples, false );
 
   document.getElementById( 'serverURL' ).value = serverURL;
@@ -283,50 +351,131 @@ function sampleListInit()
 
 ///////////////////////// ///////////////////////// /////////////////////////
 ///////////////////////// ///////////////////////// /////////////////////////
-/* Foot switch handling for two buttons. Assume the bottns are mapped to
-   UP and DOWN.
-  8 functions: Tap L+R, Double Tap L+R, Hold L+R, Both Tap, Both hold
+/* Foot switch handling for two buttons. Assume the buttons are mapped to UP and DOWN.
+   8 functions: Tap L+R, Double Tap L+R, Hold L+R, Both Tap, Both hold
 
-                              Hold Timer
+          | Start Timer       clickHoldTO
   Time -----------------------|
-    Press---------------------^ Hold
-    P ------------_           ^ Single Tap
-    P ---_  P^ Double Tap 
+    ______/-------------------| Hold
+    ______/----------\________| Single Tap
+    ______/--\___/-| Double Tap 
+          ^--- Button pressed
 */
-
+const clickHoldTO = 250;
 
 var footSwitchButtons = []; // array of buttons
 var bothHeldTimer;
 
-const clickHoldTO = 250;
-const EVENT_BOTH = 0;
-const EVENT_BOTH_HOLD = 1;
-const EVENT_TAP = 2;
-const EVENT_DTAP = 3;
-const EVENT_HOLD = 4;
+const EVENT_TAP = 0;
+const EVENT_DTAP = 1;
+const EVENT_HOLD = 2;
+
+var fsButtonMap = 
+{
+  0 : {
+      0 : {
+          id : 'fsB1Tap',
+          action : function() { moveCursor( 'left' ); }
+          },
+      1 : { 
+          id : 'fsB2Tap',
+          action : function() { moveCursor( 'right' ); }
+          },
+      2 : {
+          id : 'fsB12Tap',
+          action : function() { }
+          },
+      },
+
+  1 : {
+      0 : {
+          id : 'fsB1DTap',
+          action : function() { playSample( 'start' ); }
+          },
+      1 : {
+          id : 'fsB2DTap',
+          action : function() { playSample( 'stop' ); }
+          },
+      2 : {
+          id : 'fsB12DTap',
+          action : function() { }
+          },
+    },
+
+  2 : {
+      0 : {
+          id : 'fsB1Hold',
+          action : function() { moveCursor( 'up' ); }
+          },
+      1 : {
+          id : 'fsB2Hold',
+          action : function() { moveCursor( 'down' ); }
+          },
+      2 : {
+          id : 'fsB12Hold',
+          action : function() { }
+          },
+    }
+};
+
+function playSample( status )
+{
+  console.log( status );
+}
+
+function moveCursor( dir )
+{
+  switch( dir )
+  {
+    case 'up':
+      if( currentGroup )
+        if( currentGroup > 0 )
+          currentGroup -= 1;
+      break;
+
+    case 'down':
+      if( currentGroup )
+        if( currentGroup < sampleLibrary.groups.length - 1 )
+          currentGroup += 1;
+      break;
+
+    case 'left':
+      if( currentSample )
+        if( currentSample > 0 )
+          currentSample -= 1;
+      break;
+
+    case 'right':
+      if( currentSample )
+        if( currentSample < sampleLibrary.groups[ currentGroup ].samples.length - 1 )
+          currentSample += 1;
+      break;
+  }
+  console.log( dir );
+}
 
 function buttonEvent( event, buttonIx )
 {
-  var str = "?";
 
-  switch( event )
-  {
-    case EVENT_BOTH:      str = "Both";                   break;
-    case EVENT_BOTH_HOLD: str = "Both Hold";              break;
-    case EVENT_TAP:       str = "Tap " + buttonIx;        break;
-    case EVENT_DTAP:      str = "Double Tap " + buttonIx; break;
-    case EVENT_HOLD:      str = "Hold " + buttonIx;       break;
-  }
+  fsButtonMap[ event ][ buttonIx ].action();
 
-  console.log( str );
+  var elem = document.getElementById( fsButtonMap[ event ][ buttonIx ].id );
+  elem.classList.add( 'css_highlight' );
+  setTimeout( buttonHLTimer, 100 );
+}
+
+function buttonHLTimer()
+{
+   var buttons = document.getElementsByClassName( 'css_FSButton' );
+  for( i = 0;i < buttons.length;i++ )
+    buttons[ i ].classList.remove( 'css_highlight' );
 }
 
 function bothHoldTimerCB()
 {
   // Both buttons were held.
-  // clearTimeout( bothHeldTimer );
-  bothHeldTimer = undefined;
-  buttonEvent( EVENT_BOTH_HOLD, undefined );
+  bothHeldTimer = undefined; // clear. It's used as a flag below.
+  buttonEvent( EVENT_HOLD, 2 );
   footSwitchButtons[ 0 ].pressedState = false;
   footSwitchButtons[ 1 ].pressedState = false;
 }
@@ -389,12 +538,12 @@ class FootSwitchButton
           var otherButtonIx = 1 - this.buttonIndex;
           clearTimeout( bothHeldTimer );
           bothHeldTimer = undefined;
-          this.clearTimer()
+          this.clearTimer();
           this.pressedState = false; 
 
           footSwitchButtons[ otherButtonIx ].clearTimer();
           footSwitchButtons[ otherButtonIx ].pressedState = false;
-          buttonEvent( EVENT_BOTH, undefined );
+          buttonEvent( EVENT_TAP, 2 );
         }
       }
     }
@@ -404,13 +553,11 @@ class FootSwitchButton
   {
     this.pressedState = false;
     this.holdTimer = undefined;
-    if( this.holdFlag )
-      buttonEvent( EVENT_HOLD, this.buttonIndex );
-    else
-      buttonEvent( EVENT_TAP, this.buttonIndex );
+    buttonEvent( this.holdFlag ? EVENT_HOLD : EVENT_TAP, this.buttonIndex );
   }
 }
 
+// TBD. Call class method directly?
 function holdTimerCB( ix ) { footSwitchButtons[ ix ].holdTimerCB(); }
 function dcTimerCB( ix ) { footSwitchButtons[ ix ].dcTimerCB(); }
 
@@ -454,7 +601,7 @@ function gotSamples( file, data )
 
 function gotSample( name, data )
 {
-  sampleLibrary[ name ] = data;
+  sampleLibrary[ name ].audioFile = data;
 }
 
 function getFileFromServer( fileName, callback, binaryFlag )
@@ -466,7 +613,8 @@ function getFileFromServer( fileName, callback, binaryFlag )
     var fullURL = 'blob:' + serverURL + filename;
     xhr.open( 'GET', fullURL, true );
     xhr.responseType = 'blob';
-    xhr.onload = function( e ) {
+    xhr.onload = function( e )
+    {
       if( this.status == 200 )
         callback( fileName, this.response );
     }
@@ -475,7 +623,8 @@ function getFileFromServer( fileName, callback, binaryFlag )
   {
     xhr.overrideMimeType( "application/json" );
     xhr.open( "GET", serverURL + fileName, true );
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function()
+    {
       if ( xhr.readyState === 4 && xhr.status == "200" )
         callback( fileName, xhr.responseText );
     }
@@ -483,7 +632,6 @@ function getFileFromServer( fileName, callback, binaryFlag )
 
   xhr.send( null );
 }
-
 
 function sl_allowDrop( ev ) { ev.preventDefault(); }
 function dragElem( ev ) { ev.dataTransfer.setData( "dragElem", ev.target.id ); }
@@ -494,147 +642,156 @@ function dragElem( ev ) { ev.dataTransfer.setData( "dragElem", ev.target.id ); }
 /////////////// /////////////// /////////////// ///////////////
 function dropElem( ev )
 {
-  const slSample = "sampleListSample";
-  const slGroup = "sampleListGroup";
+  const slSample = "sampleListSample.";
+  const slGroup = "sampleListGroup.";
+  const cbStr = "clipboard";
+  const lSamp = "libSample.";
 
   ev.preventDefault();
   var dragElem = ev.dataTransfer.getData( "dragElem" );
 
-  if( ( dragElem.substring( 0, 9 ) == "clipboard" ) &&
-      ( ev.target.id.substring( 0, 12 ) == slSample ) ) // dropping the clipboard onto a set.
+  if( ( dragElem.substring( 0, cbStr.length ) == cbStr ) &&
+      ( ev.target.id.substring( 0, slSample.length ) == slSample ) ) // dropping the clipboard onto a set.
   {
-    indexes = ev.target.id.substring( 12, ).split( "." );
+    indexes = ev.target.id.substring( slSample.length, ).split( "." );
     var toGroup = parseInt( indexes[ 0 ] );
     var toSampleIx = parseInt( indexes[ 1 ] );
 
-    if( toGroup < curSampleList.groups.length - 1 )
+    if( toGroup < curSampleConfig.groups.length - 1 )
       while( true )
       {
-        var song = curSampleList.groups[ curSampleList.groups.length - 1 ].samples.pop();
+        var song = curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.pop();
         if( song )
-          curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, song );
+          curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, song );
         else
           break;
       }
   }
-  else if( ( dragElem.substring( 0, 12 ) == slSample ) &&
-           ( ev.target.id.substring( 0, 12 ) == slSample ) ) // Moving a sample
+  else if( ( dragElem.substring( 0, slSample.length ) == slSample ) &&
+           ( ev.target.id.substring( 0, slSample.length ) == slSample ) ) // Moving a sample
   {
-    var indexes = dragElem.substring( 12, ).split( "." );
+    var indexes = dragElem.substring( slSample.length, ).split( "." );
     var fromGroup = parseInt( indexes[ 0 ] );
     var fromSampleIx = parseInt( indexes[ 1 ] );
 
-    indexes = ev.target.id.substring( 12, ).split( "." );
+    indexes = ev.target.id.substring( slSample.length, ).split( "." );
     var toGroup = parseInt( indexes[ 0 ] );
     var toSampleIx = parseInt( indexes[ 1 ] );
 
     if( fromGroup == toGroup ) // Moving within the same set
     {
-      if( toSampleIx < fromSongIx ) // Moved song up
+      if( toSampleIx < fromSampleIx ) // Moved song up
       {
-        curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleList.groups[ fromGroup ].samples[ fromSampleIx ] );
-        curSampleList.groups[ fromGroup ].samples.splice( fromSampleIx + 1, 1 );
+        curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleConfig.groups[ fromGroup ].samples[ fromSampleIx ] );
+        curSampleConfig.groups[ fromGroup ].samples.splice( fromSampleIx + 1, 1 );
       }
       else
       {
-        curSampleList.groups[ toGroup ].samples.splice( toSampleIx + 1, 0, curSampleList.groups[ fromGroup ].samples[ fromSampleIx ] );
-        curSampleList.groups[ fromGroup ].samples.splice( fromSampleIx, 1 );
+        curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx + 1, 0, curSampleConfig.groups[ fromGroup ].samples[ fromSampleIx ] );
+        curSampleConfig.groups[ fromGroup ].samples.splice( fromSampleIx, 1 );
       }
     }
     else // Move between groups.
     {
-      curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleList.groups[ fromGroup ].samples[ fromSampleIx ] );
-      curSampleList.groups[ fromGroup ].samples.splice( fromSongIx, 1 );
+      curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleConfig.groups[ fromGroup ].samples[ fromSampleIx ] );
+      curSampleConfig.groups[ fromGroup ].samples.splice( fromSampleIx, 1 );
     }
 
     slEditedFlag = true;
   }
-  else if( ( dragElem.substring( 0, 8 ) == "libSample." ) &&
-           ( ev.target.id.substring( 0, 12 ) == slSample ) ) // Dropping library song into set list.
+  else if( ( dragElem.substring( 0, lSamp.length ) == lSamp ) &&
+           ( ev.target.id.substring( 0, slSample.length ) == slSample ) ) // Dropping library song into set list.
   {
-    var songId = dragElem.substring( 8, );
-    var libSample = sampleLibrary[ songId ];
-    var newSample = new SampleListSample( libSample.name, libSample.artist );
+    var sampId = dragElem.substring( lSamp.length, );
+    var libSample = sampleLibrary[ sampId ];
 
-    var indexes = ev.target.id.substring( 12, ).split( "." );
+    var newSample = new Sample( sampId, libSample.url );
+
+    var indexes = ev.target.id.substring( slSample.length, ).split( "." );
     var toGroup = parseInt( indexes[ 0 ] );
     var toSampleIx = parseInt( indexes[ 1 ] );
 
-    curSampleList.groups[ toGroup ].samples.splice( toSampleIx, 0, newSample );
+    curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, newSample );
+
     slEditedFlag = true;
   }
-  else if( ( dragElem.substring( 0, 11 ) == slGroup ) &&
-           ( ev.target.id.substring( 0, 11 ) == slGroup ) ) // Moving a set
+  else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
+           ( ev.target.id.substring( 0, slGroup.length ) == slGroup ) ) // Moving a group
   {
-    var fromGroup = parseInt( dragElem.substring( 11, ) );
-    var toGroup = parseInt( ev.target.id.substring( 11, ) );
+    var fromGroup = parseInt( dragElem.substring( slGroup.length, ) );
+    var toGroup = parseInt( ev.target.id.substring( slGroup.length, ) );
 
-    if( toGroup < fromGroup ) // moved set up
+    if( toGroup < fromGroup ) // moved group up
     {
-      curSampleList.groups.splice( toGroup, 0, curSampleList.groups[ fromGroup ] );
-      curSampleList.groups.splice( fromGroup + 1, 1 );
+      curSampleConfig.groups.splice( toGroup, 0, curSampleConfig.groups[ fromGroup ] );
+      curSampleConfig.groups.splice( fromGroup + 1, 1 );
     }
     else
     {
-      curSampleList.groups.splice( toGroup + 1, 0, curSampleList.groups[ fromGroup ] );
-      curSampleList.groups.splice( fromGroup, 1 );
+      curSampleConfig.groups.splice( toGroup + 1, 0, curSampleConfig.groups[ fromGroup ] );
+      curSampleConfig.groups.splice( fromGroup, 1 );
     }
 
     slEditedFlag = true;
   }
   else if( ev.target.id == "trashCan" )
   {
-    if( dragElem.substring( 0, 12 ) == slSample )
+    if( dragElem.substring( 0, slSample.length ) == slSample )
     {
-      var indexes = dragElem.substring( 12, ).split( "." );
+      var indexes = dragElem.substring( slSample.length, ).split( "." );
       var delGroup = parseInt( indexes[ 0 ] );
       var delSample = parseInt( indexes[ 1 ] );
 
-      curSampleList.groups[ delGroup ].samples.splice( delSample, 1 );
+      curSampleConfig.groups[ delGroup ].samples.splice( delSample, 1 );
     }
-    else if( dragElem.substring( 0, 11 ) == slGroup )
+    else if( dragElem.substring( 0, slGroup.length ) == slGroup )
     {
-      var delGroup = parseInt( dragElem.substring( 11, ) );
-      curSampleList.groups.splice( delGroup, 1 );
+      var delGroup = parseInt( dragElem.substring( slGroup.length, ) );
+      curSampleConfig.groups.splice( delGroup, 1 );
     }
-    else if( dragElem.substring( 0, 9 ) == "clipboard" )
-      curSampleList.groups[ curSampleList.groups.length - 1 ].samples = [];
+    else if( dragElem.substring( 0, cbStr.length ) == cbStr )
+      curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples = [];
 
     slEditedFlag = true;
   }
 
-  genSampleListHTML();
+  genSampleConfigHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
-function setSampleListName()
+function setSampleConfigName()
 {
-  var name = prompt( "Enter Sample File Name:", curSampleList.name );
+  var name = prompt( "Enter Sample File Name:", curSampleConfig.name );
   if( name )
   {
-    curSampleList.name = name;
+    curSampleConfig.name = name;
     slEditedFlag = true;
-    genSampleListHTML();
+    genSampleConfigHTML();
   }
 }
 
 /////////////// /////////////// /////////////// ///////////////
-function sampleClick( groupIndex, songIndex )
+function sampleClick( groupIndex, sampleIndex )
 {
-  var cs = curSampleList.groups[ groupIndex ].samples[ songIndex ]; // clicked song.
-  slEditedFlag = true;
+  var cs = curSampleConfig.groups[ groupIndex ].samples[ sampleIndex ]; // clicked song.
+
+  currentGroup = groupIndex;
+  currentSample = sampleIndex;
 
   if( operationMode == MODE_HIGHLIGHT )
-    cs.css_highlight = !cs.css_highlight;
+    cs.highlight = !cs.highlight;
   else if( operationMode == MODE_MEDLEY )
     cs.medley = !cs.medley;
-  else if( ( operationMode == MODE_CLIPBOARD ) && ( groupIndex < curSampleList.groups.length - 1 ) )
+  else if( ( operationMode == MODE_CLIPBOARD ) && ( groupIndex < curSampleConfig.groups.length - 1 ) )
   {
-    var song = curSampleList.groups[ groupIndex ].samples[ songIndex ];
-    curSampleList.groups[ curSampleList.groups.length - 1 ].samples.push( song );
-    curSampleList.groups[ groupIndex ].samples.splice( songIndex, 1 );
-  }
-  genSampleListHTML(); 
+    var sample = curSampleConfig.groups[ groupIndex ].samples[ sampleIndex ];
+    curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.push( sample );
+    curSampleConfig.groups[ groupIndex ].samples.splice( songIndex, 1 );
+   }
+  else if( operationMode == MODE_EDIT )
+    editSample = cs;
+
+  genSampleConfigHTML(); 
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -643,84 +800,85 @@ function sampleClick( groupIndex, songIndex )
 /////////////// /////////////// /////////////// ///////////////
 function libSampleClick( songId )
 {
-  if( operationMode == MODE_EDIT )
+  if( operationMode == MODE_CLIPBOARD )
   {
-    saveSampleEdits();
-    editSample = sampleLibrary[ songId ];
+    sample = new Sample( sampleLibrary[ songId ].filename );
+    curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.push( sample );
+    genSampleConfigHTML();
   }
-  else if( operationMode == MODE_DEL_LIB )
-  {
-    libEditedFlag = true;
-    delete( sampleLibrary[ songId ] );
-  }
-  else if( operationMode == MODE_CLIPBOARD )
-  {
-    song = new SampleListSample( sampleLibrary[ songId ].name, sampleLibrary[ songId ].artist );
-    curSampleList.groups[ curSampleList.groups.length - 1 ].samples.push( song );
-  }
-  
-  genSampleListHTML();
-  generateLibraryHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
-function newSampleList()
+function newSampleConfig()
 {
   if( slEditedFlag )
     if( !window.confirm( "Unsaved Edits. Continue?" ) )
       return;
 
   slEditedFlag = false;
-  curSampleList = new SampleList( "Sample List Name" );
+  curSampleConfig = new SampleConfig( "Sample List" );
 
-  genSampleListHTML();
+  genSampleConfigHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
-function setRename( groupIndex )
+function groupRename( groupIndex )
 {
-  var name = prompt( "Enter Group Name:", curSampleList.groups[ groupIndex ].name );
+  var name = prompt( "Enter Group Name:", curSampleConfig.groups[ groupIndex ].name );
 
   if( name )
   {
-    curSampleList.groups[ groupIndex ].name = name;
+    curSampleConfig.groups[ groupIndex ].name = name;
     var elem = document.getElementById( "sampleListGroup." + groupIndex );
     elem.innerHTML = name;
   }
 
   slEditedFlag = false;
-  genSampleListHTML();
+  genSampleConfigHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
 function groupAdd()
 {
-  if( curSampleList.groups.length < MAX_GROUPS )
+  if( curSampleConfig.groups.length < MAX_GROUPS )
   {
-    curSampleList.groups.splice( curSampleList.groups.length - 1, 0, new Group() );
+    curSampleConfig.groups.splice( curSampleConfig.groups.length - 1, 0, new Group() );
     slEditedFlag = true;
-    genSampleListHTML();
+    genSampleConfigHTML();
   }
   else
     alert( "Max set count reached" );
 }
 
 /////////////// /////////////// /////////////// ///////////////
-var firstTimeSL = true;
-function genSampleListHTML()
+function genSampleConfigHTML()
 {
-  var tempHtml = "<div id='sampleListName' onClick='setSampleListName()'>" + curSampleList.name + "</div><br>";
-
-  for( var i = 0;i < curSampleList.groups.length;i++ )
+  if( operationMode == MODE_EDIT && editSample )
   {
-    var s = curSampleList.groups[ i ];
-    if( i == curSampleList.groups.length - 1 )
+    var tmpHtml = "<hr>";
+    tmpHtml += "Display Name: <input contenteditable='true' id='editSampleName' value='" + editSample.displayName + "'><br>";
+    tmpHtml += "File: " + editSample.url + "<br>";
+    tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editSample.volume + "'><br>";
+    tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editSample.fadeInTime + "'><br>";
+    tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editSample.fadeOutTime + "'><br>";
+    tmpHtml += "Loop Count: <input contenteditable='true' id='editSampleLC' value='" + editSample.loopCount + "'><br>";
+
+    var elem = document.getElementById( 'multiuse' ); // edit in the multiuse panel on the left
+    elem.innerHTML = tmpHtml;
+  }
+
+  var tempHtml = "<div id='sampleListName' onClick='setSampleConfigName()'>" + curSampleConfig.name + "</div><br>";
+
+  for( var i = 0;i < curSampleConfig.groups.length;i++ )
+  {
+    var s = curSampleConfig.groups[ i ];
+    if( i == curSampleConfig.groups.length - 1 )
     {
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
     }
     else
-      tempHtml += "<button id='sampleListGroup." + i + "' class='css_setClass' onclick='setRename( " + i + " )' draggable='true' " +
+      tempHtml += "<button id='sampleListGroup." + i + "' class='css_setClass' onclick='groupRename( " + i + " )' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + s.name + "</button>\n";
 
     var medleyState = false;
@@ -728,7 +886,7 @@ function genSampleListHTML()
     for( var j = 0;j < s.samples.length;j++ )
     {
       var classes = 'css_sampleListSample';
-      if( s.samples[ j ].css_highlight )
+      if( s.samples[ j ].highlight )
         classes += ' css_s_highlight';
       if( s.samples[ j ].medley && medleyState == false )
         classes += ' css_medleyStart';
@@ -740,23 +898,18 @@ function genSampleListHTML()
 
       tempHtml += "<button id='sampleListSample." + i + "." + j + "' class='" + classes + "' onclick='sampleClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
-                  s.samples[ j ].name + "</button>\n";
+                  s.samples[ j ].displayName + "</button>\n";
     }
-    if( firstTimeSL ) // a + for moving samples to the end of a set
-      tempHtml += "<button id='sampleListSample." + i + "." + j +
-                  "' class='css_sampleListSample' onclick='sampleClick( " + i + ", " + j + " )'" +
-                  "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Drop Samples Here </button>\n";
-    else
-      tempHtml += "<button id='sampleListSample." + i + "." + j +
-                  "' class='css_sampleListSample' onclick='sampleClick( " + i + ", " + j + " )'" +
-                  "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
+
+    var tmpStr = ( curSampleConfig.groups[ i ].samples.length == 0 ) ? 'Add Samples Here' : '&nbsp+&nbsp';
+    tempHtml += "<button id='sampleListSample." + i + "." + j + "' class='css_sampleListSample' onclick='sampleClick( " + i + ", " + j + " )'" +
+                "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + tmpStr + "</button>\n";
+
 
     if( s.samples.length )
       tempHtml += "<font size='1'>" + s.samples.length + "</font>";
     tempHtml += "<br>\n";
   }
-
-  firstTimeSL = false;
 
   tempHtml += "<br><button onclick='groupAdd()'> Add Group </button>\n<br>\n<br>";
   tempHtml += "<input id='trashCan' type='image' ondragover='sl_allowDrop( event )' ondrop='dropElem( event )' src='https://greggirardin.github.io/trashcan.png'/>\n";
@@ -764,34 +917,20 @@ function genSampleListHTML()
   document.getElementById( 'setlist' ).innerHTML = tempHtml;
 
   if( slEditedFlag )
-    document.getElementById( 'saveSampleListButton' ).classList.add( 'css_highlight' );
+    document.getElementById( 'saveSampleConfigButton' ).classList.add( 'css_highlight' );
   else
-    document.getElementById( 'saveSampleListButton' ).classList.remove( 'css_highlight' );
+    document.getElementById( 'saveSampleConfigButton' ).classList.remove( 'css_highlight' );
 }
 
 function saveSampleEdits()
 {
   if( editSample )
   {
-    delete( sampleLibrary[ editSample.id ] );
-
-    var name = document.getElementById( "editSampleName" ).value; // strip HTML tags in the name and artist
-    name = name.replace( /(<([^>]+)>)/gi, "" );
-    if( name == pruneQuote( editSample.name ) )
-      name = editSample.name; // name didn't really change. don't lose the apostrophes.
-    var artist = document.getElementById( "editSampleArtist" ).value;
-    artist = artist.replace( /(<([^>]+)>)/gi, "" );
-    if( artist == pruneQuote( editSample.artist ) )
-      artist = editSample.artist; // name didn't really change. don't lose the apostrophes.
-
-    // Allow html in the lyrics. But replace <br> with CR.
-    var editedSample = new LibrarySample( name, artist, document.getElementById( "editSampleLyrics" ).innerHTML.replace( /<br>/g, '\n' ) );
-    if( editedSample.id != "." ) // That's the default name when adding, don't add.
-    {
-      // Check for a change before setting libEditedFlag.
-      sampleLibrary[ editedSample.id ] = editedSong;
-      libEditedFlag = true;
-    }
+    editSample.displayName = document.getElementById( "editSampleName" ).value; 
+    editSample.volume = document.getElementById( "editSampleVolume" ).value; 
+    editSample.fadeInTime = document.getElementById( "editSampleFIT" ).value; 
+    editSample.fadeOutTime = document.getElementById( "editSampleFOT" ).value; 
+    editSample.loopCount = document.getElementById( "editSampleLC" ).value; 
   }
 }
 
@@ -808,13 +947,6 @@ function changeMode( mode )
   editSample = undefined;
   operationMode = ( mode == operationMode ) ? MODE_NONE : mode;
 
-  // Adding a song to the library. Create an empty one and change to MODE_EDIT
-  if( operationMode == MODE_ADD_LIB )
-  {
-    editSample = new LibrarySample();
-    operationMode = MODE_EDIT;
-  }
-
   var buttons = document.getElementsByClassName( 'css_modeButton' );
   for( i = 0;i < buttons.length;i++ )
     buttons[ i ].classList.remove( 'css_highlight' );
@@ -830,17 +962,14 @@ function changeMode( mode )
       case MODE_MEDLEY:     elem = document.getElementById( 'modeMedleyButton' );     break;
       case MODE_HIGHLIGHT:  elem = document.getElementById( 'modeHighlightButton' );  break;
       case MODE_EDIT:       elem = document.getElementById( 'modeEditButton' );       break;
-      case MODE_DEL_LIB:    elem = document.getElementById( 'modeDelLibButton' );     break;
       case MODE_CLIPBOARD:  elem = document.getElementById( 'clipboard' );            break;
     }
     elem.classList.add( 'css_highlight' );
   }
 
-  genSampleListHTML();
+  genSampleConfigHTML();
   generateLibraryHTML();
 }
-
-
 
 function pruneQuote( convString )
 {
@@ -861,41 +990,25 @@ function pruneQuote( convString )
 /////////////// /////////////// /////////////// ///////////////
 function generateLibraryHTML()
 {
-  if( operationMode == MODE_EDIT && editSample )
-  {
-    var tmpHtml = "<hr>";
-    var songName = pruneQuote( editSample.name );
-    if( !songName )
-      songName = "Name";
-    var artist = editSample.artist;
-    if( !artist )
-      artist = "Artist";
-    else
-      artist = pruneQuote( artist ); // for strings with apostophes
-
-    var lyrics = editSample.lyrics.replace( /\n/g, "<br>" );
-    tmpHtml += "<br><div contenteditable='true' id='editSampleLyrics' class='css_editSample'>" + lyrics + "</div>";
-
-    var elem = document.getElementById( 'multiuse' ); // edit in the multiuse panel on the left
-    elem.innerHTML = tmpHtml;
-  }
-
   // Show the library
   var tmpHtml = "";
   var t = []; // Array for sorting.
 
   for( const[ key, value ] of Object.entries( sampleLibrary ) )
+  {
     t.push( value );
-
-  t.sort( function( a, b ){ return ( a.displayName > b.displayName ) ? 1 : -1 } );
+  }
+  t.sort( function( a, b ){ return ( a.filename > b.filename ) ? 1 : -1 } );
 
   if( !t.length )
     tmpHtml += "<h2>No Sample Library.</h2>";
   else
     for( var i = 0;i < t.length;i++ )
     {
-      tmpHtml += "<button id='libSample." + t[ i ].displayName + "' class='css_librarySample' draggable='true' ondragstart='dragElem( event )'" + 
-                  "onclick='libSampleClick( \"" + t[ i ].displayName + "\")'>" + t[ i ].displayName + "</button>\n";
+      tmpHtml += "<button id='libSample." + t[ i ].filename +
+                 "' class='css_librarySample' draggable='true' ondragstart='dragElem( event )'" + 
+                  "onclick='libSampleClick( \"" + t[ i ].filename + "\")'>" + 
+                  t[ i ].filename + "</button>\n";
     }
 
   document.getElementById( 'libraryDiv' ).innerHTML = tmpHtml;
@@ -1291,7 +1404,7 @@ function openSampleFile( e )
       try
       {
         var parsed = JSON.parse( jsonPortion );
-        curSampleList = parsed;
+        curSampleConfig = parsed;
       }
       catch( error )
       {
@@ -1301,126 +1414,30 @@ function openSampleFile( e )
     else
       alert( "Unable to parse setlist" );
 
-    genSampleListHTML();
+    genSampleConfigHTML();
   }
 
   reader.readAsText( file );
 }
 
 /////////////// /////////////// /////////////// /////////////// ///////////////
-// Generate the Setlist html file and present a dialog for the user to save it.
+// Generate the config
 /////////////// /////////////// /////////////// /////////////// ///////////////
 function saveSamplelist()
 {
-  var setFile = "<!--\n" + JSON.stringify( curSampleList, null, "  " ) + "\n-->\n";
-  setFile += "<!DOCTYPE html><html><head><meta name='viewport' content='width=device-width, initial-scale=1'>\n";
-  setFile += "<title>" + curSampleList.name + "</title>\n";
-  setFile += htmlConstStrings( 0 );
-
-  var ffState = false; // Fixed Font state
-  var missingFiles = false;
-  // Songs
-  for( var groupIndex = 0;groupIndex < curSampleList.groups.length - 1;groupIndex++ ) // Note that we don't render the clipboard set
-  {
-    setFile += "<hr><div class='setname'>" + curSampleList.groups[ groupIndex ].name + "</div>\n";
-
-    var inMedley = false;
-    for( var songIndex = 0;songIndex < curSampleList.groups[ groupIndex ].samples.length;songIndex++ )
-    {
-      var sng = curSampleList.groups[ groupIndex ].samples[ songIndex ];
-      if( !sampleLibrary[ sng.id ] )
-      {
-        console.log( "'" + sng.id + "' not in lib." );
-        if( missingFiles == false )
-        {
-          missingFiles = true; // Only alert once
-          alert( "'" + sng.name + "' not in library." );
-        }
-        continue;
-      }
-      var fLines = sampleLibrary[ sng.id ].lyrics.split( "\n" );
-
-      var classString = "accordion";
-      if( curSampleList.groups[ groupIndex ].samples[ songIndex ].css_highlight == true )
-        classString += " css_highlight";
-
-      if( curSampleList.groups[ groupIndex ].samples[ songIndex ].medley )
-      {
-        if( !inMedley )
-        {
-          classString += " css_medleyStart";
-          inMedley = true;
-        }
-        else
-          classString += " css_medleyCont";
-      }
-      else if( inMedley )
-      {
-        classString += " css_medleyEnd";
-        inMedley = false;
-      }
-      setFile += "<button class='" + classString + "'>";
-      setFile += ( songIndex + 1 ).toString() + ". " + sng.name + "</button>\n"; // tbd, include artist if present
-      setFile += "<div class='panel'>\n";
-
-      for( line of fLines )
-      {
-        curFixedFontState = ( ( line[ 1 ] == "|" ) || ( line[ 1 ] == ":" ) ) ? true : false;
-        if( curFixedFontState != ffState )
-        {
-          if( curFixedFontState == true )
-            setFile += "<font style='font-family:courier;'>\n";
-          else
-            setFile += "</font>\n";
-          ffState = curFixedFontState;
-        }
-
-        if( line != "\n" ) // add spaces
-        {
-          var nLine = "";
-          var numSpaces = 0;
-
-          for( c of line.split( "" ) )
-          {
-            if( c == " " )
-              numSpaces += 1;
-            else
-            {
-              if( numSpaces == 1 )
-                nLine += " ";
-              else if( numSpaces > 1 )
-                for( var tmp = 0;tmp < numSpaces;tmp++ )
-                  nLine += "&nbsp"; // replace spaces in the line so the browser doesn't skip it.
-              numSpaces = 0;
-              nLine += c;
-            }
-          }
-          setFile += nLine + "<br>\n";
-        }
-      }
-      if( curFixedFontState == true ) // happens if song ends with fixed font
-      {
-        setFile += "</font>\n";
-        ffState = false;
-      }
-      setFile += "</div>\n\n";
-    }
-  }
-
-  setFile += htmlConstStrings( 1 );
+  var setFile = JSON.stringify( curSampleConfig, null, "  " );
 
   // Provide URL for abuser to download it.
   const a = document.createElement( 'a' );
   const file = new Blob( [ setFile ], { type: 'text/plain' } );
   
   a.href = URL.createObjectURL( file );
-  a.download = curSampleList.name + ".html";
+  a.download = "sampleConfig.json";
   a.click();
-
 	URL.revokeObjectURL( a.href );
 
   slEditedFlag = false;
-  genSampleListHTML();
+  genSampleConfigHTML();
   return true;
 }
 

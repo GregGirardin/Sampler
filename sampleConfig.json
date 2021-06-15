@@ -1,0 +1,60 @@
+{
+  "name": "Sample List",
+  "groups": [
+    {
+      "name": "G1",
+      "samples": [
+        {
+          "displayName": "sample2.mp3",
+          "highlight": false,
+          "medley": false,
+          "fadeInTime": 0,
+          "fadeOutTime": 0,
+          "loopCount": 1,
+          "volume": 100
+        },
+        {
+          "displayName": "sample1.mp3",
+          "highlight": false,
+          "medley": false,
+          "fadeInTime": 0,
+          "fadeOutTime": 0,
+          "loopCount": 1,
+          "volume": 100
+        }
+      ]
+    },
+    {
+      "name": "G2",
+      "samples": [
+        {
+          "displayName": "sample3.mp3",
+          "highlight": false,
+          "medley": false,
+          "fadeInTime": 0,
+          "fadeOutTime": 0,
+          "loopCount": 1,
+          "volume": 100
+        }
+      ]
+    },
+    {
+      "name": "G3",
+      "samples": [
+        {
+          "displayName": "sample2.mp3",
+          "highlight": false,
+          "medley": false,
+          "fadeInTime": 0,
+          "fadeOutTime": 0,
+          "loopCount": 1,
+          "volume": 100
+        }
+      ]
+    },
+    {
+      "name": "Clipboard",
+      "samples": []
+    }
+  ]
+}
