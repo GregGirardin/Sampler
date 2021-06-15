@@ -63,7 +63,7 @@
 
 .css_FSButton:hover { border: 2px solid black; }
 
-.css_setClass
+.css_groupClass
 {
   border: 2px solid white;
   background-color: #ccf;
@@ -110,7 +110,8 @@
 }
 
 .css_s_highlight { color: #f00; }
-.css_highlight { background-color: #f00; }
+.css_highlight_red { background-color: #f00; }
+.css_highlight_pink { background-color: #faa; }
 
 .css_topButtons
 {
@@ -207,30 +208,28 @@
 <section>
 <div id='samplesPane' class='css_sampleList_pane'>
 <input contenteditable='true' id='serverURL' value='URL'>
-<button class='css_menuButton' id='saveSampleConfigButton'  onclick='saveSamplelist();'>Save</button>
+<button class='css_menuButton' id='saveConfigButton'    onclick='saveSamplelist();'>Save</button>
 <button class='css_modeButton' id='modeEditButton'      onclick='changeMode( MODE_EDIT );'>Edit</button>
 <button class='css_modeButton' id='modeHighlightButton' onclick='changeMode( MODE_HIGHLIGHT );'>Highlight</button>
-<button class='css_modeButton' id='clipboard'           onclick='changeMode( MODE_CLIPBOARD );'>Add To Clipboard</button>
+<button class='css_modeButton' id='clipboard'           onclick='changeMode( MODE_CLIPBOARD );'>Clipboard</button>
 <button class='css_modeButton' id='Help'                onclick='toggleHelp();'>Help</button>
 <hr>
 <div id='footSwitchButtons' align='left'>
+Tap
+<button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&larr;</button>
+<button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&rarr;</button>
+<button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB );'>Both</button>
+<br>
 Hold
-<button class='css_FSButton' id='fsB1Hold'  onclick='buttonEvent( EVENT_HOLD, 0 );'>&uarr;</button>
-<button class='css_FSButton' id='fsB2Hold'  onclick='buttonEvent( EVENT_HOLD, 1 );'>&darr;</button>
-<button class='css_FSButton' id='fsB12Hold' onclick='buttonEvent( EVENT_HOLD, 2 );'>Both</button>
+<button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>&uarr;</button>
+<button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>&darr;</button>
+<button class='css_FSButton' id='fsBBHold' onclick='buttonEvent( "EVENT_HOLD", "BUTTONB" );'>Both</button>
 <br>
 Double Tap
-<button class='css_FSButton' id='fsB1DTap'  onclick='buttonEvent( EVENT_DTAP, 0 );'>&#62;</button>
-<button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( EVENT_DTAP, 1 );'>&#8800;</button>
-<br>
-Tap
-<button class='css_FSButton' id='fsB1Tap'   onclick='buttonEvent( EVENT_TAP, 0 );'>&larr;</button>
-<button class='css_FSButton' id='fsB2Tap'   onclick='buttonEvent( EVENT_TAP, 1 );'>&rarr;</button>
-<button class='css_FSButton' id='fsB12Tap'  onclick='buttonEvent( EVENT_TAP, 2 );'>Both</button>
+<button class='css_FSButton' id='fsB1DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON1" );'>&#62;</button>
+<button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON2" );'>&#8800;</button>
 <hr>
-<br>
 </div>
-
 <div id='setlist'> </div>
 <div id='multiuse'></div>
 </div>
@@ -248,13 +247,12 @@ Tap
 var serverURL = 'https://greggirardin.github.io/samples/';
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 var slEditedFlag = false;
-var libEditedFlag = false;
 var sampleLibrary = {}; // object of LibrarySample
 var curSampleConfig; // a Sample List
 var editSample; // LibrarySample we're editing if MODE_EDIT
 
 // Constants.
-const MAX_GROUPS      = 20;
+const MAX_GROUPS      = 10;
 
 const MODE_NONE       = 0;
 const MODE_MEDLEY     = 1;
@@ -265,8 +263,8 @@ const MODE_EDIT       = 4;
 const MODE_DEFAULT    = 0;
 
 var operationMode = MODE_NONE;
-var fsMode = MODE_DEFAULT; 
-var currentGroup, currentSample; // cursor
+var fsMode = "pm"; 
+var currentGroup = 0, currentSample = 0; // cursor
 
 //////////////////////////// //////////////////////////// ////////////////////////////
 class LibrarySample
@@ -276,7 +274,6 @@ class LibrarySample
     this.filename = filename;
     // length?
     // last change time?
-
   }
 }
 
@@ -314,7 +311,7 @@ class SampleConfig
     this.sampleBaseURL = undefined; // The prefix of the path to all the samples
     this.groups = [];
     this.groups.push( new Group() );
-    this.groups.push( new Group( "Clipboard") );
+    this.groups.push( new Group( "Clipboard" ) );
   }
 }
 
@@ -345,8 +342,8 @@ function sampleListInit()
   document.addEventListener( 'keydown', keyPressedHandler );
   document.addEventListener( 'keyup', keyRelHandler );
 
-  footSwitchButtons[ 0 ] = new FootSwitchButton( 0 );
-  footSwitchButtons[ 1 ] = new FootSwitchButton( 1 );
+  footSwitchButtons[ 0 ] = new FootSwitchButton( "BUTTON1" );
+  footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
 }
 
 ///////////////////////// ///////////////////////// /////////////////////////
@@ -366,61 +363,146 @@ const clickHoldTO = 250;
 var footSwitchButtons = []; // array of buttons
 var bothHeldTimer;
 
-const EVENT_TAP = 0;
-const EVENT_DTAP = 1;
-const EVENT_HOLD = 2;
+var fsMode = "pm";
 
 var fsButtonMap = 
 {
-  0 : {
-      0 : {
-          id : 'fsB1Tap',
-          action : function() { moveCursor( 'left' ); }
-          },
-      1 : { 
-          id : 'fsB2Tap',
-          action : function() { moveCursor( 'right' ); }
-          },
-      2 : {
-          id : 'fsB12Tap',
-          action : function() { }
-          },
+  "EVENT_TAP" :
+  {
+    "BUTTON1" :
+    {
+      id : 'fsB1Tap',
+      pm :
+      { // Play Mode
+        html : "&larr;",
+        action : function() { moveCursor( 'left' ); }
       },
-
-  1 : {
-      0 : {
-          id : 'fsB1DTap',
-          action : function() { playSample( 'start' ); }
-          },
-      1 : {
-          id : 'fsB2DTap',
-          action : function() { playSample( 'stop' ); }
-          },
-      2 : {
-          id : 'fsB12DTap',
-          action : function() { }
-          },
+      dm :
+      { // Direct Play Mode
+        html : "",
+        action : function() { }
+      }
     },
+    "BUTTON2" :
+    {
+      id : 'fsB2Tap',
+      pm :
+      {
+        html : "&rarr;",
+        action : function() { moveCursor( 'right' ); }
+      },
+      dm :
+      {
+        html : "",
+        action : function() { }
+      }
+    },
+    "BUTTONB" :
+    { 
+      id : 'fsBBTap',
+      pm : 
+      {
+        html : "",
+        action : function() { }
+      },
+      dm :
+      {
+        html : "",
+        action : function() { }
+      } 
+    },
+  },
 
-  2 : {
-      0 : {
-          id : 'fsB1Hold',
-          action : function() { moveCursor( 'up' ); }
-          },
-      1 : {
-          id : 'fsB2Hold',
-          action : function() { moveCursor( 'down' ); }
-          },
-      2 : {
-          id : 'fsB12Hold',
-          action : function() { }
-          },
-    }
+  "EVENT_DTAP" :
+  {
+    "BUTTON1" :
+    {
+      id : 'fsB1DTap',
+      pm : 
+      {
+        html : "&#62;",
+        action : function() { playSample( 'start' ); }
+      },
+      dm :
+      {
+        html : "&#62;",
+        action : function() { playSample( 'start' ); }
+      }
+    },
+    "BUTTON2" :
+    {
+      id : 'fsB2DTap',
+      pm :
+      {
+        html : "#8800;",
+        action : function() { playSample( 'stop' ) }
+      },
+      dm :
+      {
+        html : "#8800;",
+        action : function() { playSample( 'stop' ) }
+      }
+    },
+  },
+
+  "EVENT_HOLD" :
+  {
+    "BUTTON1" :
+    {
+      id : 'fsB1Hold',
+      pm : 
+      {
+        html : "&uarr;",
+        action : function() { moveCursor( 'up' ); }
+      }, 
+      dm :
+      {
+        html : "#8800;",
+        action  : function() { moveCursor( 'up' ); }
+      }
+    },
+    "BUTTON2" :
+    {
+      id : 'fsB2Hold',
+      pm : 
+      {
+        html : "&darr;",
+        action : function() { moveCursor( 'down' ); }
+      },
+      dm : 
+      {
+        html : "#8800;",
+        action : function() { moveCursor( 'down' ); }
+      }
+    },
+    "BUTTONB" :
+    {
+      id : 'fsBBHold',
+      pm : 
+      {
+        html : "NA",
+        action : function() { togglePlayMode(); }
+      },
+      dm : 
+      {
+        html : "NA",
+        action : function() { togglePlayMode(); }
+      }
+    },
+  }
 };
+
+function togglePlayMode()
+{
+  if( fsMode == "pm" )
+    fsMode = "dm"; // direct mode
+  else
+    fsMode = "pm"; // play mode
+}
 
 function playSample( status )
 {
-  console.log( status );
+  console.log( "play:" + status );
 }
 
 function moveCursor( dir )
@@ -428,39 +510,39 @@ function moveCursor( dir )
   switch( dir )
   {
     case 'up':
-      if( currentGroup )
-        if( currentGroup > 0 )
-          currentGroup -= 1;
+      if( currentGroup > 0 )
+        currentGroup -= 1;
       break;
 
     case 'down':
-      if( currentGroup )
-        if( currentGroup < sampleLibrary.groups.length - 1 )
-          currentGroup += 1;
+      if( currentGroup < curSampleConfig.groups.length - 2 )
+        currentGroup += 1;
       break;
 
     case 'left':
-      if( currentSample )
-        if( currentSample > 0 )
-          currentSample -= 1;
+      if( currentSample > 0 )
+        currentSample -= 1;
       break;
 
     case 'right':
-      if( currentSample )
-        if( currentSample < sampleLibrary.groups[ currentGroup ].samples.length - 1 )
-          currentSample += 1;
+      if( currentSample < curSampleConfig.groups[ currentGroup ].samples.length - 1 )
+        currentSample += 1;
       break;
   }
-  console.log( dir );
+
+  var l = curSampleConfig.groups[ currentGroup ].samples.length;
+  if( currentSample >= l - 1 )
+    currentSample = l > 0 ? l - 1 : 0;
+
+  genSampleConfigHTML();
 }
 
-function buttonEvent( event, buttonIx )
+function buttonEvent( event, buttonID )
 {
+  fsButtonMap[ event ][ buttonID ][ fsMode ].action();
 
-  fsButtonMap[ event ][ buttonIx ].action();
-
-  var elem = document.getElementById( fsButtonMap[ event ][ buttonIx ].id );
-  elem.classList.add( 'css_highlight' );
+  var elem = document.getElementById( fsButtonMap[ event ][ buttonID ].id );
+  elem.classList.add( 'css_highlight_red' );
   setTimeout( buttonHLTimer, 100 );
 }
 
@@ -468,23 +550,23 @@ function buttonHLTimer()
 {
    var buttons = document.getElementsByClassName( 'css_FSButton' );
   for( i = 0;i < buttons.length;i++ )
-    buttons[ i ].classList.remove( 'css_highlight' );
+    buttons[ i ].classList.remove( 'css_highlight_red' );
 }
 
 function bothHoldTimerCB()
 {
   // Both buttons were held.
   bothHeldTimer = undefined; // clear. It's used as a flag below.
-  buttonEvent( EVENT_HOLD, 2 );
+  buttonEvent( "EVENT_HOLD", "BUTTONB" );
   footSwitchButtons[ 0 ].pressedState = false;
   footSwitchButtons[ 1 ].pressedState = false;
 }
 
 class FootSwitchButton
 {
-  constructor( index )
+  constructor( identifier )
   {
-    this.buttonIndex = index;
+    this.buttonID = identifier;
     this.buttonState = false;
     this.holdFlag = false;
     this.pressedState = false;
@@ -506,7 +588,7 @@ class FootSwitchButton
       if( newState ) // true = 'down'
       {
         // Check for both buttons pressed
-        var otherButtonIx = 1 - this.buttonIndex;
+        var otherButtonIx = ( this.buttonID == "BUTTON1" ) ? 1 : 0;
         if( footSwitchButtons[ otherButtonIx ].buttonState ) // both pressed ?
         {
           this.clearTimer(); // clear existing timers and set the 'both' timer.
@@ -519,13 +601,14 @@ class FootSwitchButton
           { // first click
             this.holdFlag = true;
             this.pressedState = true; 
-            this.holdTimer = setTimeout( holdTimerCB, clickHoldTO, this.buttonIndex );
+            this.holdTimer = setTimeout( holdTimerCB, clickHoldTO, this.buttonID );
           }
           else 
           { // this is the second click.
+
             this.clearTimer();
             this.pressedState = false;
-            buttonEvent( EVENT_DTAP, this.buttonIndex );
+            buttonEvent( "EVENT_DTAP", this.buttonID );
           }
         }
       }
@@ -535,7 +618,7 @@ class FootSwitchButton
 
         if( bothHeldTimer ) // both aren't pressed but they were previously
         {
-          var otherButtonIx = 1 - this.buttonIndex;
+          var otherButtonIx = ( this.buttonID == "BUTTON1" ) ? 1 : 0;
           clearTimeout( bothHeldTimer );
           bothHeldTimer = undefined;
           this.clearTimer();
@@ -543,7 +626,7 @@ class FootSwitchButton
 
           footSwitchButtons[ otherButtonIx ].clearTimer();
           footSwitchButtons[ otherButtonIx ].pressedState = false;
-          buttonEvent( EVENT_TAP, 2 );
+          buttonEvent( "EVENT_TAP", "BUTTONB" );
         }
       }
     }
@@ -553,13 +636,15 @@ class FootSwitchButton
   {
     this.pressedState = false;
     this.holdTimer = undefined;
-    buttonEvent( this.holdFlag ? EVENT_HOLD : EVENT_TAP, this.buttonIndex );
+    buttonEvent( this.holdFlag ? "EVENT_HOLD" : "EVENT_TAP", this.buttonID );
   }
 }
 
 // TBD. Call class method directly?
-function holdTimerCB( ix ) { footSwitchButtons[ ix ].holdTimerCB(); }
-function dcTimerCB( ix ) { footSwitchButtons[ ix ].dcTimerCB(); }
+function holdTimerCB( ButtonID )
+{
+  footSwitchButtons[ ( ButtonID == "BUTTON1" ) ? 0 : 1 ].holdTimerCB();
+}
 
 function keyPressedHandler( e ) // down / pressed
 {
@@ -786,7 +871,7 @@ function sampleClick( groupIndex, sampleIndex )
   {
     var sample = curSampleConfig.groups[ groupIndex ].samples[ sampleIndex ];
     curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.push( sample );
-    curSampleConfig.groups[ groupIndex ].samples.splice( songIndex, 1 );
+    curSampleConfig.groups[ groupIndex ].samples.splice( sampleIndex, 1 );
    }
   else if( operationMode == MODE_EDIT )
     editSample = cs;
@@ -873,12 +958,10 @@ function genSampleConfigHTML()
   {
     var s = curSampleConfig.groups[ i ];
     if( i == curSampleConfig.groups.length - 1 )
-    {
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
-    }
     else
-      tempHtml += "<button id='sampleListGroup." + i + "' class='css_setClass' onclick='groupRename( " + i + " )' draggable='true' " +
+      tempHtml += "<button id='sampleListGroup." + i + "' class='css_groupClass' onclick='groupRename( " + i + " )' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + s.name + "</button>\n";
 
     var medleyState = false;
@@ -917,9 +1000,15 @@ function genSampleConfigHTML()
   document.getElementById( 'setlist' ).innerHTML = tempHtml;
 
   if( slEditedFlag )
-    document.getElementById( 'saveSampleConfigButton' ).classList.add( 'css_highlight' );
+    document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
   else
-    document.getElementById( 'saveSampleConfigButton' ).classList.remove( 'css_highlight' );
+    document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
+
+  if( currentGroup != undefined && currentSample != undefined )
+  {
+    var estr = 'sampleListSample.' + currentGroup + '.' + currentSample;
+    document.getElementById( estr ).classList.add( 'css_highlight_pink' );
+  }
 }
 
 function saveSampleEdits()
@@ -949,10 +1038,10 @@ function changeMode( mode )
 
   var buttons = document.getElementsByClassName( 'css_modeButton' );
   for( i = 0;i < buttons.length;i++ )
-    buttons[ i ].classList.remove( 'css_highlight' );
+    buttons[ i ].classList.remove( 'css_highlight_red' );
   buttons = document.getElementsByClassName( 'css_menuButton' );
   for( i = 0;i < buttons.length;i++ )
-    buttons[ i ].classList.remove( 'css_highlight' );
+    buttons[ i ].classList.remove( 'css_highlight_red' );
 
   if( operationMode != MODE_NONE )
   {
@@ -964,7 +1053,7 @@ function changeMode( mode )
       case MODE_EDIT:       elem = document.getElementById( 'modeEditButton' );       break;
       case MODE_CLIPBOARD:  elem = document.getElementById( 'clipboard' );            break;
     }
-    elem.classList.add( 'css_highlight' );
+    elem.classList.add( 'css_highlight_red' );
   }
 
   genSampleConfigHTML();
