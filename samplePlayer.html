@@ -208,23 +208,21 @@
 <section>
 <div id='samplesPane' class='css_sampleList_pane'>
 <input contenteditable='true' id='serverURL' value='URL'>
-<button class='css_menuButton' id='saveConfigButton'    onclick='saveSamplelist();'>Save</button>
-<button class='css_modeButton' id='modeEditButton'      onclick='changeMode( MODE_EDIT );'>Edit</button>
-<button class='css_modeButton' id='modeHighlightButton' onclick='changeMode( MODE_HIGHLIGHT );'>Highlight</button>
-<button class='css_modeButton' id='clipboard'           onclick='changeMode( MODE_CLIPBOARD );'>Clipboard</button>
+<button class='css_menuButton' id='saveConfigButton'    onclick='saveSampleConfig();'>Save</button>
+<button class='css_modeButton' id='modeEditButton'      onclick='changeMode( "Mode_Edit" );'>Edit</button>
+<button class='css_modeButton' id='modeHighlightButton' onclick='changeMode( "Mode_Highlight" );'>Highlight</button>
+<button class='css_modeButton' id='clipboard'           onclick='changeMode( "Mode_Clipboard" );'>Clipboard</button>
 <button class='css_modeButton' id='Help'                onclick='toggleHelp();'>Help</button>
 <hr>
 <div id='footSwitchButtons' align='left'>
 Tap
 <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&larr;</button>
 <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&rarr;</button>
-<button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB );'>Both</button>
-<br>
+<button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB" );'>Both</button>
 Hold
 <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>&uarr;</button>
 <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>&darr;</button>
 <button class='css_FSButton' id='fsBBHold' onclick='buttonEvent( "EVENT_HOLD", "BUTTONB" );'>Both</button>
-<br>
 Double Tap
 <button class='css_FSButton' id='fsB1DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON1" );'>&#62;</button>
 <button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON2" );'>&#8800;</button>
@@ -232,7 +230,7 @@ Double Tap
 </div>
 <div id='setlist'> </div>
 <div id='multiuse'></div>
-</div>
+</div><form action="" method="get"></form>
 
 <div id='library_pane' class='css_library_pane'>
 <hr>
@@ -243,31 +241,24 @@ Double Tap
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
 
-//var serverURL = 'http://192.168.0.2:8080/'; // this is where samples.json and all the samples live.
-var serverURL = 'https://greggirardin.github.io/samples/';
+var serverURL = 'http://192.168.0.2:8080/'; // this is where samples.json and all the samples live.
+var configFile = 'sampleConfig.json';
+//var serverURL = 'https://greggirardin.github.io/samples/';
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 var slEditedFlag = false;
-var sampleLibrary = {}; // object of LibrarySample
-var curSampleConfig; // a Sample List
-var editSample; // LibrarySample we're editing if MODE_EDIT
+var sampleLibrary = {}; // object of ClLibrarySample
+var curSampleConfig;
+var editSample; // Sample we're editing if "Mode_Edit"
 
 // Constants.
-const MAX_GROUPS      = 10;
+const MAX_GROUPS = 10;
 
-const MODE_NONE       = 0;
-const MODE_MEDLEY     = 1;
-const MODE_HIGHLIGHT  = 2;
-const MODE_CLIPBOARD  = 3;
-const MODE_EDIT       = 4;
-
-const MODE_DEFAULT    = 0;
-
-var operationMode = MODE_NONE;
-var fsMode = "pm"; 
+var operationMode = "Mode_Default";
+var fsMode = "PM"; 
 var currentGroup = 0, currentSample = 0; // cursor
 
 //////////////////////////// //////////////////////////// ////////////////////////////
-class LibrarySample
+class CLibrarySample
 {
   constructor( filename )
   {
@@ -277,12 +268,12 @@ class LibrarySample
   }
 }
 
-class Sample
+class CSample
 {
-  constructor( displayName, url=undefined )
+  constructor( displayName, filename=undefined )
   {
     this.displayName = displayName;
-    this.url = url;
+    this.filename = filename; // filename on the server.
     this.highlight = false;
     this.medley = false;
     this.fadeInTime = 0; // Milliseconds
@@ -292,7 +283,7 @@ class Sample
   }
 }
 
-class Group
+class CGroup
 {
   constructor( name )
   {
@@ -303,15 +294,15 @@ class Group
   }
 }
 
-class SampleConfig
+class CSampleConfig
 {
   constructor( sampListName )
   {
     this.name = sampListName;
     this.sampleBaseURL = undefined; // The prefix of the path to all the samples
     this.groups = [];
-    this.groups.push( new Group() );
-    this.groups.push( new Group( "Clipboard" ) );
+    this.groups.push( new CGroup() );
+    this.groups.push( new CGroup( "Clipboard" ) );
   }
 }
 
@@ -330,11 +321,12 @@ function sampleListInit()
 {
   const urlParams = new URLSearchParams( window.location.search );
   var server = urlParams.get( 'serverURL' );
-  if( server )
+  if( server ) // Server URL provided by user
     serverURL = server;
 
   newSampleConfig();
   getFileFromServer( "samples.json", gotSamples, false );
+  getFileFromServer( configFile, gotConfig, false );
 
   document.getElementById( 'serverURL' ).value = serverURL;
   document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
@@ -363,7 +355,7 @@ const clickHoldTO = 250;
 var footSwitchButtons = []; // array of buttons
 var bothHeldTimer;
 
-var fsMode = "pm";
+var fsMode = "PM"; // Play Mode
 
 var fsButtonMap = 
 {
@@ -371,14 +363,14 @@ var fsButtonMap =
   {
     "BUTTON1" :
     {
-      id : 'fsB1Tap',
-      pm :
+      id : 'fsB1Tap', // the DOM element to flash
+      PM :
       { // Play Mode
         html : "&larr;",
-        action : function() { moveCursor( 'left' ); }
+        action : function() { moveCursor( 'LEFT' ); }
       },
-      dm :
-      { // Direct Play Mode
+      DM :
+      { // Direct Mode
         html : "",
         action : function() { }
       }
@@ -386,12 +378,12 @@ var fsButtonMap =
     "BUTTON2" :
     {
       id : 'fsB2Tap',
-      pm :
+      PM :
       {
         html : "&rarr;",
-        action : function() { moveCursor( 'right' ); }
+        action : function() { moveCursor( 'RIGHT' ); }
       },
-      dm :
+      DM :
       {
         html : "",
         action : function() { }
@@ -400,14 +392,14 @@ var fsButtonMap =
     "BUTTONB" :
     { 
       id : 'fsBBTap',
-      pm : 
+      PM : 
       {
-        html : "",
+        html : "NA",
         action : function() { }
       },
-      dm :
+      DM :
       {
-        html : "",
+        html : "NA",
         action : function() { }
       } 
     },
@@ -418,29 +410,29 @@ var fsButtonMap =
     "BUTTON1" :
     {
       id : 'fsB1DTap',
-      pm : 
+      PM : 
       {
         html : "&#62;",
-        action : function() { playSample( 'start' ); }
+        action : function() { playSample( 'START' ); }
       },
-      dm :
+      DM :
       {
         html : "&#62;",
-        action : function() { playSample( 'start' ); }
+        action : function() { playSample( 'START' ); }
       }
     },
     "BUTTON2" :
     {
       id : 'fsB2DTap',
-      pm :
+      PM :
       {
         html : "#8800;",
-        action : function() { playSample( 'stop' ) }
+        action : function() { playSample( 'STOP' ) }
       },
-      dm :
+      DM :
       {
         html : "#8800;",
-        action : function() { playSample( 'stop' ) }
+        action : function() { playSample( 'STOP' ) }
       }
     },
   },
@@ -450,42 +442,42 @@ var fsButtonMap =
     "BUTTON1" :
     {
       id : 'fsB1Hold',
-      pm : 
+      PM : 
       {
         html : "&uarr;",
-        action : function() { moveCursor( 'up' ); }
+        action : function() { moveCursor( 'UP' ); }
       }, 
-      dm :
+      DM :
       {
         html : "#8800;",
-        action  : function() { moveCursor( 'up' ); }
+        action  : function() { moveCursor( 'UP' ); }
       }
     },
     "BUTTON2" :
     {
       id : 'fsB2Hold',
-      pm : 
+      PM : 
       {
         html : "&darr;",
-        action : function() { moveCursor( 'down' ); }
+        action : function() { moveCursor( 'DOWN' ); }
       },
-      dm : 
+      DM : 
       {
         html : "#8800;",
-        action : function() { moveCursor( 'down' ); }
+        action : function() { moveCursor( 'DOWN' ); }
       }
     },
     "BUTTONB" :
     {
       id : 'fsBBHold',
-      pm : 
+      PM : 
       {
-        html : "NA",
+        html : "Play",
         action : function() { togglePlayMode(); }
       },
-      dm : 
+      DM : 
       {
-        html : "NA",
+        html : "Direct",
         action : function() { togglePlayMode(); }
       }
     },
@@ -494,10 +486,19 @@ var fsButtonMap =
 
 function togglePlayMode()
 {
-  if( fsMode == "pm" )
-    fsMode = "dm"; // direct mode
+  var elem = document.getElementById( 'fsBBHold' );
+
+  if( fsMode == "PM" )
+  {
+    fsMode = "DM"; // direct mode
+    elem.innerHTML = "Direct";
+  }
   else
-    fsMode = "pm"; // play mode
+  {
+    fsMode = "PM"; // play mode
+    elem.innerHTML = "Play";
+  }
+
 }
 
 function playSample( status )
@@ -509,22 +510,22 @@ function moveCursor( dir )
 {
   switch( dir )
   {
-    case 'up':
+    case 'UP':
       if( currentGroup > 0 )
         currentGroup -= 1;
       break;
 
-    case 'down':
+    case 'DOWN':
       if( currentGroup < curSampleConfig.groups.length - 2 )
         currentGroup += 1;
       break;
 
-    case 'left':
+    case 'LEFT':
       if( currentSample > 0 )
         currentSample -= 1;
       break;
 
-    case 'right':
+    case 'RIGHT':
       if( currentSample < curSampleConfig.groups[ currentGroup ].samples.length - 1 )
         currentSample += 1;
       break;
@@ -652,7 +653,9 @@ function keyPressedHandler( e ) // down / pressed
 
   switch( e.code )
   {
+    case 'ArrowLeft':
     case 'ArrowUp':   ix = 0; break;
+    case 'ArrowRight':
     case 'ArrowDown': ix = 1; break;
     default: return;
   }
@@ -665,7 +668,9 @@ function keyRelHandler( e ) // up / released
 
   switch( e.code )
   {
+    case 'ArrowLeft':
     case 'ArrowUp':   ix = 0; break;
+    case 'ArrowRight':
     case 'ArrowDown': ix = 1; break;
     default: return;
   }
@@ -678,15 +683,28 @@ function gotSamples( file, data )
 {
   sampleLibrary = JSON.parse( data );
 
-  for( const[ key, v ] of Object.entries( sampleLibrary ) )
-    sampleLibrary[ key ].audioFile = getFileFromServer( key, gotSample, false );
-
   generateLibraryHTML();
 }
 
-function gotSample( name, data )
+function gotConfig( file, data )
 {
-  sampleLibrary[ name ].audioFile = data;
+  curSampleConfig = JSON.parse( data );
+
+   for( g = 0;g < curSampleConfig.groups.length;g++ )
+    for( s = 0;s < curSampleConfig.groups[ g ].samples.length;s++ ) 
+      getFileFromServer( curSampleConfig.groups[ g ].samples[ s ].filename, gotSample, false );
+
+    genSampleConfigHTML();
+}
+
+function gotSample( filename, data )
+{
+  console.log( "Got " + filename + " data." );
+  // find all samples that want this sample audio.
+  for( g = 0;g < curSampleConfig.groups.length;g++ )
+    for( s = 0;s < curSampleConfig.groups[ g ].samples.length;s++ ) 
+      if( curSampleConfig.groups[ g ].samples[ s ].filename == filename )
+        curSampleConfig.groups[ g ].samples[ s ].audioFile = data;
 }
 
 function getFileFromServer( fileName, callback, binaryFlag )
@@ -790,7 +808,7 @@ function dropElem( ev )
     var sampId = dragElem.substring( lSamp.length, );
     var libSample = sampleLibrary[ sampId ];
 
-    var newSample = new Sample( sampId, libSample.url );
+    var newSample = new CSample( sampId, libSample.filename );
 
     var indexes = ev.target.id.substring( slSample.length, ).split( "." );
     var toGroup = parseInt( indexes[ 0 ] );
@@ -863,17 +881,17 @@ function sampleClick( groupIndex, sampleIndex )
   currentGroup = groupIndex;
   currentSample = sampleIndex;
 
-  if( operationMode == MODE_HIGHLIGHT )
+  if( operationMode == "Mode_Highlight" )
     cs.highlight = !cs.highlight;
-  else if( operationMode == MODE_MEDLEY )
+  else if( operationMode == "Mode_Default" )
     cs.medley = !cs.medley;
-  else if( ( operationMode == MODE_CLIPBOARD ) && ( groupIndex < curSampleConfig.groups.length - 1 ) )
+  else if( ( operationMode == "Mode_Clipboard" ) && ( groupIndex < curSampleConfig.groups.length - 1 ) )
   {
     var sample = curSampleConfig.groups[ groupIndex ].samples[ sampleIndex ];
     curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.push( sample );
     curSampleConfig.groups[ groupIndex ].samples.splice( sampleIndex, 1 );
    }
-  else if( operationMode == MODE_EDIT )
+  else if( operationMode == "Mode_Edit" )
     editSample = cs;
 
   genSampleConfigHTML(); 
@@ -885,9 +903,9 @@ function sampleClick( groupIndex, sampleIndex )
 /////////////// /////////////// /////////////// ///////////////
 function libSampleClick( songId )
 {
-  if( operationMode == MODE_CLIPBOARD )
+  if( operationMode == "Mode_Clipboard" )
   {
-    sample = new Sample( sampleLibrary[ songId ].filename );
+    sample = new CSample( sampleLibrary[ songId ].filename );
     curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.push( sample );
     genSampleConfigHTML();
   }
@@ -901,7 +919,7 @@ function newSampleConfig()
       return;
 
   slEditedFlag = false;
-  curSampleConfig = new SampleConfig( "Sample List" );
+  curSampleConfig = new CSampleConfig( "Sample List" );
 
   genSampleConfigHTML();
 }
@@ -927,7 +945,7 @@ function groupAdd()
 {
   if( curSampleConfig.groups.length < MAX_GROUPS )
   {
-    curSampleConfig.groups.splice( curSampleConfig.groups.length - 1, 0, new Group() );
+    curSampleConfig.groups.splice( curSampleConfig.groups.length - 1, 0, new CGroup() );
     slEditedFlag = true;
     genSampleConfigHTML();
   }
@@ -938,11 +956,11 @@ function groupAdd()
 /////////////// /////////////// /////////////// ///////////////
 function genSampleConfigHTML()
 {
-  if( operationMode == MODE_EDIT && editSample )
+  if( operationMode == "Mode_Edit" && editSample )
   {
     var tmpHtml = "<hr>";
     tmpHtml += "Display Name: <input contenteditable='true' id='editSampleName' value='" + editSample.displayName + "'><br>";
-    tmpHtml += "File: " + editSample.url + "<br>";
+    tmpHtml += "File: " + editSample.filename + "<br>";
     tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editSample.volume + "'><br>";
     tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editSample.fadeInTime + "'><br>";
     tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editSample.fadeOutTime + "'><br>";
@@ -1027,14 +1045,14 @@ function saveSampleEdits()
 function changeMode( mode )
 {
   // We were editing a library file. Save the changes.
-  if( operationMode == MODE_EDIT && editSample )
+  if( operationMode == "Mode_Edit" && editSample )
   {
     saveSampleEdits();
     document.getElementById( 'multiuse' ).innerHTML = "";
   }
 
   editSample = undefined;
-  operationMode = ( mode == operationMode ) ? MODE_NONE : mode;
+  operationMode = ( mode == operationMode ) ? "Mode_Default" : mode;
 
   var buttons = document.getElementsByClassName( 'css_modeButton' );
   for( i = 0;i < buttons.length;i++ )
@@ -1043,15 +1061,15 @@ function changeMode( mode )
   for( i = 0;i < buttons.length;i++ )
     buttons[ i ].classList.remove( 'css_highlight_red' );
 
-  if( operationMode != MODE_NONE )
+  if( operationMode != "Mode_Default" )
   {
     var elem;
     switch( operationMode )
     {
-      case MODE_MEDLEY:     elem = document.getElementById( 'modeMedleyButton' );     break;
-      case MODE_HIGHLIGHT:  elem = document.getElementById( 'modeHighlightButton' );  break;
-      case MODE_EDIT:       elem = document.getElementById( 'modeEditButton' );       break;
-      case MODE_CLIPBOARD:  elem = document.getElementById( 'clipboard' );            break;
+      case "Mode_Default":    elem = document.getElementById( 'modeMedleyButton' );     break;
+      case "Mode_Highlight":  elem = document.getElementById( 'modeHighlightButton' );  break;
+      case "Mode_Edit":       elem = document.getElementById( 'modeEditButton' );       break;
+      case "Mode_Clipboard":  elem = document.getElementById( 'clipboard' );            break;
     }
     elem.classList.add( 'css_highlight_red' );
   }
@@ -1455,10 +1473,9 @@ A library can be specified by appending "?library=http://x.y.z/???.json" to this
   return undefined;
 }
 
-//////////////////////
+////////////////////// //////////////////////
 // Sample List file mgmt
-//////////////////////
-
+////////////////////// //////////////////////
 
 function openSampleFile( e )
 {
@@ -1512,18 +1529,16 @@ function openSampleFile( e )
 /////////////// /////////////// /////////////// /////////////// ///////////////
 // Generate the config
 /////////////// /////////////// /////////////// /////////////// ///////////////
-function saveSamplelist()
+function saveSampleConfig()
 {
-  var setFile = JSON.stringify( curSampleConfig, null, "  " );
+  var configData = JSON.stringify( curSampleConfig, null, "  " );
 
-  // Provide URL for abuser to download it.
-  const a = document.createElement( 'a' );
-  const file = new Blob( [ setFile ], { type: 'text/plain' } );
-  
-  a.href = URL.createObjectURL( file );
-  a.download = "sampleConfig.json";
-  a.click();
-	URL.revokeObjectURL( a.href );
+  var formData = new FormData();
+  formData.append( "data", configData );
+
+  var xhr = new XMLHttpRequest();
+  xhr.open( 'post', serverURL + configFile );
+  xhr.send( formData );
 
   slEditedFlag = false;
   genSampleConfigHTML();
