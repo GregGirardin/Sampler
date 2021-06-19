@@ -84,7 +84,7 @@
 
 #sampleListName { font-size: 20px; }
 
-.css_groupSeqSingle
+.css_groupSeqNext
 {
   position:relative;
   overflow:hidden;
@@ -108,8 +108,15 @@
   clip-path: polygon( 0% 0%, 85% 0, 100% 50%, 85% 100%, 0% 100%, 10% 50% );
 }
 
+.css_pending 
+{
+  position:relative;
+  overflow:hidden;
+  font-style: italic;
+  color: #f00;
+}
 
-.css_s_highlight { color: #f00; }
+
 .css_highlight_red { background-color: #f00; }
 .css_cursor { background-color: #faa; }
 
@@ -246,6 +253,7 @@ var configFile = 'sampleConfig.json';
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 var slEditedFlag = false;
 var sampleLibrary = {}; // object of ClLibrarySample
+var audioFiles = {}; // object of audio file binaries
 var curSampleConfig;
 var editSample; // What we're editing if "Mode_Edit"
 var editGroup;
@@ -269,7 +277,7 @@ class CLibrarySample
 }
 
 var loopTypes = [ "Once", "Repeat" ];
-var seqTypes = [ "Once", "Next", "Play" ];
+var seqTypes = [ "Single", "Next", "Play" ];
 
 class CSample
 {
@@ -283,8 +291,6 @@ class CSample
     this.fadeOutTime = 0;
     this.loopType = loopTypes[ 0 ];
     this.volume = 100;
-
-    this.remainingTime = 0;
   }
 }
 
@@ -339,68 +345,90 @@ function sampleListInit()
 
   footSwitchButtons[ 0 ] = new FootSwitchButton( "BUTTON1" );
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
-  setInterval( sampleTimer, samplePollTime );
+  //setInterval( genPurposeTimer, samplePollTime );
 }
 
-function sampleTimer()
+// function genPurposeTimer()
+// {
+//   for( var i = 0;i < curSampleConfig.groups.length;i++ )
+//   {
+//     var g = curSampleConfig.groups[ i ];
+//     for( var j = 0;j < g.samples.length;j++ )
+//       if( g.samples[ j ].remainingTime > 0 )
+//       {
+//         g.samples[ j ].remainingTime -= samplePollTime;
+//         if( g.samples[ j ].remainingTime <= 0 )
+//         {
+//           audioFiles[ g.samples[ j ].filename ].pause();
+//           var elem = document.getElementById( "slSample." + i + "." + j );
+//           elem.classList.remove( 'css_playing' );
+//           if( ( g.seqType == seqTypes[ 2 ] ) && !didNavFlag ) // in Continuous mode and haven't navigated.
+//             playSample( "START" );
+//         }
+//       }
+//   }
+// }
+
+function playEnded()
 {
-  for( var i = 0;i < curSampleConfig.groups.length;i++ )
+  curAF.sampleObj.elem.classList.remove( 'css_playing' );
+  if( !didNavFlag && curAF.sampleObj.playNext )
+    playSample( "START" );
+  else
   {
-    var g = curSampleConfig.groups[ i ];
-    for( var j = 0;j < g.samples.length;j++ )
-      if( g.samples[ j ].remainingTime > 0 )
-      {
-        g.samples[ j ].remainingTime -= samplePollTime;
-        if( g.samples[ j ].remainingTime <= 0 )
-        {
-          var elem = document.getElementById( "slSample." + i + "." + j );
-          elem.classList.remove( 'css_playing' );
-          console.log( "AUDIO Finished TBD" );
-          if( ( g.seqType == seqTypes[ 2 ] ) && !didNavFlag ) // in Play mode and haven't navigated.
-            playSample( "START" );
-        }
-      }
+    curAF.pause();
+    curAF.sampleObj.playing = undefined;
   }
 }
 
-function stopAllAudio()
-{
-  for( var i = 0;i < curSampleConfig.groups.length;i++ )
-  {
-    var g = curSampleConfig.groups[ i ];
-    for( var j = 0;j < g.samples.length;j++ )
-      if( g.samples[ j ].remainingTime > 0 )
-      {
-        g.samples[ j ].remainingTime = 0;
-        var elem = document.getElementById( "slSample." + i + "." + j );
-        elem.classList.remove( 'css_playing' );
-        console.log( "Stop AUDIO TBD" );
-      }
-  }
-}
+var curAF; // current audio being played.
 
 function playSample( status )
 {
-  stopAllAudio();
-
-  if( ( cursorGroup != undefined ) &&
-      ( cursorSample != undefined ) &&
-      status == "START" )
+  if( curAF )
   {
+    curAF.pause();
+    curAF.sampleObj.elem.classList.remove( 'css_playing' );
+    curAF.sampleObj.playing = undefined;
+  }
 
+  if( ( cursorGroup != undefined ) && ( cursorSample != undefined ) && status == "START" )
+  {
     cs = curSampleConfig.groups[ cursorGroup ].samples[ cursorSample ];
-    cs.remainingTime = 5000;
-    console.log( "Start AUDIO TBD" );
+
+    curAF = audioFiles[ cs.filename ];
+    curAF.currentTime = 0; // start from the beginning
+
+    if( cs.loopType == "Once" )
+    {
+      curAF.loop = false;
+      curAF.onended = playEnded;
+    }
+    else
+      curAF.loop = true;
+
+    curAF.play();
+    cs.playing = true;
+
     var id = "slSample." + cursorGroup + "." + cursorSample;
     elem = document.getElementById( id );
     elem.classList.add( 'css_playing' );
-    console.log( curSampleConfig.groups[ cursorGroup ].seqType );
+    cs.elem = elem;
+
     if( ( curSampleConfig.groups[ cursorGroup ].seqType == seqTypes[ 1 ] ) ||
         ( curSampleConfig.groups[ cursorGroup ].seqType == seqTypes[ 2 ] ) )
     {
       moveCursor( "RIGHT" );
+      if( curSampleConfig.groups[ cursorGroup ].seqType == seqTypes[ 2 ] )
+        curAF.sampleObj.playNext = true;
+      else
+        curAF.sampleObj.playNext = false;
+
       didNavFlag = false;
     }
+
+    curAF.sampleObj = cs;
+
   }
 }
 
@@ -410,7 +438,7 @@ function playSample( status )
    8 functions: Tap L+R, Double Tap L+R, Hold L+R, Both Tap, Both hold
 
           | Start Timer       clickHoldTO
-  Time -----------------------|   Trigger Hold after up for determinism.
+  Time -----------------------|   Trigger Hold at 'up' for determinism.
     ______/-------------------|---\_ Hold
     ______/----------\________| Single Tap
     ______/--\___/-| Double Tap 
@@ -522,9 +550,7 @@ function moveCursor( dir )
 
 function buttonEvent( event, buttonID )
 {
-  // console.log( "ev " + event + buttonID );
   fsButtonMap[ event ][ buttonID ][ fsMode ].action();
-
   var elem = document.getElementById( fsButtonMap[ event ][ buttonID ].id );
   elem.classList.add( 'css_highlight_red' );
   setTimeout( buttonHLTimer, 100 );
@@ -589,7 +615,6 @@ class FootSwitchButton
           }
           else 
           { // this is the second click.
-
             this.clearTimer();
             this.pressedState = false;
             buttonEvent( "EVENT_DTAP", this.buttonID );
@@ -624,6 +649,7 @@ class FootSwitchButton
   {
     this.pressedState = false;
     this.holdTimer = undefined;
+
     if( !this.heldFlag )
       buttonEvent( "EVENT_TAP", this.buttonID );
     else
@@ -642,7 +668,7 @@ function holdTimerCB( ButtonID )
   footSwitchButtons[ ( ButtonID == "BUTTON1" ) ? 0 : 1 ].holdTimerCB();
 }
 
-function keyPressedHandler( e ) // down / pressed
+function keyHandler( e, state )
 {
   var ix;
 
@@ -654,30 +680,17 @@ function keyPressedHandler( e ) // down / pressed
     case 'ArrowDown': ix = 1; break;
     default: return;
   }
-  footSwitchButtons[ ix ].setState( true );
+  footSwitchButtons[ ix ].setState( state );
 }
 
-function keyRelHandler( e ) // up / released
-{
-  var ix;
-
-  switch( e.code )
-  {
-    case 'ArrowLeft':
-    case 'ArrowUp':   ix = 0; break;
-    case 'ArrowRight':
-    case 'ArrowDown': ix = 1; break;
-    default: return;
-  }
-  footSwitchButtons[ ix ].setState( false );
-}
+function keyPressedHandler( e ) { keyHandler( e, true ); } // down / pressed
+function keyRelHandler( e ) { keyHandler( e, false ); } // up / released
 
 ///////////////////////// ///////////////////////// /////////////////////////
 ///////////////////////// ///////////////////////// /////////////////////////
 function gotSamples( file, data )
 {
   sampleLibrary = JSON.parse( data );
-
   generateLibraryHTML();
 }
 
@@ -685,43 +698,60 @@ function gotConfig( file, data )
 {
   curSampleConfig = JSON.parse( data );
 
-   for( g = 0;g < curSampleConfig.groups.length;g++ )
-    for( s = 0;s < curSampleConfig.groups[ g ].samples.length;s++ ) 
-      getFileFromServer( curSampleConfig.groups[ g ].samples[ s ].filename, gotSample, false );
-
-    genSampleConfigHTML();
+  getSampleAudio();
+  genSampleConfigHTML();
 }
 
-function gotSample( filename, data )
+function getSampleAudio()
 {
-  // find all samples that want this sample audio.
   for( g = 0;g < curSampleConfig.groups.length;g++ )
-    for( s = 0;s < curSampleConfig.groups[ g ].samples.length;s++ ) 
-      if( curSampleConfig.groups[ g ].samples[ s ].filename == filename )
-        curSampleConfig.groups[ g ].samples[ s ].audioFile = data;
+  {
+    var samps = curSampleConfig.groups[ g ].samples;
+    for( s = 0;s < samps.length;s++ )
+      if( audioFiles[ samps[ s ].filename ] == undefined )
+        audioFiles[ samps[ s ].filename ] = new Audio( serverURL + samps[ s ].filename );
+  }
 }
 
-function getFileFromServer( fileName, callback, binaryFlag )
+function getFileFromServer( filename, callback, binaryFlag )
 {
+  console.log( "Get: " + filename );
   var xhr = new XMLHttpRequest();
 
   if( binaryFlag )
   {
-    var fullURL = 'blob:' + serverURL + filename;
-    xhr.open( 'GET', fullURL, true );
+    xhr.open( "GET", serverURL + filename, true );
     xhr.responseType = 'blob';
     xhr.onload = function( e ) {
-      if( this.status == 200 )
-        callback( fileName, this.response );
+      if ( xhr.readyState === 4 )
+        if( xhr.status == "200" )
+          callback( filename, xhr.response );
+        else
+          callback( filename, false ); // Error, file not present probably.
+    }
+    xhr.onerror = function( e ) {
+      callback( filename, false );
+    }
+    xhr.ontimeout = function( e ) {
+      callback( filename, false );
     }
   }
   else
   {
     xhr.overrideMimeType( "application/json" );
-    xhr.open( "GET", serverURL + fileName, true );
+    xhr.open( "GET", serverURL + filename, true );
     xhr.onreadystatechange = function() {
-      if ( xhr.readyState === 4 && xhr.status == "200" )
-        callback( fileName, xhr.responseText );
+      if ( xhr.readyState === 4 )
+        if( xhr.status == "200" )
+          callback( filename, xhr.responseText );
+        else
+          callback( filename, false ); // Error, file not present probably.
+    }
+    xhr.onerror = function( e ) {
+      callback( filename, false );
+    }
+    xhr.ontimeout = function( e ) {
+      callback( filename, false );
     }
   }
 
@@ -797,14 +827,11 @@ function dropElem( ev )
   {
     var sampId = dragElem.substring( lSamp.length, );
     var libSample = sampleLibrary[ sampId ];
-
-    var newSample = new CSample( libSample.filename );
-
     var indexes = ev.target.id.substring( slSample.length, ).split( "." );
     var toGroup = parseInt( indexes[ 0 ] );
     var toSampleIx = parseInt( indexes[ 1 ] );
 
-    curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, newSample );
+    curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, new CSample( libSample.filename ) );
   }
   else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
            ( ev.target.id.substring( 0, slGroup.length ) == slGroup ) ) // Moving a group
@@ -928,7 +955,7 @@ function groupAdd()
     genSampleConfigHTML();
   }
   else
-    alert( "Max set count reached" );
+    alert( "Max Groups reached" );
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -945,7 +972,7 @@ function genSampleConfigHTML()
       tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editSample.volume + "'><br>";
       tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editSample.fadeInTime + "'><br>";
       tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editSample.fadeOutTime + "'><br>";
-
+      tmpHtml += "Audio Length: " + (audioFiles[ editSample.filename ].duration * 1000).toString().split('.')[0] + "ms<br>";
       tmpHtml += "Play:<select id='editSamplePT'>";
       for( var i = 0;i < loopTypes.length;i++ )
       {
@@ -998,9 +1025,9 @@ function genSampleConfigHTML()
 
     switch( g.seqType )
     {
-      case "None":    break;
-      case "Single":  classes += ' css_groupSeqSingle'; break;
-      case "Cont":    classes += ' css_groupSeqCont'; break;
+      case "Single":  break;
+      case "Next": classes += ' css_groupSeqNext'; break;
+      case "Play": classes += ' css_groupSeqCont'; break;
     }
 
     if( i == curSampleConfig.groups.length - 1 )
@@ -1013,8 +1040,10 @@ function genSampleConfigHTML()
     for( var j = 0;j < g.samples.length;j++ )
     {
       var classes = 'css_slSample';
-      if( curSampleConfig.groups[ i ].samples[ j ].remainingTime > 0 )
+      if( curSampleConfig.groups[ i ].samples[ j ].playing )
         classes += ' css_playing';
+      if( !audioFiles[ curSampleConfig.groups[ i ].samples[ j ].filename ] ) // undefined or false
+        classes += ' css_pending';
 
       tempHtml += "<button id='slSample." + i + "." + j + "' class='" + classes + "' onclick='sampleClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
