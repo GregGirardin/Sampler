@@ -393,8 +393,8 @@ function stopAllAudio()
 {
   for( var g = 0;g < curConfig.groups.length;g++ )
     for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
-      if( !curConfig.groups[ g ].samples[ s ].audioFile.paused )
-        stopAudio( curConfig.groups[ g ].samples[ s ] );
+      if( !curConfig.groups[ g ].elements[ s ].audioFile.paused )
+        stopAudio( curConfig.groups[ g ].elements[ s ] );
 }
 
 function stopAudio( sample )
@@ -448,10 +448,10 @@ function playSample( status )
     }
     else
     {
-      if( seqType != seqTypes[ 0 ] )
-        stopAllAudio();
-      else
+      if( seqType == seqTypes[ 0 ] )
         stopAudio( cs );
+      else
+        stopAllAudio();
     }
   }
 }
@@ -960,12 +960,6 @@ function groupAdd()
     alert( "Max Groups reached" );
 }
 
-function getDurationMs( filename )
-{
-  // toString().split('.')[ 0 ]
-  return "N/A";
-}
-
 /////////////// /////////////// /////////////// ///////////////
 function genSampleConfigHTML()
 {
@@ -980,7 +974,8 @@ function genSampleConfigHTML()
       tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editSample.volume + "'><br>";
       tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editSample.fadeInTime + "'><br>";
       tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editSample.fadeOutTime + "'><br>";
-      tmpHtml += "Audio Length: " + getDurationMs( editSample.filename ).toString() + "ms<br>";
+      var duration = ( editSample.audioFile.duration * 1000 ).toString().split('.')[ 0 ];
+      tmpHtml += "Audio Length: " + duration + "ms<br>";
       tmpHtml += "Play:<select id='editSamplePT'>";
 
       for( var i = 0;i < loopTypes.length;i++ )
