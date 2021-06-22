@@ -92,6 +92,14 @@
   clip-path: polygon( 0% 0%, 85% 0, 100% 50%, 85% 100%, 0% 100% );
 }
 
+.css_groupSeqNextStop
+{
+  position:relative;
+  overflow:hidden;
+  background: #aaf;
+  clip-path: polygon( 0% 0%, 85% 0, 100% 50%, 85% 100%, 0% 100%, 5%, 50% );
+}
+
 .css_groupSeqCont
 {
   position:relative;
@@ -215,7 +223,7 @@
 <section>
 <div id='samplesPane' class='css_sampleList_pane'>
 <input contenteditable='true' id='serverURL' value='URL'>
-<button class='css_menuButton' id='saveConfigButton'    onclick='saveSampleConfig();'>Save</button>
+<button class='css_menuButton' id='saveConfigButton'    onclick='sampleConfigSave();'>Save</button>
 <button class='css_modeButton' id='modeEditButton'      onclick='changeMode( "Mode_Edit" );'>Edit</button>
 <button class='css_modeButton' id='Help'                onclick='toggleHelp();'>Help</button>
 <hr>
@@ -238,8 +246,15 @@ Double Tap
 </div><form action="" method="get"></form>
 
 <div id='library_pane' class='css_library_pane'>
+<h3> Sample Library</h3>
+<div id='libraryDiv' class='_css_library'> </div>
 <hr>
-<div id='libraryDiv' class='css_library'> </div>
+<h3> Chord Library</h3>
+<div id='chordDiv' class='_css_library'> </div>
+<button class='css_menuButton' id='newChord'        onclick='chordConfigNew();'>New</button>
+<button class='css_menuButton' id='saveChordConfig' onclick='chordConfigSave();'>Save</button>
+<hr>
+
 </div>
 </section>
 
@@ -251,46 +266,67 @@ var serverURL = 'http://192.168.0.2:8080/'; // this is where samples.json and al
 var configFile = 'sampleConfig.json';
 
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
-var slEditedFlag = false;
+var configEditedFlag = false;
+var chordLibEditedFlag = false;
 var sampleLibrary = {}; // object of ClLibrarySample
-var audioFiles = {}; // object of audio file binaries
-var curSampleConfig;
+var chordLibrary = {}; // object of CChord
+var curConfig;
 var editSample; // What we're editing if "Mode_Edit"
 var editGroup;
 var didNavFlag = false;
 
 // Constants.
 const MAX_GROUPS = 10;
-const samplePollTime = 100;
 
 var operationMode = "Mode_Default";
 var fsMode = "PM"; 
-var cursorGroup = 0, cursorSample = 0; // cursor
+var cursorGroup = 0, cursorElement = 0; // cursor
 
-//////////////////////////// //////////////////////////// ////////////////////////////
-class CLibrarySample
+var loopTypes = [ "Once", "Repeat" ];
+var seqTypes = [ "Single",
+                 "Next",  // move to the next sample in the group
+                 "Cont" ]; // keep playing from one sample to the next.
+
+
+class CLChord
 {
-  constructor( filename )
+  constructor( name )
   {
-    this.filename = filename;
+    this.chordName = name;
+    this.notes = []; // 
+    this.instrument = "?"; // synthesized
+    this.duration = 1000; // ms.
+    this.reverb = .1;
+    this.delay = 0;
   }
 }
 
-var loopTypes = [ "Once", "Repeat" ];
-var seqTypes = [ "Single", "Next", "Play" ];
+class CChord
+{
+  constructor( name )
+  {
+    this.objType = "CChord";
+    this.chordName = name;
+    this.notes = []; // 
+    this.instrument = "?"; // synthesized
+    this.duration = 1000; // ms.
+    this.reverb = .1;
+    this.delay = 0;
+  }
+}
 
 class CSample
 {
   constructor( filename )
   {
+    this.objType = "CSample";
     this.displayName = filename;
     this.filename = filename; // filename on the server.
-    this.highlight = false;
-    this.medley = false;
     this.fadeInTime = 0; // Milliseconds
     this.fadeOutTime = 0;
     this.loopType = loopTypes[ 0 ];
     this.volume = 100;
+    this.duration = "?";
   }
 }
 
@@ -300,7 +336,7 @@ class CGroup
   {
     this.name = name;
     this.seqType = "None"; // None, Single, Loop
-    this.samples = []; // Sample[]
+    this.elements = []; // CSample, CChord, etc.
   }
 }
 
@@ -334,8 +370,8 @@ function sampleListInit()
     serverURL = server;
 
   newSampleConfig();
-  getFileFromServer( "samples.json", gotSamples, false );
-  getFileFromServer( configFile, gotConfig, false );
+  getFileFromServer( "samples.json", gotSamples );
+  getFileFromServer( configFile, gotConfig );
 
   document.getElementById( 'serverURL' ).value = serverURL;
   document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
@@ -345,94 +381,81 @@ function sampleListInit()
 
   footSwitchButtons[ 0 ] = new FootSwitchButton( "BUTTON1" );
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
-  //setInterval( genPurposeTimer, samplePollTime );
+
+  // setInterval( genPurposeTimer, samplePollTime );
 }
 
 // function genPurposeTimer()
 // {
-//   for( var i = 0;i < curSampleConfig.groups.length;i++ )
-//   {
-//     var g = curSampleConfig.groups[ i ];
-//     for( var j = 0;j < g.samples.length;j++ )
-//       if( g.samples[ j ].remainingTime > 0 )
-//       {
-//         g.samples[ j ].remainingTime -= samplePollTime;
-//         if( g.samples[ j ].remainingTime <= 0 )
-//         {
-//           audioFiles[ g.samples[ j ].filename ].pause();
-//           var elem = document.getElementById( "slSample." + i + "." + j );
-//           elem.classList.remove( 'css_playing' );
-//           if( ( g.seqType == seqTypes[ 2 ] ) && !didNavFlag ) // in Continuous mode and haven't navigated.
-//             playSample( "START" );
-//         }
-//       }
-//   }
 // }
 
-var curAF; // current audio being played.
-
-function stopAudio()
+function stopAllAudio()
 {
-  if( curAF )
-  {
-    var elem = document.getElementById( curAF.sampleObj.id );
-    elem.classList.remove( 'css_playing' );
-    curAF.pause();
-    curAF = undefined;
-  }
+  for( var g = 0;g < curConfig.groups.length;g++ )
+    for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
+      if( !curConfig.groups[ g ].samples[ s ].audioFile.paused )
+        stopAudio( curConfig.groups[ g ].samples[ s ] );
 }
 
-function playEnded()
+function stopAudio( sample )
 {
-  var playNext = curAF.sampleObj.playNext && !didNavFlag;
-  stopAudio();
-  if( playNext )
+  if( sample.id )
+  {
+    var elem = document.getElementById( sample.id );
+    elem.classList.remove( 'css_playing' );
+  }
+  sample.audioFile.pause();
+}
+
+function playEndedCB( ev )
+{
+  stopAudio( this.sampleObj );
+  if( this.sampleObj.playNext && !didNavFlag )
     playSample( "START" );
 }
 
 function playSample( status )
 {
-  stopAudio();
-
-  if( ( cursorGroup != undefined ) && ( cursorSample != undefined ) && status == "START" )
+  if( ( cursorGroup != undefined ) && ( cursorElement != undefined ) )
   {
-    var cs = curSampleConfig.groups[ cursorGroup ].samples[ cursorSample ];
+    var cs = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
+    var seqType = curConfig.groups[ cursorGroup ].seqType;
 
-    curAF = audioFiles[ cs.filename ];
-    curAF.currentTime = 0; // start from the beginning
-
-    if( cs.loopType == "Once" )
+    if( status == "START" )
     {
-      curAF.loop = false;
-      curAF.onended = playEnded;
+      var af = cs.audioFile;
+
+      af.currentTime = 0; // Start from the beginning
+
+      cs.id = "slSample." + cursorGroup + "." + cursorElement;
+      cs.playNext = ( seqType == seqTypes[ 2 ] ) ? true : false;
+
+      var elem = document.getElementById( cs.id );
+      elem.classList.add( 'css_playing' );
+
+      af.loop = ( cs.loopType == "Once" ) ? false : true;
+      if( cs.loopType == "Once" )
+        af.onended = playEndedCB;
+
+      af.sampleObj = cs;
+      af.play();
+
+      if( seqType != seqTypes[ 0 ] )
+      {
+        moveCursor( "RIGHT" );
+        didNavFlag = false;
+      }
     }
     else
-      curAF.loop = true;
-
-    curAF.play();
-
-    cs.id = "slSample." + cursorGroup + "." + cursorSample;
-    var elem = document.getElementById( cs.id );
-    elem.classList.add( 'css_playing' );
-
-    if( curSampleConfig.groups[ cursorGroup ].seqType == seqTypes[ 2 ] )
-      cs.playNext = true;
-    else
-      cs.playNext = false;
-
-    curAF.sampleObj = cs;
-
-    if( ( curSampleConfig.groups[ cursorGroup ].seqType == seqTypes[ 1 ] ) ||
-        ( curSampleConfig.groups[ cursorGroup ].seqType == seqTypes[ 2 ] ) )
     {
-      moveCursor( "RIGHT" );
-      didNavFlag = false;
+      if( seqType != seqTypes[ 0 ] )
+        stopAllAudio();
+      else
+        stopAudio( cs );
     }
   }
 }
 
-///////////////////////// /////////////////////////
-///////////////////////// /////////////////////////
 /* Foot switch handling for two buttons. Assume the buttons are mapped to UP and DOWN.
    8 functions: Tap L+R, Double Tap L+R, Hold L+R, Both Tap, Both hold
 
@@ -456,12 +479,12 @@ var fsButtonMap =
     "BUTTON1" : {
       id : 'fsB1Tap', // the DOM element to flash
       PM : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
-      DM : { html : "", action : function() { } }
+      DM : { html :       "", action : function() { } }
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
       PM : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
-      DM : { html : "", action : function() { } }
+      DM : { html :       "", action : function() { } }
     },
     "BUTTONB" : { 
       id : 'fsBBTap',
@@ -496,7 +519,7 @@ var fsButtonMap =
     },
     "BUTTONB" : {
       id : 'fsBBHold',
-      PM : { html : "Play", action : function() { togglePlayMode(); } },
+      PM : { html :   "Play", action : function() { togglePlayMode(); } },
       DM : { html : "Direct", action : function() { togglePlayMode(); } }
     },
   }
@@ -528,19 +551,19 @@ function moveCursor( dir )
       break;
 
     case 'DOWN':
-      if( cursorGroup < curSampleConfig.groups.length - 2 )
+      if( cursorGroup < curConfig.groups.length - 2 )
         cursorGroup += 1;
       break;
 
     case 'LEFT':
-      if( cursorSample > 0 )
-        cursorSample -= 1;
+      if( cursorElement > 0 )
+        cursorElement -= 1;
       break;
 
     case 'RIGHT':
-      cursorSample += 1;
-      if( cursorSample > curSampleConfig.groups[ cursorGroup ].samples.length - 1 )
-        cursorSample = 0;
+      cursorElement += 1;
+      if( cursorElement > curConfig.groups[ cursorGroup ].elements.length - 1 )
+        cursorElement = 0;
       break;
   }
   didNavFlag = true; // navigating stops the continuous playing of a sequence.
@@ -557,7 +580,7 @@ function buttonEvent( event, buttonID )
 
 function buttonHLTimer()
 {
-   var buttons = document.getElementsByClassName( 'css_FSButton' );
+  var buttons = document.getElementsByClassName( 'css_FSButton' );
   for( i = 0;i < buttons.length;i++ )
     buttons[ i ].classList.remove( 'css_highlight_red' );
 }
@@ -695,63 +718,44 @@ function gotSamples( file, data )
 
 function gotConfig( file, data )
 {
-  curSampleConfig = JSON.parse( data );
-
-  getSampleAudio();
-  genSampleConfigHTML();
+  if( data )
+  {
+    curConfig = JSON.parse( data );
+    getSampleAudio();
+    genSampleConfigHTML();
+  }
 }
 
 function getSampleAudio()
 {
-  for( g = 0;g < curSampleConfig.groups.length;g++ )
-  {
-    var sList = curSampleConfig.groups[ g ].samples;
-    for( s = 0;s < sList.length;s++ )
-      if( audioFiles[ sList[ s ].filename ] == undefined )
-        audioFiles[ sList[ s ].filename ] = new Audio( serverURL + sList[ s ].filename );
-  }
+  for( var g = 0;g < curConfig.groups.length;g++ )
+    for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
+    {
+      var cs = curConfig.groups[ g ].elements[ s ];
+      if( cs.audioFile == undefined )
+        cs.audioFile = new Audio( serverURL + cs.filename );
+    }
 }
 
-function getFileFromServer( filename, callback, binaryFlag )
+function getFileFromServer( filename, callback )
 {
   console.log( "Get: " + filename );
   var xhr = new XMLHttpRequest();
 
-  if( binaryFlag )
-  {
-    xhr.open( "GET", serverURL + filename, true );
-    xhr.responseType = 'blob';
-    xhr.onload = function( e ) {
-      if ( xhr.readyState === 4 )
-        if( xhr.status == "200" )
-          callback( filename, xhr.response );
-        else
-          callback( filename, false ); // Error, file not present probably.
-    }
-    xhr.onerror = function( e ) {
-      callback( filename, false );
-    }
-    xhr.ontimeout = function( e ) {
-      callback( filename, false );
-    }
+  xhr.overrideMimeType( "application/json" );
+  xhr.open( "GET", serverURL + filename, true );
+  xhr.onreadystatechange = function() {
+    if ( xhr.readyState === 4 )
+      if( xhr.status == "200" )
+        callback( filename, xhr.responseText );
+      else
+        callback( filename, false ); // Error, file not present probably.
   }
-  else
-  {
-    xhr.overrideMimeType( "application/json" );
-    xhr.open( "GET", serverURL + filename, true );
-    xhr.onreadystatechange = function() {
-      if ( xhr.readyState === 4 )
-        if( xhr.status == "200" )
-          callback( filename, xhr.responseText );
-        else
-          callback( filename, false ); // Error, file not present probably.
-    }
-    xhr.onerror = function( e ) {
-      callback( filename, false );
-    }
-    xhr.ontimeout = function( e ) {
-      callback( filename, false );
-    }
+  xhr.onerror = function( e ) {
+    callback( filename, false );
+  }
+  xhr.ontimeout = function( e ) {
+    callback( filename, false );
   }
 
   xhr.send( null );
@@ -781,12 +785,12 @@ function dropElem( ev )
     var toGroup = parseInt( indexes[ 0 ] );
     var toSampleIx = parseInt( indexes[ 1 ] );
 
-    if( toGroup < curSampleConfig.groups.length - 1 )
+    if( toGroup < curConfig.groups.length - 1 )
       while( true )
       {
-        var song = curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.pop();
+        var song = curConfig.groups[ curConfig.groups.length - 1 ].elements.pop();
         if( song )
-          curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, song );
+          curConfig.groups[ toGroup ].elements.splice( toSampleIx, 0, song );
         else
           break;
       }
@@ -806,19 +810,19 @@ function dropElem( ev )
     {
       if( toSampleIx < fromSampleIx ) // Moved song up
       {
-        curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleConfig.groups[ fromGroup ].samples[ fromSampleIx ] );
-        curSampleConfig.groups[ fromGroup ].samples.splice( fromSampleIx + 1, 1 );
+        curConfig.groups[ toGroup ].elements.splice( toSampleIx, 0, curConfig.groups[ fromGroup ].elements[ fromSampleIx ] );
+        curConfig.groups[ fromGroup ].elements.splice( fromSampleIx + 1, 1 );
       }
       else
       {
-        curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx + 1, 0, curSampleConfig.groups[ fromGroup ].samples[ fromSampleIx ] );
-        curSampleConfig.groups[ fromGroup ].samples.splice( fromSampleIx, 1 );
+        curConfig.groups[ toGroup ].elements.splice( toSampleIx + 1, 0, curConfig.groups[ fromGroup ].elements[ fromSampleIx ] );
+        curConfig.groups[ fromGroup ].elements.splice( fromSampleIx, 1 );
       }
     }
     else // Move between groups.
     {
-      curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, curSampleConfig.groups[ fromGroup ].samples[ fromSampleIx ] );
-      curSampleConfig.groups[ fromGroup ].samples.splice( fromSampleIx, 1 );
+      curConfig.groups[ toGroup ].elements.splice( toSampleIx, 0, curConfig.groups[ fromGroup ].elements[ fromSampleIx ] );
+      curConfig.groups[ fromGroup ].elements.splice( fromSampleIx, 1 );
     }
   }
   else if( ( dragElem.substring( 0, lSamp.length ) == lSamp ) &&
@@ -830,7 +834,7 @@ function dropElem( ev )
     var toGroup = parseInt( indexes[ 0 ] );
     var toSampleIx = parseInt( indexes[ 1 ] );
 
-    curSampleConfig.groups[ toGroup ].samples.splice( toSampleIx, 0, new CSample( libSample.filename ) );
+    curConfig.groups[ toGroup ].elements.splice( toSampleIx, 0, new CSample( libSample.filename ) );
     getSampleAudio(); // get any new audio.
   }
   else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
@@ -841,13 +845,13 @@ function dropElem( ev )
 
     if( toGroup < fromGroup ) // moved group up
     {
-      curSampleConfig.groups.splice( toGroup, 0, curSampleConfig.groups[ fromGroup ] );
-      curSampleConfig.groups.splice( fromGroup + 1, 1 );
+      curConfig.groups.splice( toGroup, 0, curConfig.groups[ fromGroup ] );
+      curConfig.groups.splice( fromGroup + 1, 1 );
     }
     else
     {
-      curSampleConfig.groups.splice( toGroup + 1, 0, curSampleConfig.groups[ fromGroup ] );
-      curSampleConfig.groups.splice( fromGroup, 1 );
+      curConfig.groups.splice( toGroup + 1, 0, curConfig.groups[ fromGroup ] );
+      curConfig.groups.splice( fromGroup, 1 );
     }
   }
   else if( ev.target.id == "trashCan" )
@@ -858,18 +862,18 @@ function dropElem( ev )
       var delGroup = parseInt( indexes[ 0 ] );
       var delSample = parseInt( indexes[ 1 ] );
 
-      curSampleConfig.groups[ delGroup ].samples.splice( delSample, 1 );
+      curConfig.groups[ delGroup ].elements.splice( delSample, 1 );
     }
     else if( dragElem.substring( 0, slGroup.length ) == slGroup )
     {
       var delGroup = parseInt( dragElem.substring( slGroup.length, ) );
-      curSampleConfig.groups.splice( delGroup, 1 );
+      curConfig.groups.splice( delGroup, 1 );
     }
     else if( dragElem.substring( 0, cbStr.length ) == cbStr )
-      curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples = [];
+      curConfig.groups[ curConfig.groups.length - 1 ].elements = [];
   }
 
-  slEditedFlag = true;
+  configEditedFlag = true;
 
   genSampleConfigHTML();
 }
@@ -877,11 +881,11 @@ function dropElem( ev )
 /////////////// /////////////// /////////////// ///////////////
 function setSampleConfigName()
 {
-  var name = prompt( "Enter Sample File Name:", curSampleConfig.name );
+  var name = prompt( "Enter Sample File Name:", curConfig.name );
   if( name )
   {
-    curSampleConfig.name = name;
-    slEditedFlag = true;
+    curConfig.name = name;
+    configEditedFlag = true;
     genSampleConfigHTML();
   }
 }
@@ -893,7 +897,7 @@ function groupClick( groupIndex )
   {
     saveEdits();
     editSample = undefined;
-    editGroup = curSampleConfig.groups[ groupIndex ];
+    editGroup = curConfig.groups[ groupIndex ];
   }
 
   genSampleConfigHTML();
@@ -902,20 +906,18 @@ function groupClick( groupIndex )
 /////////////// /////////////// ///////////////
 function sampleClick( groupIndex, sampleIndex )
 {
-  var cs = curSampleConfig.groups[ groupIndex ].samples[ sampleIndex ];
+  var cs = curConfig.groups[ groupIndex ].elements[ sampleIndex ];
 
   saveEdits();
 
-  if( ( cursorGroup != groupIndex ) && ( cursorSample != sampleIndex ) )
+  if( ( cursorGroup != groupIndex ) && ( cursorElement != sampleIndex ) )
     didNavFlag = true;
 
   cursorGroup = groupIndex;
-  cursorSample = sampleIndex;
+  cursorElement = sampleIndex;
 
   if( operationMode == "Mode_Highlight" )
     cs.highlight = !cs.highlight;
-  else if( operationMode == "Mode_Medley" )
-    cs.medley = !cs.medley;
   else if( operationMode == "Mode_Edit" )
   {
     editGroup = undefined;
@@ -928,19 +930,19 @@ function sampleClick( groupIndex, sampleIndex )
 function libSampleClick( songId )
 {
   sample = new CSample( sampleLibrary[ songId ].filename );
-  curSampleConfig.groups[ curSampleConfig.groups.length - 1 ].samples.push( sample ); // add to Clipboard
+  curConfig.groups[ curConfig.groups.length - 1 ].elements.push( sample ); // add to Clipboard
   genSampleConfigHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
 function newSampleConfig()
 {
-  if( slEditedFlag )
+  if( configEditedFlag )
     if( !window.confirm( "Unsaved Edits. Continue?" ) )
       return;
 
-  slEditedFlag = false;
-  curSampleConfig = new CSampleConfig( "Sample List" );
+  configEditedFlag = false;
+  curConfig = new CSampleConfig( "Sample List" );
 
   genSampleConfigHTML();
 }
@@ -948,14 +950,20 @@ function newSampleConfig()
 /////////////// /////////////// /////////////// ///////////////
 function groupAdd()
 {
-  if( curSampleConfig.groups.length < MAX_GROUPS )
+  if( curConfig.groups.length < MAX_GROUPS )
   {
-    curSampleConfig.groups.splice( curSampleConfig.groups.length - 1, 0, new CGroup( "Group" ) );
-    slEditedFlag = true;
+    curConfig.groups.splice( curConfig.groups.length - 1, 0, new CGroup( "Group" ) );
+    configEditedFlag = true;
     genSampleConfigHTML();
   }
   else
     alert( "Max Groups reached" );
+}
+
+function getDurationMs( filename )
+{
+  // toString().split('.')[ 0 ]
+  return "N/A";
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -967,12 +975,12 @@ function genSampleConfigHTML()
 
     if( editSample )
     {
-      tmpHtml += "Display Name: <input contenteditable='true' id='editSampleName' value='" + editSample.displayName + "'><br>";
+      tmpHtml += "Displ` Name: <input contenteditable='true' id='editSampleName' value='" + editSample.displayName + "'><br>";
       tmpHtml += "File: " + editSample.filename + "<br>";
       tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editSample.volume + "'><br>";
       tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editSample.fadeInTime + "'><br>";
       tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editSample.fadeOutTime + "'><br>";
-      tmpHtml += "Audio Length: " + ( audioFiles[ editSample.filename ].duration * 1000 ).toString().split('.')[ 0 ] + "ms<br>";
+      tmpHtml += "Audio Length: " + getDurationMs( editSample.filename ).toString() + "ms<br>";
       tmpHtml += "Play:<select id='editSamplePT'>";
 
       for( var i = 0;i < loopTypes.length;i++ )
@@ -1001,7 +1009,7 @@ function genSampleConfigHTML()
     document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
   }
 
-  var l = curSampleConfig.groups.length;
+  var l = curConfig.groups.length;
   if( l == 1 )
     cursorGroup = undefined;
   else
@@ -1010,44 +1018,49 @@ function genSampleConfigHTML()
       cursorGroup = 0;
     if( cursorGroup >= l - 1 )
       cursorGroup = l - 2;
-    l = curSampleConfig.groups[ cursorGroup ].samples.length;
-    if( cursorSample >= l )
-      cursorSample = l - 1;
-    else if( ( cursorSample < 0 ) && ( l > 0 ) )
-      cursorSample = 0;
+    l = curConfig.groups[ cursorGroup ].elements.length;
+    if( cursorElement >= l )
+      cursorElement = l - 1;
+    else if( ( cursorElement < 0 ) && ( l > 0 ) )
+      cursorElement = 0;
   }
 
-  var tempHtml = "<div id='sampleListName' onClick='setSampleConfigName()'>" + curSampleConfig.name + "</div><br>";
+  var tempHtml = "<div id='sampleListName' onClick='setSampleConfigName()'>" + curConfig.name + "</div><br>";
 
-  for( var i = 0;i < curSampleConfig.groups.length;i++ )
+  for( var i = 0;i < curConfig.groups.length;i++ )
   {
-    var g = curSampleConfig.groups[ i ];
+    var g = curConfig.groups[ i ];
     var classes = 'css_groupClass';
 
     switch( g.seqType )
     {
       case "Single":  break;
       case "Next": classes += ' css_groupSeqNext'; break;
-      case "Play": classes += ' css_groupSeqCont'; break;
+      case "Cont": classes += ' css_groupSeqCont'; break;
     }
 
-    if( i == curSampleConfig.groups.length - 1 )
+    if( i == curConfig.groups.length - 1 )
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
     else
       tempHtml += "<button id='slGroup." + i + "' class='" + classes + "' onclick='groupClick( " + i + " )' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + g.name + "</button>\n";
 
-    for( var j = 0;j < g.samples.length;j++ )
-      tempHtml += "<button id='slSample." + i + "." + j + "' class='css_slSample' onclick='sampleClick( " + i + ", " + j + " )'" +
-                  " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
-                  g.samples[ j ].displayName + "</button>\n";
+    for( var j = 0;j < g.elements.length;j++ )
+    {
+      var classes = 'css_slSample';
+      if( g.elements[ j ].audioFile.paused == false )
+        classes += ' css_playing';
 
+      tempHtml += "<button id='slSample." + i + "." + j + "' class='" + classes + "' onclick='sampleClick( " + i + ", " + j + " )'" +
+                  " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
+                  g.elements[ j ].displayName + "</button>\n";
+    }
     tempHtml += "<button id='slSample." + i + "." + j + "' class='css_slSample' onclick='sampleClick( " + i + ", " + j + " )'" +
                 "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
 
-    if( g.samples.length )
-      tempHtml += "<font size='1'>" + g.samples.length + "</font>";
+    if( g.elements.length )
+      tempHtml += "<font size='1'>" + g.elements.length + "</font>";
     tempHtml += "<br>\n";
   }
 
@@ -1056,23 +1069,20 @@ function genSampleConfigHTML()
 
   document.getElementById( 'setlist' ).innerHTML = tempHtml;
 
-  if( slEditedFlag )
+  if( configEditedFlag )
     document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
   else
     document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
 
   var elem;
-  if( cursorGroup >= 0 && cursorSample >= 0 )
-    elem = document.getElementById( 'slSample.' + cursorGroup + '.' + cursorSample );
+  if( cursorGroup >= 0 && cursorElement >= 0 )
+    elem = document.getElementById( 'slSample.' + cursorGroup + '.' + cursorElement );
   else if( cursorGroup )
     elem = document.getElementById( 'slGroup.' + cursorGroup );
   if( elem )
     elem.classList.add( 'css_cursor' );
 
-  if( curAF )
-    document.getElementById( curAF.sampleObj.id ).classList.add( 'css_playing' );
-
-  //if( !audioFiles[ curSampleConfig.groups[ i ].samples[ j ].filename ] )
+  //if( !audioFiles[ curConfig.groups[ i ].elements[ j ].filename ] )
   //  classes += ' css_pending';
 }
 
@@ -1093,7 +1103,7 @@ function saveEdits()
     editGroup.seqType = document.getElementById( "editGroupSequence" ).value;
   }
 
-  slEditedFlag = true;
+  configEditedFlag = true;
 }
 
 ///////////////////////// ///////////////////////// /////////////////////////
@@ -1183,66 +1193,21 @@ A library can be specified by appending "?library=http://x.y.z/???.json" to this
   return undefined;
 }
 
-////////////////////// //////////////////////
-// Sample List file mgmt
-////////////////////// //////////////////////
-function openSampleFile( e )
-{
-  var file = e.target.files[ 0 ];
-  if( !file )
-    return;
-  var reader = new FileReader();
-  reader.onload = function( e )
-  {
-    var lines = e.target.result.split( "\n" ); // Line 2->n is JSON of the setList
-    var jsonPortion = ""; // setlist json beings with { in column 0 and ends with } in column 0.
-    var firstLine = true;
-    var success = false;
-
-    for( line of lines )
-    {
-      if( firstLine )
-      {
-        firstLine = false; // first line is opening comment
-        continue;
-      }
-
-      jsonPortion += line;
-      if( line == "}" )
-      {
-        success = true; // found the end of json.
-        break;
-      }
-    }
-    if( success )
-    {
-      try
-      {
-        var parsed = JSON.parse( jsonPortion );
-        curSampleConfig = parsed;
-      }
-      catch( error )
-      {
-        alert( error );
-      }
-    }
-    else
-      alert( "Unable to parse setlist" );
-
-    genSampleConfigHTML();
-  }
-
-  reader.readAsText( file );
-}
-
 /////////////// /////////////// /////////////// /////////////// ///////////////
-// Generate the config
+// Save the current config
 /////////////// /////////////// /////////////// /////////////// ///////////////
-function saveSampleConfig()
+function sampleConfigSave()
 {
   saveEdits();
+  // Hack.
+  // in order not to save the Audio in the json we delete it and reload after saving.
+  for( var g = 0;g < curConfig.groups.length;g++ )
+    for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
+      curConfig.groups[ g ].elements[ s ].audioFile = undefined;
 
-  var configData = JSON.stringify( curSampleConfig, null, "  " );
+  var configData = JSON.stringify( curConfig, null, "  " );
+
+  getSampleAudio();
 
   var formData = new FormData();
   formData.append( "data", configData );
@@ -1251,8 +1216,9 @@ function saveSampleConfig()
   xhr.open( 'post', serverURL + configFile );
   xhr.send( formData );
 
-  slEditedFlag = false;
+  configEditedFlag = false;
   genSampleConfigHTML();
+
   return true;
 }
 
