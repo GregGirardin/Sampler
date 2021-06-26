@@ -67,8 +67,45 @@
   background-color: #bbf;
   color: #444;
   padding: 6px;
-  text-align: denter;
+  text-align: center;
   font-size: 14px;
+}
+
+.css_keyboard
+{
+  border: 2px solid 000;
+  background-color: #bbb;
+  color: #000;
+  text-align:center;
+}
+
+.css_whiteKey
+{
+  border: 1px solid #000;
+  background-color: #fff;
+  color: #000;
+  padding: 6px;
+  text-align: center;
+  width: 30px;
+  height: 50px;
+  font-size: 10px;
+}
+
+.css_blackKey
+{
+  border: 1px solid white;
+  background-color: #111;
+  color: #fff;
+  padding: 6px;
+  text-align: center;
+  width: 25px;
+  height: 40px;
+  font-size: 10px;
+}
+
+.css_pressedKey
+{
+  border: 3px solid #f00;
 }
 
 .css_FSButton:hover { border: 2px solid black; }
@@ -266,7 +303,6 @@ var synthLibrary = []; // object of CSynth
 var curConfig;
 
 var editElement; // What we're editing if "Mode_Edit"
-var editSynth;
 
 var didNavFlag = false;
 
@@ -300,8 +336,9 @@ class CLibSynth // synthesized chords w/ Web Audio API generated sounds
     this.objType = "CLibSynth";
     this.elementName = name;
 
-    this.notes = []; // 
+    this.notes = 0x0; // bit field of pressed keys 
     this.instrument = "?"; // synthesized
+    this.octave = 0;
     this.duration = 0; // ms.
     this.reverbSend = 0; // 0-100
     this.delaySend = 0;
@@ -348,6 +385,8 @@ class CSampleConfig
   }
 }
 
+var audioContext;
+
 //////////////////////////// ////////////////////////////
 //////////////////////////// ////////////////////////////
 window.onload = sampleListInit;
@@ -383,6 +422,8 @@ function sampleListInit()
 
   getSampleAudio();
   genSynthLibraryHTML();
+
+  audioContext = new AudioContext();
 }
 
 function stopAllAudio()
@@ -407,50 +448,65 @@ function playEndedCB( ev )
 {
   stopAudio( this.sampleObj );
   if( this.sampleObj.playNext && !didNavFlag )
-    playSample( "START" );
+    playElement( "START" );
 }
 
-function playSample( status )
+function playElement( status )
 {
   if( ( cursorGroup != undefined ) && ( cursorElement != undefined ) )
   {
-    var cs = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
+    var ce = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
     var seqType = curConfig.groups[ cursorGroup ].seqType;
 
     if( status == "START" )
     {
-      if( !cs.audioFile )
+      ce.id = "slElement." + cursorGroup + "." + cursorElement;
+      ce.playNext = ( seqType == seqTypes[ 2 ] ) ? true : false;
+
+      document.getElementById( ce.id ).classList.add( 'css_playing' );
+
+      if( ce.objType == "CSample" )
       {
-        getSampleAudio();
-        return;
+        var af = ce.audioFile;
+        af.currentTime = 0; // Start from the beginning
+        af.loop = ( ce.loopType == "Once" ) ? false : true;
+        if( ce.loopType == "Once" )
+          af.onended = playEndedCB;
+
+        af.sampleObj = ce;
+        af.play();
       }
-      var af = cs.audioFile;
+      else if( curElem.objType == "CSynth" )
+      {
+        // find the library synth
+        for( var synthIx = 0;synthIx < synthLibrary.length;synthIx++ )
+          if( synthLibrary[ synthIx ].elementName == ce.elementName )
+            break;
+        
+        if( synthIx < synthLibrary.length )
+          for( var noteIx = 0;noteIx < 24;noteIx++ )
+            if( synthLibrary[ synthIx ].notes & ( 1 << noteIx ) )
+            {
+              var curNote = 36 + synthLibrary[ synthIx ].octave * 12 + noteIx;
 
-      af.currentTime = 0; // Start from the beginning
 
-      cs.id = "slElement." + cursorGroup + "." + cursorElement;
-      cs.playNext = ( seqType == seqTypes[ 2 ] ) ? true : false;
 
-      var elem = document.getElementById( cs.id );
-      elem.classList.add( 'css_playing' );
+            }
 
-      af.loop = ( cs.loopType == "Once" ) ? false : true;
-      if( cs.loopType == "Once" )
-        af.onended = playEndedCB;
-
-      af.sampleObj = cs;
-      af.play();
+      
+      }
 
       if( seqType != seqTypes[ 0 ] )
       {
         moveCursor( "RIGHT" );
         didNavFlag = false;
       }
+
     }
     else
     {
       if( seqType == seqTypes[ 0 ] )
-        stopAudio( cs );
+        stopAudio( ce );
       else
         stopAllAudio();
     }
@@ -497,13 +553,13 @@ var fsButtonMap =
   "EVENT_DTAP" : {
     "BUTTON1" : {
       id : 'fsB1DTap',
-      PM : { html : "&#62;", action : function() { playSample( 'START' ); } },
-      DM : { html : "&#62;", action : function() { playSample( 'START' ); } }
+      PM : { html : "&#62;", action : function() { playElement( 'START' ); } },
+      DM : { html : "&#62;", action : function() { playElement( 'START' ); } }
     },
     "BUTTON2" : {
       id : 'fsB2DTap',
-      PM : { html : "#8800;", action : function() { playSample( 'STOP' ) } },
-      DM : { html : "#8800;", action : function() { playSample( 'STOP' ) } }
+      PM : { html : "#8800;", action : function() { playElement( 'STOP' ) } },
+      DM : { html : "#8800;", action : function() { playElement( 'STOP' ) } }
     },
   },
 
@@ -866,8 +922,8 @@ function dropElem( ev )
   else if( ( dragElem.substring( 0, libSynthID.length ) == libSynthID ) &&
            ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Synth into config 
   {
-    var sampId = dragElem.substring( libSynthID.length, );
-    var libSynth = synthLibrary[ sampId ];
+    var sampIx = dragElem.substring( libSynthID.length, );
+    var libSynth = synthLibrary[ sampIx ];
     var indexes = ev.target.id.substring( slElem.length, ).split( "." );
     var toGroup = parseInt( indexes[ 0 ] );
     var toElementIx = parseInt( indexes[ 1 ] );
@@ -989,31 +1045,81 @@ function elemClick( groupIndex, sampleIndex )
 }
 
 /////////////// /////////////// ///////////////
+
 function synthClick( synthIndex )
 {
   if( operationMode == "Mode_Edit" )
   {
     saveEdits();
     editElement = synthLibrary[ synthIndex ];
-    var tmpHtml = "<hr>";
-    tmpHtml += "Name: <input contenteditable='true' id='editSynthName' value='" + editElement.elementName + "'><br>";
+  
+    var tmpHtml = "<hr>Name: <input contenteditable='true' id='editSynthName' value='" + editElement.elementName + "'><br>";
+
+    tmpHtml += "Octave:<select id='editSynthOctave'>";
+    for( i = -3;i <= 3;i++ )
+    {
+      tmpHtml += "<option value='" + i + "' ";
+      if( editElement.octave == i )
+        tmpHtml += "selected='selected'";
+      tmpHtml += ">" + i + "</option>";
+    }
+    tmpHtml += "</select><br>";
 
     tmpHtml += "Instrument:<select id='editSynthInstrument'>";
     for( i = 0;i < synthTypes.length;i++ )
     {
       tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
-      if( editElement.loopType == synthTypes[ i ] )
+      if( editElement.instrument == synthTypes[ i ] )
         tmpHtml += "selected='selected'";
       tmpHtml += ">" + synthTypes[ i ] + "</option>";
     }
     tmpHtml += "</select><br>";
 
-    tmpHtml += "Duration: <input type='range' id='editSynthDuration' min='0' max='1000' value='" + editElement.duration + "'><br>";
-    tmpHtml += "Reverb: <input type='range' id='editSynthReverb' min='0' max='100' value='" + editElement.reverbSend + "'><br>";
-    tmpHtml += "Delay: <input type='range' id='editSynthDelay' min='0' max='100' value='" + editElement.delaySend + "'><br>";
-
+    tmpHtml += "<div class='css_keyboard' id='keyboard_id'><br>";
     document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+
+    drawKeyboard();
   }
+  else
+  {
+    // tbd, add this synth to clipboard
+  }
+}
+
+function drawKeyboard()
+{
+  const noteNames = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
+  const blackKeys = [         1,         3,              6,         8,        10 ];
+  // Two octave keyboard
+  var tmpHtml = "<div class='css_keyboard' id='keyboard'><br>";
+
+  for( var note = 0;note < 24;note++ )
+  {
+    var css_class = ( blackKeys.includes( note % 12 ) ) ? 'css_blackKey' : 'css_whiteKey';
+
+    if( ( 1 << note ) & editElement.notes )
+      css_class += ' css_pressedKey';
+
+    tmpHtml += "<button class='" + css_class + "' onclick='keyPressed( " + note + " );'>" + noteNames[ note % 12 ] + "</button>";
+  }
+  tmpHtml += "<br><br></div>";
+  tmpHtml += "Duration: <input type='range' id='editSynthDuration' min='0' max='1000' value='" + editElement.duration + "'><br>";
+  tmpHtml += "Reverb: <input type='range' id='editSynthReverb' min='0' max='100' value='" + editElement.reverbSend + "'><br>";
+  tmpHtml += "Delay: <input type='range' id='editSynthDelay' min='0' max='100' value='" + editElement.delaySend + "'><br>";
+
+  document.getElementById( 'keyboard_id' ).innerHTML = tmpHtml;
+}
+
+function keyPressed( note )
+{
+  var pressed = ( ( 1 << note ) & editElement.notes );
+
+  if( pressed )
+    editElement.notes &= ~( 1 << note ); // clear
+  else
+    editElement.notes |= ( 1 << note );
+
+  drawKeyboard();
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -1152,9 +1258,10 @@ function saveEdits()
         editElement.seqType = document.getElementById( "editGroupSequence" ).value;
         break;
 
-      case "CSynth":
+      case "CLibSynth":
         editElement.elementName = document.getElementById( "editSynthName" ).value;
         editElement.instrument = document.getElementById( "editSynthInstrument" ).value;
+        editElement.octave = document.getElementById( "editSynthOctave" ).value;
         editElement.duration = document.getElementById( "editSynthDuration" ).value;
         editElement.delaySend = document.getElementById( "editSynthDelay" ).value;
         editElement.reverbSend = document.getElementById( "editSynthReverb" ).value;
@@ -1302,7 +1409,7 @@ function toggleHelp()
 
 function synthAdd()
 {
-  synthLibrary.push( new CSynth( "New" ) );
+  synthLibrary.push( new CLibSynth( "New" ) );
   genSynthLibraryHTML();
 }
 
