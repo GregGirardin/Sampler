@@ -1,47 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sample Player</title>
-<link rel="stylesheet" href="spstyle.css">
-</head>
-
-<body align="left">
-<div class='css_sl_pane'>
-  <input contenteditable='true' id='serverURL' value='URL'>
-  <button class='css_menuButton' id='saveConfigButton'  onclick='sampleConfigSave();'>Save</button>
-  <button class='css_modeButton' id='modeEditButton'    onclick='changeMode( "Mode_Edit" );'>Edit</button>
-  <button class='css_modeButton' id='Help'              onclick='toggleHelp();'>Help</button>
-  <hr>
-  <div id='footSwitchButtons' align='left'>
-    Tap
-    <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&larr;</button>
-    <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&rarr;</button>
-    <button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB" );'>Both</button>
-    Hold
-    <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>&uarr;</button>
-    <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>&darr;</button>
-    <button class='css_FSButton' id='fsBBHold' onclick='buttonEvent( "EVENT_HOLD", "BUTTONB" );'>Both</button>
-    Double Tap
-    <button class='css_FSButton' id='fsB1DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON1" );'>&#62;</button>
-    <button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON2" );'>&#8800;</button>
-    <hr>
-  </div>
-  <div id='audioElements'></div>
-  <hr>
-  <h3> Sample Library</h3>
-  <div id='libraryDiv'></div>
-  <hr>
-  <h3> Synth Library</h3>
-  <div id='synthDiv'></div>
-
-  <div id='multiuse'></div>
-
-</div>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-
 var serverURL = 'http://192.168.0.2:8080/'; // this is where samples.json and all the samples live.
 // var serverURL = 'https://greggirardin.github.io/samples/';
 var configFile = 'sampleConfig.json';
@@ -1269,7 +1225,3 @@ function synthAdd()
   synthLibrary.push( new CLibSynth( "New" ) );
   genSynthLibraryHTML();
 }
-
-</script>
-</body>
-</html>
