@@ -1,3 +1,5 @@
+// Main js file.
+
 var configEditedFlag = false;
 var synthEditedFlag = false;
 var sampleLibrary = {}; // object of ClLibrarySample
@@ -65,12 +67,7 @@ var audioContext;
 
 //////////////////////////// ////////////////////////////
 //////////////////////////// ////////////////////////////
-window.onload = sampleListInit;
-
-function changeURL()
-{
-  serverURL = document.getElementById( 'serverURL' ).value;
-}
+window.onload = sampleListInit; // set up main entry point
 
 /////////////// /////////////// /////////////// ///////////////
 function sampleListInit()
@@ -85,7 +82,7 @@ function sampleListInit()
 
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
-  //getFileFromServer( "synthLib.json", gotSynthLib );
+  getFileFromServer( "synthLib.json", gotSynthLib );
 
   document.getElementById( 'serverURL' ).value = serverURL;
   document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
@@ -99,7 +96,7 @@ function sampleListInit()
   genSynthLibraryHTML();
 }
 
-function stopAllAudio() // go through all groups
+function stopAllAudio() // go through all groups / elements and call stopAudio.
 {
   for( var g = 0;g < curConfig.groups.length;g++ )
     for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
@@ -134,49 +131,4 @@ function playEndedCB( ev )
   stopAudio( this.sampleObj );
   if( this.sampleObj.playNext && !didNavFlag )
     playElement( "START" );
-}
-
-function togglePlayMode()
-{
-  var elem = document.getElementById( 'fsBBHold' );
-
-  if( fsMode == "PM" )
-  {
-    fsMode = "DM"; // direct mode
-    elem.innerHTML = "Direct";
-  }
-  else
-  {
-    fsMode = "PM"; // play mode
-    elem.innerHTML = "Play";
-  }
-}
-
-function moveCursor( dir )
-{
-  switch( dir )
-  {
-    case 'UP':
-      if( cursorGroup > 0 )
-        cursorGroup -= 1;
-      break;
-
-    case 'DOWN':
-      if( cursorGroup < curConfig.groups.length - 2 )
-        cursorGroup += 1;
-      break;
-
-    case 'LEFT':
-      if( cursorElement > 0 )
-        cursorElement -= 1;
-      break;
-
-    case 'RIGHT':
-      cursorElement += 1;
-      if( cursorElement > curConfig.groups[ cursorGroup ].elements.length - 1 )
-        cursorElement = 0;
-      break;
-  }
-  didNavFlag = true; // navigating stops the continuous playing of a sequence.
-  genElementConfigHTML();
 }

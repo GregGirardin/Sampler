@@ -159,3 +159,28 @@ function toggleHelp()
   var helpElem = document.getElementById( 'multiuse' );
   helpElem.innerHTML = helpHtml;
 }
+
+// for editing a Synth.
+function drawKeyboard()
+{
+  const noteNames = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
+  const blackKeys = [         1,         3,              6,         8,        10 ];
+  // Two octave keyboard
+  var tmpHtml = "<div class='css_keyboard' id='keyboard'><br>";
+
+  for( var note = 0;note < 24;note++ )
+  {
+    var css_class = ( blackKeys.includes( note % 12 ) ) ? 'css_blackKey' : 'css_whiteKey';
+
+    if( ( 1 << note ) & editElement.notes )
+      css_class += ' css_pressedKey';
+
+    tmpHtml += "<button class='" + css_class + "' onclick='keyPressed( " + note + " );'>" + noteNames[ note % 12 ] + "</button>";
+  }
+  tmpHtml += "<br><br></div>";
+  tmpHtml += "Duration: <input type='range' id='editSynthDuration' min='0' max='1000' value='" + editElement.duration + "'><br>";
+  tmpHtml += "Reverb: <input type='range' id='editSynthReverb' min='0' max='100' value='" + editElement.reverbSend + "'><br>";
+  tmpHtml += "Delay: <input type='range' id='editSynthDelay' min='0' max='100' value='" + editElement.delaySend + "'><br>";
+
+  document.getElementById( 'keyboard_id' ).innerHTML = tmpHtml;
+}

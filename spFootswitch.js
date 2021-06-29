@@ -216,3 +216,32 @@ function keyPressed( note )
 
   drawKeyboard();
 }
+
+function moveCursor( dir )
+{
+  switch( dir )
+  {
+    case 'UP':
+      if( cursorGroup > 0 )
+        cursorGroup -= 1;
+      break;
+
+    case 'DOWN':
+      if( cursorGroup < curConfig.groups.length - 2 )
+        cursorGroup += 1;
+      break;
+
+    case 'LEFT':
+      if( cursorElement > 0 )
+        cursorElement -= 1;
+      break;
+
+    case 'RIGHT':
+      cursorElement += 1;
+      if( cursorElement > curConfig.groups[ cursorGroup ].elements.length - 1 )
+        cursorElement = 0;
+      break;
+  }
+  didNavFlag = true; // navigating stops the continuous playing of a sequence.
+  genElementConfigHTML();
+}

@@ -125,7 +125,7 @@ function dropElem( ev )
 
   configEditedFlag = true;
 
-  getSampleAudio();// get any new audio.
+  getSampleAudio();// get any new audio dragged in from the library.
   genElementConfigHTML();
 }
 
@@ -292,11 +292,13 @@ function saveEdits()
         editElement.fadeInTime = document.getElementById( "editSampleFIT" ).value; 
         editElement.fadeOutTime = document.getElementById( "editSampleFOT" ).value; 
         editElement.loopType = document.getElementById( "editSamplePT" ).value;
+        configEditedFlag = true;
         break;
     
       case "CGroup":
         editElement.elementName = document.getElementById( "editGroupName" ).value;
         editElement.seqType = document.getElementById( "editGroupSequence" ).value;
+        configEditedFlag = true;
         break;
 
       case "CLibSynth":
@@ -306,6 +308,7 @@ function saveEdits()
         editElement.duration = document.getElementById( "editSynthDuration" ).value;
         editElement.delaySend = document.getElementById( "editSynthDelay" ).value;
         editElement.reverbSend = document.getElementById( "editSynthReverb" ).value;
+        synthEditedFlag = true;
         break;
     }
 
@@ -314,8 +317,6 @@ function saveEdits()
 
   genElementConfigHTML();
   genSynthLibraryHTML();
-
-  configEditedFlag = true;
 }
 
 ///////////////////////// ///////////////////////// /////////////////////////
@@ -326,20 +327,23 @@ function changeMode( mode )
     saveEdits();
   operationMode = ( mode == operationMode ) ? "Mode_Default" : mode;
 
-  var buttons = document.getElementsByClassName( 'css_modeButton' );
-  for( var i = 0;i < buttons.length;i++ )
-    buttons[ i ].classList.remove( 'css_highlight_red' );
-  buttons = document.getElementsByClassName( 'css_menuButton' );
-  for( i = 0;i < buttons.length;i++ )
-    buttons[ i ].classList.remove( 'css_highlight_red' );
+  // var buttons = document.getElementsByClassName( 'css_modeButton' );
+  // for( var i = 0;i < buttons.length;i++ )
+  //   buttons[ i ].classList.remove( 'css_highlight_red' );
 
   if( operationMode == "Mode_Edit" )
     document.getElementById( 'modeEditButton' ).classList.add( 'css_highlight_red' );
+  else
+    document.getElementById( 'modeEditButton' ).classList.remove( 'css_highlight_red' );
+
 }
 
 function synthAdd()
 {
   synthLibrary.push( new CLibSynth( "New" ) );
+  synthEditedFlag = true;
+  document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
+
   genSynthLibraryHTML();
 }
 
@@ -403,4 +407,25 @@ function playElement( status )
       ce.playing = false;
     }
   }
+}
+
+function togglePlayMode()
+{
+  var elem = document.getElementById( 'fsBBHold' );
+
+  if( fsMode == "PM" )
+  {
+    fsMode = "DM"; // direct mode
+    elem.innerHTML = "Direct";
+  }
+  else
+  {
+    fsMode = "PM"; // play mode
+    elem.innerHTML = "Play";
+  }
+}
+
+function changeURL()
+{
+  serverURL = document.getElementById( 'serverURL' ).value;
 }
