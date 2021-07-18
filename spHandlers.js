@@ -148,21 +148,7 @@ function groupClick( groupIndex )
   {
     saveEdits();
     editElement = curConfig.groups[ groupIndex ];
-
-    var tmpHtml = "<hr>";
-    tmpHtml += "Name: <input contenteditable='true' id='editGroupName' value='" + editElement.elementName + "'><br>";
-    tmpHtml += "Sequence:<select id='editGroupSequence'>";
-
-    for( var i = 0;i < seqTypes.length;i++ )
-    {
-      tmpHtml += "<option value='" + seqTypes[ i ] + "' ";
-      if( editElement.seqType == seqTypes[ i ] )
-        tmpHtml += "selected='selected'";
-      tmpHtml += ">" + seqTypes[ i ] + "</option>";
-    }
-    tmpHtml += "</select><br>";
-
-    document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+    genEditGroupHTML()
   }
 }
 
@@ -178,35 +164,10 @@ function elemClick( groupIndex, sampleIndex )
   if( operationMode == "Mode_Edit" )
   {
     saveEdits();
-    var i;
-    var tmpHtml = "<hr>";
-
     editElement = curConfig.groups[ groupIndex ].elements[ sampleIndex ];
 
     if( editElement.objType == "CSample" )
-    {
-      tmpHtml += "Display Name: <input contenteditable='true' id='editSampleName' value='" + editElement.elementName + "'><br>";
-      tmpHtml += "File: " + editElement.filename + "<br>";
-      tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editElement.volume + "'><br>";
-      tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editElement.fadeInTime + "'><br>";
-      tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editElement.fadeOutTime + "'><br>";
-      var duration = "?";
-      if( editElement.audioFile )
-        duration = ( editElement.audioFile.duration * 1000 ).toString().split( '.' )[ 0 ] + "ms";
-      tmpHtml += "Audio Length: " + duration + "<br>";
-      tmpHtml += "Play:<select id='editSamplePT'>";
-
-      for( i = 0;i < loopTypes.length;i++ )
-      {
-        tmpHtml += "<option value='" + loopTypes[ i ] + "' ";
-        if( editElement.loopType == loopTypes[ i ] )
-          tmpHtml += "selected='selected'";
-        tmpHtml += ">" + loopTypes[ i ] + "</option>";
-      }
-      tmpHtml += "</select><br>";
-
-      document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
-    }
+      genEditSampleHTML();
     else if( editElement.objType == "CSynth" )
     {
       document.getElementById( 'multiuse' ).innerHTML = "TBD: Edit in Synth Library";
@@ -225,37 +186,7 @@ function synthClick( synthIndex )
   {
     saveEdits();
     editElement = synthLibrary[ synthIndex ];
-  
-    var tmpHtml = "<hr>Name: <input contenteditable='true' id='editSynthName' value='" + editElement.elementName + "'><br>";
-
-    tmpHtml += "Octave:<select id='editSynthOctave'>";
-    for( i = -3;i <= 3;i++ )
-    {
-      tmpHtml += "<option value='" + i + "' ";
-      if( editElement.octave == i )
-        tmpHtml += "selected='selected'";
-      tmpHtml += ">" + i + "</option>";
-    }
-    tmpHtml += "</select><br>";
-
-    tmpHtml += "Instrument:<select id='editSynthInstrument'>";
-    for( i = 0;i < synthTypes.length;i++ )
-    {
-      tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
-      if( editElement.instrument == synthTypes[ i ] )
-        tmpHtml += "selected='selected'";
-      tmpHtml += ">" + synthTypes[ i ] + "</option>";
-    }
-    tmpHtml += "</select><br>";
-
-    tmpHtml += "<div class='css_keyboard' id='keyboard_id'><br>";
-    document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
-
-    drawKeyboard();
-  }
-  else
-  {
-    // tbd, add this synth to clipboard
+    genEditSynthHTML();
   }
 }
 
@@ -304,6 +235,7 @@ function saveEdits()
       case "CLibSynth":
         editElement.elementName = document.getElementById( "editSynthName" ).value;
         editElement.instrument = document.getElementById( "editSynthInstrument" ).value;
+        editElement.volume = document.getElementById( "editSynthVolume" ).value;
         editElement.octave = document.getElementById( "editSynthOctave" ).value;
         editElement.duration = document.getElementById( "editSynthDuration" ).value;
         editElement.delaySend = document.getElementById( "editSynthDelay" ).value;
@@ -335,7 +267,6 @@ function changeMode( mode )
     document.getElementById( 'modeEditButton' ).classList.add( 'css_highlight_red' );
   else
     document.getElementById( 'modeEditButton' ).classList.remove( 'css_highlight_red' );
-
 }
 
 function synthAdd()
@@ -362,7 +293,7 @@ function playElement( status )
       ce.playNext = ( seqType == seqTypes[ 2 ] ) ? true : false;
 
       document.getElementById( ce.id ).classList.add( 'css_playing' );
-      ce.playing = true;
+
       if( ce.objType == "CSample" )
       {
         var af = ce.audioFile;
@@ -375,22 +306,31 @@ function playElement( status )
 
           af.sampleObj = ce;
           af.play();
+          ce.playing = true;
         }
         else
         {
           console.log( "Audio not loaded:", ce.elementName );
-          ce.playing = false;
         }
       }
       else if( ce.objType == "CSynth" )
       {
-        // find the library synth
+        var found = false;
+        // find in the library
         for( var synthIx = 0;synthIx < synthLibrary.length;synthIx++ )
           if( synthLibrary[ synthIx ].elementName == ce.elementName )
           {
             playSynth( synthLibrary[ synthIx ] );
+            ce.playing = true;
+            found = true;
             break;
           }
+      
+        if( !found )
+        {
+          console.log( "Synth not found." );
+          synthDebug();
+        }
       }
       if( seqType != seqTypes[ 0 ] )
       {
@@ -428,4 +368,22 @@ function togglePlayMode()
 function changeURL()
 {
   serverURL = document.getElementById( 'serverURL' ).value;
+}
+
+// A key on the generated keyboard was pressed.
+function keyboardPressed( note )
+{
+  var pressed = ( ( 1 << note ) & editElement.notes );
+  var elem = document.getElementById( 'keyboardKey_' + note );
+
+  if( pressed )
+  {
+    editElement.notes &= ~( 1 << note ); // clear
+    elem.classList.remove( 'css_pressedKey' );
+  }
+  else
+  {
+    editElement.notes |= ( 1 << note );
+    elem.classList.add( 'css_pressedKey' );
+  }
 }

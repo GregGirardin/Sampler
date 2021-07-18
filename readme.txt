@@ -13,3 +13,6 @@ Synthesis / MIDI
 
 Volume / Fade in/out
 
+Reverb / Delay controls, send
+
+

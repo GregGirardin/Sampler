@@ -6,8 +6,8 @@ var serverURL = 'http://192.168.0.2:8080/'; // this is where samples.json and al
 // var serverURL = 'https://greggirardin.github.io/samples/';
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 
-var configFile = 'sampleConfig.json';
-var synthConfigFile = 'synthConfig.json';
+const configFile = 'sampleConfig.json';
+const synthConfigFile = 'synthConfig.json';
 
 function gotSamples( file, data )
 {
@@ -23,6 +23,8 @@ function gotConfig( file, data )
     genElementConfigHTML();
     getSampleAudio();
   }
+  else
+    console.log( "No config." );
 }
 
 function gotSynthLib( file, data )
@@ -32,6 +34,8 @@ function gotSynthLib( file, data )
     synthLibrary = JSON.parse( data );
     genSynthLibraryHTML();
   }
+  else
+    console.log( "No Synth Library." );
 }
 
 function getSampleAudio()
@@ -59,9 +63,11 @@ function getFileFromServer( filename, callback )
       else
         callback( filename, false ); // Error, file not present probably.
   }
+
   xhr.onerror = function( e ) {
     callback( filename, false );
   }
+
   xhr.ontimeout = function( e ) {
     callback( filename, false );
   }

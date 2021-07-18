@@ -3,25 +3,37 @@
 
           | Start Timer       clickHoldTO
   Time -----------------------|   Trigger Hold at 'up' for determinism.
-    ______/-------------------|---\_ Hold
+B1  ______/-------------------|---\_ Hold
     ______/----------\________| Single Tap
-    ______/--\___/-| Double Tap 
+    ______/--\___/ <- Double Tap 
           ^--- Button pressed
+B2 ___________________________|
+
+***
+
+B1  ______/-------------------| Both Hold
+B2  ___________/--------------|
+
+***
+
+B1  ______/-----------*-\____
+B2  ______/--------\ <-- Both Tap
+                      
 */
 const clickHoldTO = 250;
 
 var footSwitchButtons = []; // array of buttons
 var bothHeldTimer;
 
-var fsMode = "PM"; // Play Mode
+var fsMode = "PM"; // Play Mode. May add other modes if necessary.
 
 var fsButtonMap = 
 {
-  "EVENT_TAP" : {
-    "BUTTON1" : {
-      id : 'fsB1Tap', // the DOM element to flash
-      PM : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
-      DM : { html :       "", action : function() { } }
+  "EVENT_TAP" : { // Event type
+    "BUTTON1" : { // Event source
+      id : 'fsB1Tap', // the DOM element to highlight
+      PM : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } }, // performance mode info
+      DM : { html :       "", action : function() { } } // Other mode TBD
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
@@ -46,6 +58,7 @@ var fsButtonMap =
       PM : { html : "#8800;", action : function() { playElement( 'STOP' ) } },
       DM : { html : "#8800;", action : function() { playElement( 'STOP' ) } }
     },
+    // No Double tap of both
   },
 
   "EVENT_HOLD" : {
@@ -172,7 +185,7 @@ function buttonEvent( event, buttonID )
   setTimeout( buttonHLTimer, 100 );
 }
 
-function buttonHLTimer()
+function buttonHLTimer() // Highlight timer.
 {
   var buttons = document.getElementsByClassName( 'css_FSButton' );
   for( i = 0;i < buttons.length;i++ )
@@ -194,28 +207,20 @@ function keyHandler( e, state )
   switch( e.code )
   {
     case 'ArrowLeft':
-    case 'ArrowUp':   ix = 0; break;
+    case 'ArrowUp':
+      ix = 0; break;
     case 'ArrowRight':
-    case 'ArrowDown': ix = 1; break;
-    default: return;
+    case 'ArrowDown':
+      ix = 1; break;
+
+    default:
+      return;
   }
   footSwitchButtons[ ix ].setState( state );
 }
 
 function keyPressedHandler( e ) { keyHandler( e, true ); } // down / pressed
 function keyRelHandler( e ) { keyHandler( e, false ); } // up / released
-
-function keyPressed( note )
-{
-  var pressed = ( ( 1 << note ) & editElement.notes );
-
-  if( pressed )
-    editElement.notes &= ~( 1 << note ); // clear
-  else
-    editElement.notes |= ( 1 << note );
-
-  drawKeyboard();
-}
 
 function moveCursor( dir )
 {

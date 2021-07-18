@@ -1,5 +1,7 @@
 // Functions that generation HTML content.
 
+const seqTypes = [ "None", "Next", "Cont" ];
+
 /////////////// /////////////// /////////////// ///////////////
 function genElementConfigHTML()
 {
@@ -76,9 +78,6 @@ function genElementConfigHTML()
     elem = document.getElementById( 'slGroup.' + cursorGroup );
   if( elem )
     elem.classList.add( 'css_cursor' );
-
-  // if( !audioFiles[ curConfig.groups[ i ].elements[ j ].filename ] )
-  //   classes += ' css_pending';
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -160,27 +159,102 @@ function toggleHelp()
   helpElem.innerHTML = helpHtml;
 }
 
-// for editing a Synth.
-function drawKeyboard()
+function genEditGroupHTML()
 {
+  var tmpHtml = "<hr>";
+  tmpHtml += "Name: <input contenteditable='true' id='editGroupName' value='" + editElement.elementName + "'><br>";
+  tmpHtml += "Sequence:<select id='editGroupSequence'>";
+
+  for( var i = 0;i < seqTypes.length;i++ )
+  {
+    tmpHtml += "<option value='" + seqTypes[ i ] + "' ";
+    if( editElement.seqType == seqTypes[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + seqTypes[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+}
+
+function genEditSampleHTML()
+{
+  var tmpHtml = "<hr>";
+
+  tmpHtml += "Display Name: <input contenteditable='true' id='editSampleName' value='" + editElement.elementName + "'><br>";
+  tmpHtml += "File: " + editElement.filename + "<br>";
+  tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editElement.volume + "'><br>";
+  tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editElement.fadeInTime + "'><br>";
+  tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editElement.fadeOutTime + "'><br>";
+  var duration = "?";
+  if( editElement.audioFile )
+    duration = ( editElement.audioFile.duration * 1000 ).toString().split( '.' )[ 0 ] + "ms";
+  tmpHtml += "Audio Length: " + duration + "<br>";
+  tmpHtml += "Play:<select id='editSamplePT'>";
+
+  for( i = 0;i < loopTypes.length;i++ )
+  {
+    tmpHtml += "<option value='" + loopTypes[ i ] + "' ";
+    if( editElement.loopType == loopTypes[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + loopTypes[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+}
+
+// for editing a Synth.
+function genEditSynthHTML()
+{
+  var tmpHtml = "<hr>Name: <input contenteditable='true' id='editSynthName' value='" + editElement.elementName + "'><br>";
+
+  tmpHtml += "Octave:<select id='editSynthOctave'>";
+  for( i = 3;i >= -3;i-- )
+  {
+    tmpHtml += "<option value='" + i + "' ";
+    if( editElement.octave == i )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + i + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  tmpHtml += "Instrument:<select id='editSynthInstrument'>";
+  for( i = 0;i < synthTypes.length;i++ )
+  {
+    tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
+    if( editElement.instrument == synthTypes[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + synthTypes[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  tmpHtml += "Voume: <input type='range' id='editSynthVolume' min='0' max='100' value='" + editElement.volume + "'><br>";
+  tmpHtml += "Duration: <input type='range' id='editSynthDuration' min='0' max='1000' value='" + editElement.duration + "'><br>";
+  tmpHtml += "Reverb: <input type='range' id='editSynthReverb' min='0' max='100' value='" + editElement.reverbSend + "'><br>";
+  tmpHtml += "Delay: <input type='range' id='editSynthDelay' min='0' max='100' value='" + editElement.delaySend + "'><br>";
+  tmpHtml += "<div class='css_keyboard'><br>";
+
+  //document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+
   const noteNames = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
   const blackKeys = [         1,         3,              6,         8,        10 ];
   // Two octave keyboard
-  var tmpHtml = "<div class='css_keyboard' id='keyboard'><br>";
 
-  for( var note = 0;note < 24;note++ )
+  for( var note = 0;note < 32;note++ )
   {
     var css_class = ( blackKeys.includes( note % 12 ) ) ? 'css_blackKey' : 'css_whiteKey';
 
     if( ( 1 << note ) & editElement.notes )
       css_class += ' css_pressedKey';
 
-    tmpHtml += "<button class='" + css_class + "' onclick='keyPressed( " + note + " );'>" + noteNames[ note % 12 ] + "</button>";
+    tmpHtml += "<button id='keyboardKey_" + note + "' class='" + css_class + "' onclick='keyboardPressed( " + note + " );'>" + noteNames[ note % 12 ] + "</button>";
   }
   tmpHtml += "<br><br></div>";
-  tmpHtml += "Duration: <input type='range' id='editSynthDuration' min='0' max='1000' value='" + editElement.duration + "'><br>";
-  tmpHtml += "Reverb: <input type='range' id='editSynthReverb' min='0' max='100' value='" + editElement.reverbSend + "'><br>";
-  tmpHtml += "Delay: <input type='range' id='editSynthDelay' min='0' max='100' value='" + editElement.delaySend + "'><br>";
 
-  document.getElementById( 'keyboard_id' ).innerHTML = tmpHtml;
+  document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+}
+
+function configFX()
+{
 }

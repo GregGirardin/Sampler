@@ -3,11 +3,10 @@
 var configEditedFlag = false;
 var synthEditedFlag = false;
 var sampleLibrary = {}; // object of ClLibrarySample
-var synthLibrary = []; // object of CSynth
+var synthLibrary = []; // array of CSynth
 var curConfig;
 
 var editElement; // What we're editing if "Mode_Edit"
-
 var didNavFlag = false;
 
 // Constants.
@@ -15,12 +14,8 @@ const MAX_GROUPS = 10;
 
 var operationMode = "Mode_Default";
 var fsMode = "PM"; 
-var cursorGroup = 0, cursorElement = 0; // cursor
-
 var loopTypes = [ "Once", "Repeat" ];
-var seqTypes = [ "None",
-                 "Next",  // move to the next sample in the group
-                 "Cont" ]; // keep playing from one sample to the next.
+var cursorGroup = 0, cursorElement = 0; // cursor
 
 class CSample
 {
@@ -82,7 +77,7 @@ function sampleListInit()
 
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
-  getFileFromServer( "synthLib.json", gotSynthLib );
+  getFileFromServer( synthConfigFile, gotSynthLib );
 
   document.getElementById( 'serverURL' ).value = serverURL;
   document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
@@ -94,41 +89,4 @@ function sampleListInit()
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
 
   genSynthLibraryHTML();
-}
-
-function stopAllAudio() // go through all groups / elements and call stopAudio.
-{
-  for( var g = 0;g < curConfig.groups.length;g++ )
-    for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
-      stopAudio( curConfig.groups[ g ].elements[ s ] );
-}
-
-function stopAudio( element )
-{
-  if( element.playing )
-  {
-    element.playing = false;
-    if( element.id )
-    {
-      var elem = document.getElementById( element.id );
-      elem.classList.remove( 'css_playing' );
-    }
-    if( element.objType == "CSample" )
-      element.audioFile.pause();
-    else if( element.objType == "CSynth" )
-    {
-      masterGain.gain.value = 0.0;
-
-      for( var sourceIx = 0;sourceIx < NUM_SOURCES;sourceIx++ )
-        if( audioSource[ sourceIx ] )
-          audioSource[ sourceIx ].source.disconnect();
-    }
-  }
-}
-
-function playEndedCB( ev )
-{
-  stopAudio( this.sampleObj );
-  if( this.sampleObj.playNext && !didNavFlag )
-    playElement( "START" );
 }
