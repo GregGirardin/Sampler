@@ -48,6 +48,13 @@ function genElementConfigHTML()
 
       if( g.elements[ j ].playing )
         classes += ' css_playing';
+      
+      if( g.elements[ j ].objType == "CSynth" ) // make sure there's an instrument
+      {
+        var libSynth = synthFromName( g.elements[ j ].elementName ); // if this is a synth and is in the library.
+        if( !libSynth || (libSynth.instrument == "None" && g.instrument == "None" ) )
+          classes += ' css_noInstrument';
+      }
 
       tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
@@ -135,7 +142,7 @@ function genSynthLibraryHTML()
   var tempHtml = "<hr>";
 
   for( var i = 0;i < synthLibrary.length;i++ )
-    tempHtml += "<button id='libSynth." + i + "' class='css_synth' onclick='synthClick( " + i + " )'" +
+    tempHtml += "<button id='libSynth." + i + "' class='css_synth'  onclick='synthClick( " + i + " )'" +
                 " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
                 synthLibrary[ i ].elementName + "</button>\n";
 
@@ -149,6 +156,7 @@ function genSynthLibraryHTML()
 var helpState = false;
 function toggleHelp()
 {
+  editElement = undefined; 
   helpState = !helpState;
   var helpHtml = "";
 
@@ -171,6 +179,16 @@ function genEditGroupHTML()
     if( editElement.seqType == seqTypes[ i ] )
       tmpHtml += "selected='selected'";
     tmpHtml += ">" + seqTypes[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  tmpHtml += "Instrument:<select id='editGroupInstrument'>";
+  for( i = 0;i < synthTypes.length;i++ )
+  {
+    tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
+    if( editElement.instrument == synthTypes[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + synthTypes[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
@@ -229,7 +247,7 @@ function genEditSynthHTML()
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Voume: <input type='range' id='editSynthVolume' min='0' max='100' value='" + editElement.volume + "'><br>";
+  tmpHtml += "Volume: <input type='range' id='editSynthVolume' min='0' max='100' value='" + editElement.volume + "'><br>";
   tmpHtml += "Duration: <input type='range' id='editSynthDuration' min='0' max='1000' value='" + editElement.duration + "'><br>";
   tmpHtml += "Reverb: <input type='range' id='editSynthReverb' min='0' max='100' value='" + editElement.reverbSend + "'><br>";
   tmpHtml += "Delay: <input type='range' id='editSynthDelay' min='0' max='100' value='" + editElement.delaySend + "'><br>";

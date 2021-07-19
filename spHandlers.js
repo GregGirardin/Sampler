@@ -119,6 +119,11 @@ function dropElem( ev )
       var delGroup = parseInt( dragElem.substring( slGroup.length, ) );
       curConfig.groups.splice( delGroup, 1 );
     }
+    else if( dragElem.substring( 0, libSynthID.length ) == libSynthID )
+    {
+      var delSynth = parseInt( dragElem.substring( libSynthID.length, ) );
+      synthLibrary.splice( delSynth, 1 );
+    }
     else if( dragElem.substring( 0, cbStr.length ) == cbStr )
       curConfig.groups[ curConfig.groups.length - 1 ].elements = [];
   }
@@ -127,6 +132,7 @@ function dropElem( ev )
 
   getSampleAudio();// get any new audio dragged in from the library.
   genElementConfigHTML();
+  genSynthLibraryHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -144,15 +150,12 @@ function setSampleConfigName()
 /////////////// /////////////// /////////////// ///////////////
 function groupClick( groupIndex )
 {
-  if( operationMode == "Mode_Edit" )
-  {
-    saveEdits();
-    editElement = curConfig.groups[ groupIndex ];
-    genEditGroupHTML()
-  }
+  saveEdits();
+  editElement = curConfig.groups[ groupIndex ];
+  genEditGroupHTML()
 }
 
-/////////////// /////////////// ///////////////
+/////////////// /////////////// /////////////// ///////////////
 function elemClick( groupIndex, sampleIndex )
 {
   if( ( cursorGroup != groupIndex ) && ( cursorElement != sampleIndex ) )
@@ -161,11 +164,11 @@ function elemClick( groupIndex, sampleIndex )
   cursorGroup = groupIndex;
   cursorElement = sampleIndex;
 
-  if( operationMode == "Mode_Edit" )
-  {
-    saveEdits();
-    editElement = curConfig.groups[ groupIndex ].elements[ sampleIndex ];
+  saveEdits();
+  editElement = curConfig.groups[ groupIndex ].elements[ sampleIndex ];
 
+  if( editElement )
+  {
     if( editElement.objType == "CSample" )
       genEditSampleHTML();
     else if( editElement.objType == "CSynth" )
@@ -175,19 +178,17 @@ function elemClick( groupIndex, sampleIndex )
     }
     else
       editElement = undefined;
+
+    genElementConfigHTML(); // need to indicate the cursor location
   }
-  genElementConfigHTML(); // need to indicate the cursor location
 }
 
-/////////////// /////////////// ///////////////
+/////////////// /////////////// /////////////// ///////////////
 function synthClick( synthIndex )
 {
-  if( operationMode == "Mode_Edit" )
-  {
-    saveEdits();
-    editElement = synthLibrary[ synthIndex ];
-    genEditSynthHTML();
-  }
+  saveEdits();
+  editElement = synthLibrary[ synthIndex ];
+  genEditSynthHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -228,6 +229,7 @@ function saveEdits()
     
       case "CGroup":
         editElement.elementName = document.getElementById( "editGroupName" ).value;
+        editElement.instrument = document.getElementById( "editGroupInstrument" ).value;
         editElement.seqType = document.getElementById( "editGroupSequence" ).value;
         configEditedFlag = true;
         break;
@@ -249,24 +251,6 @@ function saveEdits()
 
   genElementConfigHTML();
   genSynthLibraryHTML();
-}
-
-///////////////////////// ///////////////////////// /////////////////////////
-function changeMode( mode )
-{
-  // We were editing a library file. Save the changes.
-  if( operationMode == "Mode_Edit" )
-    saveEdits();
-  operationMode = ( mode == operationMode ) ? "Mode_Default" : mode;
-
-  // var buttons = document.getElementsByClassName( 'css_modeButton' );
-  // for( var i = 0;i < buttons.length;i++ )
-  //   buttons[ i ].classList.remove( 'css_highlight_red' );
-
-  if( operationMode == "Mode_Edit" )
-    document.getElementById( 'modeEditButton' ).classList.add( 'css_highlight_red' );
-  else
-    document.getElementById( 'modeEditButton' ).classList.remove( 'css_highlight_red' );
 }
 
 function synthAdd()
@@ -315,22 +299,8 @@ function playElement( status )
       }
       else if( ce.objType == "CSynth" )
       {
-        var found = false;
-        // find in the library
-        for( var synthIx = 0;synthIx < synthLibrary.length;synthIx++ )
-          if( synthLibrary[ synthIx ].elementName == ce.elementName )
-          {
-            playSynth( synthLibrary[ synthIx ] );
-            ce.playing = true;
-            found = true;
-            break;
-          }
-      
-        if( !found )
-        {
-          console.log( "Synth not found." );
-          synthDebug();
-        }
+        playSynth( ce.elementName );
+        ce.playing = true;
       }
       if( seqType != seqTypes[ 0 ] )
       {

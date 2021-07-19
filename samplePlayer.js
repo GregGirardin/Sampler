@@ -10,9 +10,8 @@ var editElement; // What we're editing if "Mode_Edit"
 var didNavFlag = false;
 
 // Constants.
-const MAX_GROUPS = 10;
+const MAX_GROUPS = 20;
 
-var operationMode = "Mode_Default";
 var fsMode = "PM"; 
 var loopTypes = [ "Once", "Repeat" ];
 var cursorGroup = 0, cursorElement = 0; // cursor
@@ -39,6 +38,7 @@ class CGroup
   constructor( groupName )
   {
     this.objType = "CGroup";
+    this.instrument = "None";
 
     this.elementName = groupName;
     this.seqType = "None"; // None, Single, Loop
@@ -58,9 +58,6 @@ class CSampleConfig
   }
 }
 
-var audioContext;
-
-//////////////////////////// ////////////////////////////
 //////////////////////////// ////////////////////////////
 window.onload = sampleListInit; // set up main entry point
 
@@ -89,4 +86,5 @@ function sampleListInit()
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
 
   genSynthLibraryHTML();
+  initWebAudio();
 }
