@@ -18,17 +18,18 @@
   <input contenteditable='true' id='serverURL' value='URL'>
   <button class='css_menuButton' id='saveConfigButton'  onclick='sampleConfigSave();'>Save</button>
   <button class='css_modeButton' id='Help'              onclick='toggleHelp();'>Help</button>
+  <button class='css_modeButton' id='editButton'        onclick='toggleEdit();'>Edit</button>
   <button class='css_modeButton' id='configFX'          onclick='configFX();'>FX</button>
   <hr>
   <div id='footSwitchButtons' align='left'>
     Tap
     <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&larr;</button>
     <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&rarr;</button>
-    <button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB" );'>Both</button>
+    <button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB" );'>&larr;&larr;</button>
     Hold
     <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>&uarr;</button>
     <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>&darr;</button>
-    <button class='css_FSButton' id='fsBBHold' onclick='buttonEvent( "EVENT_HOLD", "BUTTONB" );'>Both</button>
+    <button class='css_FSButton' id='fsBBHold' onclick='buttonEvent( "EVENT_HOLD", "BUTTONB" );'>&uarr;&uarr;</button>
     Double Tap
     <button class='css_FSButton' id='fsB1DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON1" );'>&#62;</button>
     <button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON2" );'>&#8800;</button>

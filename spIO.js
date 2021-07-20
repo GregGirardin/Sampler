@@ -21,7 +21,6 @@ function gotConfig( file, data )
   {
     curConfig = JSON.parse( data );
     genElementConfigHTML();
-    getSampleAudio();
   }
   else
     console.log( "No config." );
@@ -33,21 +32,10 @@ function gotSynthLib( file, data )
   {
     synthLibrary = JSON.parse( data );
     genSynthLibraryHTML();
+    genElementConfigHTML();
   }
   else
     console.log( "No Synth Library." );
-}
-
-function getSampleAudio()
-{
-  for( var g = 0;g < curConfig.groups.length;g++ )
-    for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
-    {
-      var cs = curConfig.groups[ g ].elements[ s ];
-      if( cs.objType == "CSample" )
-        if( cs.audioFile == undefined )
-          cs.audioFile = new Audio( serverURL + cs.filename );
-    }
 }
 
 function getFileFromServer( filename, callback )
@@ -84,14 +72,7 @@ function sampleConfigSave()
 
   if( configEditedFlag )
   {
-    // Hack. In order not to save the Audio in the json we delete it and reload after saving.
-    for( var g = 0;g < curConfig.groups.length;g++ )
-      for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
-        curConfig.groups[ g ].elements[ s ].audioFile = undefined;
-
     var configData = JSON.stringify( curConfig, null, "  " );
-
-    getSampleAudio();
 
     var formData = new FormData();
     formData.append( "data", configData );

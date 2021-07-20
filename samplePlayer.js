@@ -16,22 +16,6 @@ var fsMode = "PM";
 var loopTypes = [ "Once", "Repeat" ];
 var cursorGroup = 0, cursorElement = 0; // cursor
 
-class CSample
-{
-  constructor( filename )
-  {
-    this.objType = "CSample";
-    this.elementName = filename;
-    this.playing = false;
-
-    this.filename = filename; // filename on the server.
-    this.fadeInTime = 0; // Milliseconds
-    this.fadeOutTime = 0;
-    this.loopType = loopTypes[ 0 ];
-    this.volume = 100;
-    this.duration = "?";
-  }
-}
 
 class CGroup
 {

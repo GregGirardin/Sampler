@@ -33,17 +33,14 @@ var fsButtonMap =
     "BUTTON1" : { // Event source
       id : 'fsB1Tap', // the DOM element to highlight
       PM : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } }, // performance mode info
-      DM : { html :       "", action : function() { } } // Other mode TBD
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
       PM : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
-      DM : { html :       "", action : function() { } }
     },
     "BUTTONB" : { 
       id : 'fsBBTap',
-      PM : { html : "NA", action : function() { } },
-      DM : { html : "NA", action : function() { } } 
+      PM : { html : "&rarr&rarr;", action : function() { moveCursor( 'START' );} },
     },
   },
 
@@ -51,12 +48,10 @@ var fsButtonMap =
     "BUTTON1" : {
       id : 'fsB1DTap',
       PM : { html : "&#62;", action : function() { playElement( 'START' ); } },
-      DM : { html : "&#62;", action : function() { playElement( 'START' ); } }
     },
     "BUTTON2" : {
       id : 'fsB2DTap',
       PM : { html : "#8800;", action : function() { playElement( 'STOP' ) } },
-      DM : { html : "#8800;", action : function() { playElement( 'STOP' ) } }
     },
     // No Double tap of both
   },
@@ -65,17 +60,14 @@ var fsButtonMap =
     "BUTTON1" : {
       id : 'fsB1Hold',
       PM :  { html : "&uarr;", action : function() { moveCursor( 'UP' ); } }, 
-      DM :  { html : "#8800;", action : function() { moveCursor( 'UP' ); } }
     },
     "BUTTON2" : {
       id : 'fsB2Hold',
       PM : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
-      DM : { html : "#8800;", action : function() { moveCursor( 'DOWN' ); } }
     },
     "BUTTONB" : {
       id : 'fsBBHold',
-      PM : { html :   "Play", action : function() { togglePlayMode(); } },
-      DM : { html : "Direct", action : function() { togglePlayMode(); } }
+      PM : { html :   "Play", action : function() { moveCursor( 'TOP' ); } },
     },
   }
 };
@@ -226,6 +218,10 @@ function moveCursor( dir )
 {
   switch( dir )
   {
+    case 'TOP':
+      cursorGroup = 0;
+      break;
+  
     case 'UP':
       if( cursorGroup > 0 )
         cursorGroup -= 1;
@@ -234,6 +230,10 @@ function moveCursor( dir )
     case 'DOWN':
       if( cursorGroup < curConfig.groups.length - 2 )
         cursorGroup += 1;
+      break;
+
+    case 'START':
+      cursorElement = 0;
       break;
 
     case 'LEFT':

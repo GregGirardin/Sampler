@@ -1,6 +1,6 @@
 // Functions that generation HTML content.
 
-const seqTypes = [ "None", "Next", "Cont" ];
+const seqTypes = [ "None", "Next" ];
 
 /////////////// /////////////// /////////////// ///////////////
 function genElementConfigHTML()
@@ -88,7 +88,7 @@ function genElementConfigHTML()
 }
 
 /////////////// /////////////// /////////////// ///////////////
-// generate the library pane.
+// generate the "Sample Library".
 // 1) list of samples from the library that can be dragged into the set list 
 // 2) A library song we're editing.
 /////////////// /////////////// /////////////// ///////////////
@@ -153,20 +153,6 @@ function genSynthLibraryHTML()
 
 /////////////// /////////////// ///////////////
 /////////////// /////////////// ///////////////
-var helpState = false;
-function toggleHelp()
-{
-  editElement = undefined; 
-  helpState = !helpState;
-  var helpHtml = "";
-
-  if( helpState )
-    helpHtml = htmlConstStrings( 0 );
-
-  var helpElem = document.getElementById( 'multiuse' );
-  helpElem.innerHTML = helpHtml;
-}
-
 function genEditGroupHTML()
 {
   var tmpHtml = "<hr>";
@@ -201,13 +187,12 @@ function genEditSampleHTML()
 
   tmpHtml += "Display Name: <input contenteditable='true' id='editSampleName' value='" + editElement.elementName + "'><br>";
   tmpHtml += "File: " + editElement.filename + "<br>";
-  tmpHtml += "Volume: <input type='range' id='editSampleVolume' min='0' max='100' value='" + editElement.volume + "'><br>";
+  tmpHtml += "Master: <input type='range' id='editSampleMasterLevel' min='0' max='100' value='" + editElement.masterLevel + "'><br>";
+  tmpHtml += "Dry: <input type='range' id='editSampleDryLevel' min='0' max='100' value='" + editElement.dryLevel + "'><br>";
+  tmpHtml += "Delay: <input type='range' id='editSampleDelayLevel' min='0' max='100' value='" + editElement.delayLevel + "'><br>";
+  tmpHtml += "Reverb: <input type='range' id='editSampleReverbLevel' min='0' max='100' value='" + editElement.reverbLevel + "'><br>";
   tmpHtml += "Fade In: <input type='range' id='editSampleFIT' min='0' max='5000' value='" + editElement.fadeInTime + "'><br>";
   tmpHtml += "Fade Out: <input type='range' id='editSampleFOT' min='0' max='5000' value='" + editElement.fadeOutTime + "'><br>";
-  var duration = "?";
-  if( editElement.audioFile )
-    duration = ( editElement.audioFile.duration * 1000 ).toString().split( '.' )[ 0 ] + "ms";
-  tmpHtml += "Audio Length: " + duration + "<br>";
   tmpHtml += "Play:<select id='editSamplePT'>";
 
   for( i = 0;i < loopTypes.length;i++ )
@@ -247,10 +232,10 @@ function genEditSynthHTML()
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Volume: <input type='range' id='editSynthVolume' min='0' max='100' value='" + editElement.volume + "'><br>";
-  tmpHtml += "Duration: <input type='range' id='editSynthDuration' min='0' max='1000' value='" + editElement.duration + "'><br>";
-  tmpHtml += "Reverb: <input type='range' id='editSynthReverb' min='0' max='100' value='" + editElement.reverbSend + "'><br>";
-  tmpHtml += "Delay: <input type='range' id='editSynthDelay' min='0' max='100' value='" + editElement.delaySend + "'><br>";
+  tmpHtml += "Master: <input type='range' id='editSynthMasterLevel' min='0' max='100' value='" + editElement.volume + "'><br>";
+  tmpHtml += "Dry: <input type='range' id='editSynthDryLevel' min='0' max='100' value='" + editElement.dryLevel + "'><br>";
+  tmpHtml += "Delay: <input type='range' id='editSynthDelayLevel' min='0' max='100' value='" + editElement.delayLevel + "'><br>";
+  tmpHtml += "Reverb: <input type='range' id='editSynthReverbLevel' min='0' max='100' value='" + editElement.reverbLevel + "'><br>";
   tmpHtml += "<div class='css_keyboard'><br>";
 
   //document.getElementById( 'multiuse' ).innerHTML = tmpHtml;

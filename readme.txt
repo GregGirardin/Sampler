@@ -3,16 +3,14 @@ A javascript sample player.
 
 Notes:
 
-Handle files w/ spaces
-Handle files not existing
-Load files as added.
-
-files to curSampleConfig, but don't save in json.
-
-Synthesis / MIDI
-
-Volume / Fade in/out
-
-Reverb / Delay controls, send
 
 
+EDIT Button
+
+Other FX sends
+
+Master Reverb / Delay controls, send
+
+Volume / Fade in/out ADSR 
+
+Instruments: Pads Lead, Organ, Glass

@@ -1,25 +1,59 @@
 /* Web Audio API using Tone.js
 
-    S0 S1 S2.. :  Audio sources. Single dry amount and a wet send for each parallel effect
-    |  |  | TBD pan/level per voice
-    |/___/
-    |
-  Master Gain <- The volume
-    |\
-    | \
-    |  \_________
-    |   |        |
-    |  RGain    DGain <- FX levels
-    |   |        |
-    |  Reverb   Delay <- Parallel FX
-    |   |        |
-    |   /       /
-   Out  <------   
-  */
+  S0 S1 S2.. :  Audio sources.
+  |  |  | TBD pan/level per voice
+  |/___/
+  |
+Master Gain <- The volume
+  |
+  |
+  Chorus
+  |
+  Phaser
+  |
+  Panner
+  |
+  Tremolo
+  |
+  |\
+  | \
+  |  \_______________
+  |         |        |
+  Dry       RGain    DGain <- FX levels
+  |         |        |
+  |         Reverb   Delay <- Parallel FX
+  |         |        |
+  |         /       /
+  Out  <-----------  
+*/
 
 const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle" ];
 
-class CSynth
+class CSample // A Sample in the config.
+{
+  constructor( filename )
+  {
+    this.objType = "CSample";
+    this.elementName = filename;
+    this.playing = false;
+
+    this.filename = filename; // filename on the server.
+    this.fadeInTime = 0; // Milliseconds
+    this.fadeOutTime = 0;
+    this.loopType = loopTypes[ 0 ];
+    this.duration = "?";
+
+    this.masterLevel = 100;
+    this.dryLevel = 100;
+    this.reverbLevel = 0;
+    this.delayLevel = 0;
+  }
+}
+
+// Synth is handled opposite of samples in that most information about the synth
+// is in the library, not in the current config.
+
+class CSynth // A synth in the config. Just a name referring to the CLibSynth
 {
   constructor( name )
   {
@@ -39,10 +73,12 @@ class CLibSynth // synthesized chords w/ Web Audio API generated sounds
     this.notes = 0x0; // bit field of pressed keys bit 0 is a C
     this.instrument = synthTypes[ 0 ];
     this.octave = 0;
-    this.duration = 0; // ms.
-    this.reverbSend = 0; // 0-100
-    this.delaySend = 0;
-    this.volume = 100;
+
+    // Levels are 0-100
+    this.masterLevel = 100;
+    this.dryLevel = 100;
+    this.reverbLevel = 0; 
+    this.delayLevel = 0;
   }
 }
 
@@ -52,27 +88,29 @@ const EFFECT_DELAY = 1;
 const EFFECT_LAST = 1;
 
 var audioSource = []; // Use a PolySynth?
-var masterGain;
-var audioEffectGain = []; // parallel effects levels
+var masterLevel, reverbBlock, delayBlock, tremoloBlock, dryLevel, reverbLevel, delayLevel;
 var samplers = {};
 var activeSampler = undefined;
 
 function initWebAudio()
 {
-  var audioEffect = []; // parallel effects
+  // build chain from bottom up
+  reverbBlock = new Tone.Reverb( { decay : 10, wet : 1 } ).toDestination();
+  delayBlock = new Tone.FeedbackDelay( { delayTime : .4, feedback : 0.5, wet : 1 } ).toDestination();
 
-  masterGain = new Tone.Gain().toDestination(); // dry out.
-  audioEffect[ EFFECT_REVERB ] = new Tone.Reverb( { decay : 10, wet : 1 } ).toDestination();
-  audioEffect[ EFFECT_DELAY ] = new Tone.FeedbackDelay( { delayTime : .4, feedback : 0.5 } ).toDestination();
+  dryLevel = new Tone.Gain().toDestination();
+  reverbLevel = new Tone.Gain().connect( reverbBlock );
+  delayLevel = new Tone.Gain().connect( delayBlock );
 
-  for( var effectIx = EFFECT_REVERB;effectIx <= EFFECT_LAST;effectIx++ )
-  {
-    audioEffectGain[ effectIx ] = new Tone.Gain();
-    masterGain.connect( audioEffectGain[ effectIx ] );
-    audioEffectGain[ effectIx ].connect( audioEffect[ effectIx ] );
-  }
+  tremoloBlock = new Tone.Tremolo( 1, 1 );
+  tremoloBlock.connect( dryLevel );
+  tremoloBlock.connect( delayLevel );
+  tremoloBlock.connect( reverbLevel );
+  tremoloBlock.start();
 
-  samplers[ 'piano' ] = createSampler( 'piano' );
+  masterLevel = new Tone.Gain().connect( tremoloBlock );
+
+  samplers[ 'piano' ] = createSamplerInstrument( 'piano' );
   waInitialized = true;
 }
 
@@ -94,7 +132,7 @@ function stopAudio( element )
       elem.classList.remove( 'css_playing' );
     }
     if( element.objType == "CSample" )
-      element.audioFile.pause();
+      stopSample( element.elementName );
     else if( element.objType == "CSynth" )
       stopSynth();
   }
@@ -122,10 +160,11 @@ function stopSynth()
       audioSource[ sourceIx ] = undefined;
     }
 
-  masterGain.gain.value = 0; 
+  masterLevel.gain.value = 0; 
 }
 
-function createSampler( instrument )
+// Note that this is creating an instrument, not just a "sample".
+function createSamplerInstrument( instrument )
 {
   var sampler = undefined;
 
@@ -168,7 +207,7 @@ function createSampler( instrument )
         },
         release: 1,
         baseUrl: "https://tonejs.github.io/audio/salamander/",
-      } ).connect( masterGain );
+      } ).connect( masterLevel );
 
       break;
   }
@@ -176,23 +215,60 @@ function createSampler( instrument )
   return sampler;
 }
 
+// Play the CSample
+function playSample( sampleObj )
+{
+  // if( !loopFlag )
+  //   af.onended = playEndedCB;
+
+  var libSample = sampleLibrary[ sampleObj.elementName ]; // the ClLibrarySample
+  if( libSample )
+  {
+    masterLevel.gain.value = sampleObj.masterLevel / 100;
+    dryLevel.gain.value = sampleObj.dryLevel / 100;
+    delayLevel.gain.value = sampleObj.delayLevel / 100;
+    reverbLevel.gain.value = sampleObj.reverbLevel / 100;
+
+    // We put the player in the ClLibrarySample so there is only 1 instance per sample.
+    // The same sample may be in multiple groups.
+    if( !libSample.player )
+    {
+      // First time. Need to create the player and connect it.
+      libSample.player = new Tone.Player( serverURL + libSample.filename );
+      libSample.player.autostart = true;
+      libSample.player.connect( masterLevel ); // TBD. For now we never disconnect
+    }
+    else
+      libSample.player.start();
+
+    libSample.player.loop = sampleObj.loopType == "Once" ? false : true;
+  }
+}
+
+function stopSample( sName )
+{
+  var libSample = sampleLibrary[ sName ]; // a CSample
+  if( libSample )
+    if( libSample.player )
+      libSample.player.stop(); // TBD. Disconnect it? All samples will remain connected.
+}
+
 var waInitialized = false;
 
-function synthFromName( sName )
+function synthFromName( sName ) // get the CLibSynth by name
 {
-  var synth = undefined;
-  // find in the library
+  var s = undefined;
+
   for( var synthIx = 0;synthIx < synthLibrary.length;synthIx++ )
     if( synthLibrary[ synthIx ].elementName == sName )
     {
-      synth = synthLibrary[ synthIx ];
+      s = synthLibrary[ synthIx ];
       break;
     }
 
-  return synth;
+  return s;
 }
 
-// Play a CSynth
 function playSynth( sName ) 
 {
   if( !waInitialized )
@@ -206,8 +282,10 @@ function playSynth( sName )
   if( !synth )
     return false;
 
-  audioEffectGain[ EFFECT_REVERB ].gain.value = synth.reverbSend / 100;
-  audioEffectGain[ EFFECT_DELAY ].gain.value = synth.delaySend / 100;
+  masterLevel.gain.value = synth.masterLevel / 100; // rampTo( synth.dryLevel / 100, .1 );
+  dryLevel.gain.value = synth.dryLevel / 100; // rampTo( synth.dryLevel / 100, .1 );
+  delayLevel.gain.value = synth.delayLevel / 100; //rampTo( synth.delayLevel / 100, .2 );
+  reverbLevel.gain.value = synth.reverbLevel / 100; //rampTo( synth.reverbLevel / 100, .2 );
 
   var inst = synth.instrument;
 
@@ -235,7 +313,7 @@ function playSynth( sName )
           audioSource[ sourceIx ] = new Tone.Oscillator( {
                                                           type : synth.instrument,
                                                           frequency : freq,
-                                                        } ).connect( masterGain );
+                                                        } ).connect( masterLevel );
           audioSource[ sourceIx ].start();
   
           sourceIx++;
@@ -256,7 +334,6 @@ function playSynth( sName )
           notesToPlay.push( freq );
         }
 
-      masterGain.gain.value = synth.volume / 100; // 0 - 100
       activeSampler = samplers[ synth.instrument ];
       activeSampler.triggerAttack( notesToPlay );
       break;

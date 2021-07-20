@@ -130,29 +130,51 @@ function dropElem( ev )
 
   configEditedFlag = true;
 
-  getSampleAudio();// get any new audio dragged in from the library.
   genElementConfigHTML();
   genSynthLibraryHTML();
+}
+
+var helpState = false;
+function toggleHelp()
+{
+  if( editElement )
+     saveEdits();
+
+  editElement = undefined; 
+  helpState = !helpState;
+  var helpHtml = "";
+
+  if( helpState )
+    helpHtml = htmlConstStrings( 0 );
+
+  var helpElem = document.getElementById( 'multiuse' );
+  helpElem.innerHTML = helpHtml;
 }
 
 /////////////// /////////////// /////////////// ///////////////
 function setSampleConfigName()
 {
-  var name = prompt( "Enter Config Name:", curConfig.name );
-  if( name )
+  if( editMode )
   {
-    curConfig.name = name;
-    configEditedFlag = true;
-    document.getElementById( 'sampleListName' ).innerHTML = name;
+    var name = prompt( "Enter Config Name:", curConfig.name );
+    if( name )
+    {
+      curConfig.name = name;
+      configEditedFlag = true;
+      document.getElementById( 'sampleListName' ).innerHTML = name;
+    }
   }
 }
 
 /////////////// /////////////// /////////////// ///////////////
 function groupClick( groupIndex )
 {
-  saveEdits();
-  editElement = curConfig.groups[ groupIndex ];
-  genEditGroupHTML()
+  if( editMode )
+  {
+    saveEdits();
+    editElement = curConfig.groups[ groupIndex ];
+    genEditGroupHTML()
+  }
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -164,31 +186,33 @@ function elemClick( groupIndex, sampleIndex )
   cursorGroup = groupIndex;
   cursorElement = sampleIndex;
 
-  saveEdits();
-  editElement = curConfig.groups[ groupIndex ].elements[ sampleIndex ];
-
-  if( editElement )
+  if( editMode )
   {
-    if( editElement.objType == "CSample" )
-      genEditSampleHTML();
-    else if( editElement.objType == "CSynth" )
-    {
-      document.getElementById( 'multiuse' ).innerHTML = "TBD: Edit in Synth Library";
-      editElement = undefined;
-    }
-    else
-      editElement = undefined;
+    saveEdits();
+    editElement = curConfig.groups[ groupIndex ].elements[ sampleIndex ];
 
-    genElementConfigHTML(); // need to indicate the cursor location
+    if( editElement )
+    {
+      if( editElement.objType == "CSample" )
+        genEditSampleHTML();
+      else
+        editElement = undefined;
+
+    }
   }
+
+  genElementConfigHTML(); // need to indicate the cursor location
 }
 
 /////////////// /////////////// /////////////// ///////////////
 function synthClick( synthIndex )
 {
-  saveEdits();
-  editElement = synthLibrary[ synthIndex ];
-  genEditSynthHTML();
+  if( editMode )
+  {
+    saveEdits();
+    editElement = synthLibrary[ synthIndex ];
+    genEditSynthHTML();
+  }
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -220,7 +244,10 @@ function saveEdits()
     {
       case "CSample":
         editElement.elementName = document.getElementById( "editSampleName" ).value; 
-        editElement.volume = document.getElementById( "editSampleVolume" ).value; 
+        editElement.masterLevel = document.getElementById( "editSampleMasterLevel" ).value; 
+        editElement.dryLevel = document.getElementById( "editSampleDryLevel" ).value; 
+        editElement.delayLevel = document.getElementById( "editSampleDelayLevel" ).value; 
+        editElement.reverbLevel = document.getElementById( "editSampleReverbLevel" ).value; 
         editElement.fadeInTime = document.getElementById( "editSampleFIT" ).value; 
         editElement.fadeOutTime = document.getElementById( "editSampleFOT" ).value; 
         editElement.loopType = document.getElementById( "editSamplePT" ).value;
@@ -237,11 +264,12 @@ function saveEdits()
       case "CLibSynth":
         editElement.elementName = document.getElementById( "editSynthName" ).value;
         editElement.instrument = document.getElementById( "editSynthInstrument" ).value;
-        editElement.volume = document.getElementById( "editSynthVolume" ).value;
+        editElement.masterLevel = document.getElementById( "editSynthMasterLevel" ).value;
+        editElement.dryLevel = document.getElementById( "editSynthDryLevel" ).value;
+        editElement.delayLevel = document.getElementById( "editSynthDelayLevel" ).value;
+        editElement.reverbLevel = document.getElementById( "editSynthReverbLevel" ).value;
         editElement.octave = document.getElementById( "editSynthOctave" ).value;
-        editElement.duration = document.getElementById( "editSynthDuration" ).value;
-        editElement.delaySend = document.getElementById( "editSynthDelay" ).value;
-        editElement.reverbSend = document.getElementById( "editSynthReverb" ).value;
+
         synthEditedFlag = true;
         break;
     }
@@ -279,29 +307,18 @@ function playElement( status )
       document.getElementById( ce.id ).classList.add( 'css_playing' );
 
       if( ce.objType == "CSample" )
-      {
-        var af = ce.audioFile;
-        if( af )
-        {
-          af.currentTime = 0; // Start from the beginning
-          af.loop = ( ce.loopType == "Once" ) ? false : true;
-          if( ce.loopType == "Once" )
-            af.onended = playEndedCB;
-
-          af.sampleObj = ce;
-          af.play();
-          ce.playing = true;
-        }
-        else
-        {
-          console.log( "Audio not loaded:", ce.elementName );
-        }
-      }
+        playSample( ce );
       else if( ce.objType == "CSynth" )
       {
-        playSynth( ce.elementName );
-        ce.playing = true;
+        var synth = synthFromName( ce.elementName );
+        var inst = synth.instrument;
+        if( inst == "None" )
+          inst = curConfig.groups[ cursorGroup ].instrument; // use the Group's instrument.
+
+        playSynth( inst );
       }
+      ce.playing = true;
+
       if( seqType != seqTypes[ 0 ] )
       {
         moveCursor( "RIGHT" );
@@ -319,21 +336,26 @@ function playElement( status )
   }
 }
 
-function togglePlayMode()
-{
-  var elem = document.getElementById( 'fsBBHold' );
+var editMode = false;
 
-  if( fsMode == "PM" )
-  {
-    fsMode = "DM"; // direct mode
-    elem.innerHTML = "Direct";
-  }
+function toggleEdit()
+{
+  if( editMode )
+    saveEdits();
+
+  editElement = undefined; 
+
+  editMode = !editMode;
+
+  var b = document.getElementById( 'editButton' );
+  if( editMode )
+    b.classList.add( 'css_highlight_red' );
   else
-  {
-    fsMode = "PM"; // play mode
-    elem.innerHTML = "Play";
-  }
+    b.classList.remove( 'css_highlight_red' );
+
+  document.getElementById( 'multiuse' ).innerHTML = "";
 }
+
 
 function changeURL()
 {
