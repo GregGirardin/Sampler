@@ -262,15 +262,10 @@ function playElement( status )
     if( status == "START" )
     {
       ce.id = "slElement." + cursorGroup + "." + cursorElement;
-      ce.playNext = ( seqType == seqTypes[ 2 ] ) ? true : false;
+      ce.playing = true;
 
       document.getElementById( ce.id ).classList.add( 'css_playing' );
-
-      if( ce.objType == "CSample" )
-        playSample( ce );
-      else if( ce.objType == "CSynth" )
-        playSynth( synthFromName( ce.elementName ) );
-      ce.playing = true;
+      playElemAudio( ce );
 
       if( seqType != seqTypes[ 0 ] )
       {
@@ -289,7 +284,6 @@ function toggleEdit()
     saveEdits();
 
   editElement = undefined; 
-
   editMode = !editMode;
 
   var b = document.getElementById( 'editButton' );

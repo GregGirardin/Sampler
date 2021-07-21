@@ -16,7 +16,6 @@ var fsMode = "PM";
 var loopTypes = [ "Once", "Repeat" ];
 var cursorGroup = 0, cursorElement = 0; // cursor
 
-
 class CGroup
 {
   constructor( groupName )
@@ -27,6 +26,19 @@ class CGroup
     this.elementName = groupName;
     this.seqType = "None"; // None, Single, Loop
     this.elements = []; // CSample, CChord, etc.
+
+    this.fadeInTime = 0; // Milliseconds
+    this.fadeOutTime = 0;
+
+    this.compressorLevel = 0;
+    this.masterLevel = 100;
+    this.distortionLevel = 0;
+    this.chorusLevel = 0;
+    this.phaserLevel = 0;
+    this.tremoloLevel = 0;
+    this.dryLevel = 100;
+    this.reverbLevel = 0;
+    this.delayLevel = 0;
   }
 }
 
