@@ -232,7 +232,7 @@ function genEditSynthHTML()
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Master: <input type='range' id='editSynthMasterLevel' min='0' max='100' value='" + editElement.volume + "'><br>";
+  tmpHtml += "Master: <input type='range' id='editSynthMasterLevel' min='0' max='100' value='" + editElement.masterLevel + "'><br>";
   tmpHtml += "Dry: <input type='range' id='editSynthDryLevel' min='0' max='100' value='" + editElement.dryLevel + "'><br>";
   tmpHtml += "Delay: <input type='range' id='editSynthDelayLevel' min='0' max='100' value='" + editElement.delayLevel + "'><br>";
   tmpHtml += "Reverb: <input type='range' id='editSynthReverbLevel' min='0' max='100' value='" + editElement.reverbLevel + "'><br>";
@@ -260,4 +260,47 @@ function genEditSynthHTML()
 
 function configFX()
 {
+}
+
+function saveEdits()
+{
+  if( editElement )
+    switch( editElement.objType )
+    {
+      case "CSample":
+        editElement.elementName = document.getElementById( "editSampleName" ).value; 
+        editElement.masterLevel = document.getElementById( "editSampleMasterLevel" ).value; 
+        editElement.dryLevel = document.getElementById( "editSampleDryLevel" ).value; 
+        editElement.delayLevel = document.getElementById( "editSampleDelayLevel" ).value; 
+        editElement.reverbLevel = document.getElementById( "editSampleReverbLevel" ).value; 
+        editElement.fadeInTime = document.getElementById( "editSampleFIT" ).value; 
+        editElement.fadeOutTime = document.getElementById( "editSampleFOT" ).value; 
+        editElement.loopType = document.getElementById( "editSamplePT" ).value;
+        configEditedFlag = true;
+        break;
+    
+      case "CGroup":
+        editElement.elementName = document.getElementById( "editGroupName" ).value;
+        editElement.instrument = document.getElementById( "editGroupInstrument" ).value;
+        editElement.seqType = document.getElementById( "editGroupSequence" ).value;
+        configEditedFlag = true;
+        break;
+
+      case "CLibSynth":
+        editElement.elementName = document.getElementById( "editSynthName" ).value;
+        editElement.instrument = document.getElementById( "editSynthInstrument" ).value;
+        editElement.masterLevel = document.getElementById( "editSynthMasterLevel" ).value;
+        editElement.dryLevel = document.getElementById( "editSynthDryLevel" ).value;
+        editElement.delayLevel = document.getElementById( "editSynthDelayLevel" ).value;
+        editElement.reverbLevel = document.getElementById( "editSynthReverbLevel" ).value;
+        editElement.octave = document.getElementById( "editSynthOctave" ).value;
+        synthEditedFlag = true;
+        break;
+    }
+
+  editElement = undefined;
+  document.getElementById( 'multiuse' ).innerHTML = "";
+
+  genElementConfigHTML();
+  genSynthLibraryHTML();
 }

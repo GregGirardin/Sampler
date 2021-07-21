@@ -4,9 +4,6 @@ A javascript sample player.
 Notes:
 
 
-
-EDIT Button
-
 Other FX sends
 
 Master Reverb / Delay controls, send

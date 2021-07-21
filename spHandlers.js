@@ -195,9 +195,13 @@ function elemClick( groupIndex, sampleIndex )
     {
       if( editElement.objType == "CSample" )
         genEditSampleHTML();
-      else
-        editElement = undefined;
-
+      else if( editElement.objType == "CSynth" )
+      {
+        // Clicked a synth in the config, but we actually edit the synth in the Library
+        editElement = synthFromName( editElement.elementName );
+        if( editElement )
+          genEditSynthHTML();
+      }
     }
   }
 
@@ -237,50 +241,6 @@ function groupAdd()
     alert( "Max Groups reached" );
 }
 
-function saveEdits()
-{
-  if( editElement )
-    switch( editElement.objType )
-    {
-      case "CSample":
-        editElement.elementName = document.getElementById( "editSampleName" ).value; 
-        editElement.masterLevel = document.getElementById( "editSampleMasterLevel" ).value; 
-        editElement.dryLevel = document.getElementById( "editSampleDryLevel" ).value; 
-        editElement.delayLevel = document.getElementById( "editSampleDelayLevel" ).value; 
-        editElement.reverbLevel = document.getElementById( "editSampleReverbLevel" ).value; 
-        editElement.fadeInTime = document.getElementById( "editSampleFIT" ).value; 
-        editElement.fadeOutTime = document.getElementById( "editSampleFOT" ).value; 
-        editElement.loopType = document.getElementById( "editSamplePT" ).value;
-        configEditedFlag = true;
-        break;
-    
-      case "CGroup":
-        editElement.elementName = document.getElementById( "editGroupName" ).value;
-        editElement.instrument = document.getElementById( "editGroupInstrument" ).value;
-        editElement.seqType = document.getElementById( "editGroupSequence" ).value;
-        configEditedFlag = true;
-        break;
-
-      case "CLibSynth":
-        editElement.elementName = document.getElementById( "editSynthName" ).value;
-        editElement.instrument = document.getElementById( "editSynthInstrument" ).value;
-        editElement.masterLevel = document.getElementById( "editSynthMasterLevel" ).value;
-        editElement.dryLevel = document.getElementById( "editSynthDryLevel" ).value;
-        editElement.delayLevel = document.getElementById( "editSynthDelayLevel" ).value;
-        editElement.reverbLevel = document.getElementById( "editSynthReverbLevel" ).value;
-        editElement.octave = document.getElementById( "editSynthOctave" ).value;
-
-        synthEditedFlag = true;
-        break;
-    }
-
-  editElement = undefined;
-  document.getElementById( 'multiuse' ).innerHTML = "";
-
-  genElementConfigHTML();
-  genSynthLibraryHTML();
-}
-
 function synthAdd()
 {
   synthLibrary.push( new CLibSynth( "New" ) );
@@ -309,14 +269,7 @@ function playElement( status )
       if( ce.objType == "CSample" )
         playSample( ce );
       else if( ce.objType == "CSynth" )
-      {
-        var synth = synthFromName( ce.elementName );
-        var inst = synth.instrument;
-        if( inst == "None" )
-          inst = curConfig.groups[ cursorGroup ].instrument; // use the Group's instrument.
-
-        playSynth( inst );
-      }
+        playSynth( synthFromName( ce.elementName ) );
       ce.playing = true;
 
       if( seqType != seqTypes[ 0 ] )
@@ -324,14 +277,6 @@ function playElement( status )
         moveCursor( "RIGHT" );
         didNavFlag = false;
       }
-    }
-    else
-    {
-      // tbd. We may want to play multiple sources at the same time.
-      // if( seqType == seqTypes[ 0 ] )
-      //   stopAudio( ce );
-      // else
-      ce.playing = false;
     }
   }
 }
@@ -355,7 +300,6 @@ function toggleEdit()
 
   document.getElementById( 'multiuse' ).innerHTML = "";
 }
-
 
 function changeURL()
 {
