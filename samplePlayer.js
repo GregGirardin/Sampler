@@ -7,14 +7,13 @@ var synthLibrary = []; // array of CSynth
 var curConfig;
 
 var editElement; // What we're editing if "Mode_Edit"
-var didNavFlag = false;
 
 // Constants.
 const MAX_GROUPS = 20;
 
-var fsMode = "PM"; 
-var loopTypes = [ "Once", "Repeat" ];
 var cursorGroup = 0, cursorElement = 0; // cursor
+
+const attackTimes = [ "Fast", "Med", "Slow" ]; // 0, 1s, 3s
 
 class CGroup
 {
@@ -25,10 +24,8 @@ class CGroup
 
     this.elementName = groupName;
     this.seqType = "None"; // None, Single, Loop
+    this.attackTime = attackTimes[ 0 ];
     this.elements = []; // CSample, CChord, etc.
-
-    this.fadeInTime = 0; // Milliseconds
-    this.fadeOutTime = 0;
 
     this.compressorLevel = 0;
     this.masterLevel = 100;

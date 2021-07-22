@@ -4,9 +4,9 @@
     |  |  | TBD pan/level per voice
     |/___/
     |
-  Compressor
-    |
   Master Gain <- The volume
+    |
+  Envelope
     |
   Distortion
     |
@@ -39,7 +39,7 @@ class CSample // A Sample in the config.
     this.playing = false;
 
     this.filename = filename; // filename on the server.
-    this.loopType = loopTypes[ 0 ];
+    this.loopFlag = false;
   }
 }
 
@@ -74,9 +74,8 @@ const NUM_SOURCES = 4;
 var audioSource = []; // Use a PolySynth?
 var masterLevel, dryLevel, reverbLevel, delayLevel;
 var reverbBlock, delayBlock, tremoloBlock, phaserBlock,
-    chorusBlock, distortionBlock, compressorBlock;
+    chorusBlock, distortionBlock, envelopeBlock;
 var samplers = {};
-var activeSampler = undefined;
 
 function initWebAudio()
 {
@@ -84,18 +83,18 @@ function initWebAudio()
   reverbBlock = new Tone.Reverb( { decay : 10, wet : 1 } ).toDestination();
   delayBlock = new Tone.FeedbackDelay( { delayTime : .4, feedback : 0.5, wet : 1 } ).toDestination();
 
-  dryLevel = new Tone.Gain().toDestination();
+  dryLevel = new Tone.Gain( 1 ).toDestination();
   reverbLevel = new Tone.Gain( 0 ).connect( reverbBlock );
   delayLevel = new Tone.Gain( 0 ).connect( delayBlock );
 
-  tremoloBlock = new Tone.Tremolo( { frequency : 1, depth : 1 } );
+  tremoloBlock = new Tone.Tremolo( { frequency : 3, depth : 1 } );
   tremoloBlock.connect( dryLevel );
   tremoloBlock.connect( delayLevel );
   tremoloBlock.connect( reverbLevel );
-  tremoloBlock.wet.value = 1;
+  tremoloBlock.wet.value = 0;
 
   phaserBlock = new Tone.Phaser( { frequency : 1, octaves : 3, baseFrequency : 1000 } );
-  phaserBlock.wet.value = 1;
+  phaserBlock.wet.value = 0;
   phaserBlock.connect( tremoloBlock );
 
   chorusBlock = new Tone.Chorus( { frequency : 1, delayTime : 2.5, depth : .5 } );
@@ -106,7 +105,8 @@ function initWebAudio()
   distortionBlock.connect( chorusBlock );
   distortionBlock.wet.value = 0;
 
-  masterLevel = new Tone.Gain().connect( distortionBlock );
+  masterLevel = new Tone.Gain( 0 );
+  masterLevel.connect( distortionBlock );
 
   samplers[ 'piano' ] = createSamplerInstrument( 'piano' );
   samplers[ 'piano' ].connect( masterLevel );
@@ -148,13 +148,6 @@ function createSamplerInstrument( instrument )
   return sampler;
 }
 
-function stopAllAudio() // go through all groups / elements and call stopAudio.
-{
-  for( var g = 0;g < curConfig.groups.length;g++ )
-    for( var s = 0;s < curConfig.groups[ g ].elements.length;s++ )
-      stopAudio( curConfig.groups[ g ].elements[ s ] );
-}
-
 function stopAudio( element )
 {
   if( element.playing )
@@ -170,14 +163,14 @@ function stopAudio( element )
       var libSample = sampleLibrary[ element.elementName ]; // a CSample
       if( libSample )
         if( libSample.player )
-          libSample.player.stop(); // TBD. Disconnect it? All samples will remain connected.
+          libSample.player.stop(); // TBD. Disconnect it?
     }
     else if( element.objType == "CSynth" )
     {
-      if( activeSampler )
+      if( element.sampler )
       {
-        activeSampler.triggerRelease( activeSampler.notesToPlay ); 
-        activeSampler = undefined;
+        element.sampler.triggerRelease( element.sampler.notesToPlay ); 
+        element.sampler = undefined;
       }
       else
         for( var sourceIx = 0;sourceIx < NUM_SOURCES;sourceIx++ )
@@ -188,6 +181,16 @@ function stopAudio( element )
           }
     }
   }
+}
+
+function rampDownAudio()
+{
+  if( activeElement )
+  {
+    var elem = document.getElementById( activeElement.id );
+    elem.classList.remove( 'css_playing' );
+  }
+  masterLevel.gain.rampTo( 0, 1 );
 }
 
 function setEffectLevels( grp, rampTime )
@@ -203,7 +206,16 @@ function setEffectLevels( grp, rampTime )
 
 var firstTime = true;
 
+var activeElement;
+
+function samplePlayCompleteCB()
+{
+  if( activeElement )
+    stopAudio( activeElement );
+}
+
 // Play the CSample
+
 function playElemAudio( elem )
 {
   if( firstTime )
@@ -214,7 +226,12 @@ function playElemAudio( elem )
 
   saveEdits();
 
-  setEffectLevels( curConfig.groups[ cursorGroup ], .2 );
+  setEffectLevels( curConfig.groups[ cursorGroup ], 0 );
+  
+  if( activeElement )
+    stopAudio( activeElement );
+
+  activeElement = elem;
 
   if( elem.objType == "CSample" )
   {
@@ -233,8 +250,10 @@ function playElemAudio( elem )
       }
       else
         libSample.player.start();
+      
+      libSample.player.onstop = samplePlayCompleteCB;
 
-      libSample.player.loop = elem.loopType == "Once" ? false : true;
+      libSample.player.loop = elem.loopFlag;
     }
   }
   else if( elem.objType == "CSynth" )
@@ -255,8 +274,6 @@ function playElemAudio( elem )
       case "triangle":
 
         // Oscillators are louder than samplers.
-        masterLevel.gain.value = curConfig.groups[ cursorGroup ].masterLevel / 1000; // 0 - 100
-
         var sourceIx = 0;
         for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
           if( synth.notes & ( 1 << noteIx ) ) // notes are a bit field
@@ -265,9 +282,13 @@ function playElemAudio( elem )
 
             var freq = 440 * Math.pow( 2, noteOffset / 12 );
 
-            audioSource[ sourceIx ] = new Tone.Oscillator( { type : inst, frequency : freq } ).connect( masterLevel );
-            audioSource[ sourceIx ].start();
-    
+            // Oscillators are louder than samples for some reason so normalize by reducing volume
+            var s = new Tone.Oscillator( { type : inst,
+                                           frequency : freq,
+                                           volume : -18 } ).connect( masterLevel );
+            audioSource[ sourceIx ] = s;
+            s.start();
+
             sourceIx++;
             if( sourceIx == NUM_SOURCES )
               break;
@@ -277,7 +298,6 @@ function playElemAudio( elem )
 
       default: // not an oscillator.
 
-        masterLevel.gain.value = curConfig.groups[ cursorGroup ].masterLevel / 100; // rampTo( synth.dryLevel / 100, .1 );
         notesToPlay = [];
         for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
           if( synth.notes & ( 1 << noteIx ) ) // notes are a bit field
@@ -287,13 +307,20 @@ function playElemAudio( elem )
             notesToPlay.push( freq );
           }
 
-        activeSampler = samplers[ inst ];
-        activeSampler.triggerAttack( notesToPlay );
-        activeSampler.notesToPlay = notesToPlay;
-
+        elem.sampler = samplers[ inst ];
+        elem.sampler.triggerAttack( notesToPlay );
+        elem.sampler.notesToPlay = notesToPlay;
         break;
       }
   }
+
+  var attackTime = 0; // Fast
+  if( curConfig.groups[ cursorGroup ].attackTime == attackTimes[ 1 ] ) // Medium
+    attackTime = 2;
+  else if( curConfig.groups[ cursorGroup ].attackTime == attackTimes[ 2 ] ) // Slow
+    attackTime = 5;
+
+  masterLevel.gain.rampTo( curConfig.groups[ cursorGroup ].masterLevel / 100, attackTime );
 }
 
 function synthFromName( sName ) // get the CLibSynth by name

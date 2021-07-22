@@ -247,6 +247,5 @@ function moveCursor( dir )
         cursorElement = 0;
       break;
   }
-  didNavFlag = true; // navigating stops the continuous playing of a sequence.
   genElementConfigHTML();
 }

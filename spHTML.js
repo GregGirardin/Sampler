@@ -32,7 +32,6 @@ function genElementConfigHTML()
     {
       case "Single": break;
       case "Next": classes += ' css_groupSeqNext'; break;
-      case "Cont": classes += ' css_groupSeqCont'; break;
     }
 
     if( i == curConfig.groups.length - 1 )
@@ -178,6 +177,17 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
+
+  tmpHtml += "Attack:<select id='editGroupAttack'>";
+  for( i = 0;i < attackTimes.length;i++ )
+  {
+    tmpHtml += "<option value='" + attackTimes[ i ] + "' ";
+    if( editElement.attackTime == attackTimes[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + attackTimes[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
   tmpHtml += "Master: <input type='range' id='editGroupMasterLevel' min='0' max='100' value='" + editElement.masterLevel + "'><br>";
 
   tmpHtml += "Chorus: <input type='range' id='editGroupChorusLevel' min='0' max='100' value='" + editElement.chorusLevel + "'><br>";
@@ -195,18 +205,10 @@ function genEditSampleHTML()
 {
   var tmpHtml = "<hr>";
 
-  tmpHtml += "Display Name: <input contenteditable='true' id='editSampleName' value='" + editElement.elementName + "'><br>";
+  tmpHtml += "Display Name: <input id='editSampleName' contenteditable='true' value='" + editElement.elementName + "'><br>";
   tmpHtml += "File: " + editElement.filename + "<br>";
-  tmpHtml += "Play:<select id='editSamplePT'>";
-
-  for( i = 0;i < loopTypes.length;i++ )
-  {
-    tmpHtml += "<option value='" + loopTypes[ i ] + "' ";
-    if( editElement.loopType == loopTypes[ i ] )
-      tmpHtml += "selected='selected'";
-    tmpHtml += ">" + loopTypes[ i ] + "</option>";
-  }
-  tmpHtml += "</select><br>";
+  var checked = editElement.loopFlag ? "checked" : "";
+  tmpHtml += "Loop: <input type='checkbox' id='editSampleLoopFlag' " + checked + "><br>";
 
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
@@ -268,7 +270,7 @@ function saveEdits()
     {
       case "CSample":
         editElement.elementName = document.getElementById( "editSampleName" ).value; 
-        editElement.loopType = document.getElementById( "editSamplePT" ).value;
+        editElement.loopFlag = document.getElementById( "editSampleLoopFlag" ).checked;
         configEditedFlag = true;
         break;
     
@@ -276,6 +278,7 @@ function saveEdits()
         editElement.elementName = document.getElementById( "editGroupName" ).value;
         editElement.instrument = document.getElementById( "editGroupInstrument" ).value;
         editElement.seqType = document.getElementById( "editGroupSequence" ).value;
+        editElement.attackTime = document.getElementById( "editGroupAttack" ).value;
         editElement.masterLevel = document.getElementById( "editGroupMasterLevel" ).value;
         editElement.distortionLevel = document.getElementById( "editGroupDistortionLevel" ).value;
         editElement.chorusLevel = document.getElementById( "editGroupChorusLevel" ).value;
@@ -284,6 +287,7 @@ function saveEdits()
         editElement.dryLevel = document.getElementById( "editGroupDryLevel" ).value;
         editElement.delayLevel = document.getElementById( "editGroupDelayLevel" ).value;
         editElement.reverbLevel = document.getElementById( "editGroupReverbLevel" ).value;
+
         configEditedFlag = true;
         break;
 

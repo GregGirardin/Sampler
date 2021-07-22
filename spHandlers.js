@@ -180,9 +180,6 @@ function groupClick( groupIndex )
 /////////////// /////////////// /////////////// ///////////////
 function elemClick( groupIndex, sampleIndex )
 {
-  if( ( cursorGroup != groupIndex ) && ( cursorElement != sampleIndex ) )
-    didNavFlag = true;
-
   cursorGroup = groupIndex;
   cursorElement = sampleIndex;
 
@@ -217,13 +214,20 @@ function synthClick( synthIndex )
     editElement = synthLibrary[ synthIndex ];
     genEditSynthHTML();
   }
+  else
+  {
+    // add to Clipboard
+    var synth = new CSynth( synthLibrary[ synthIndex ].elementName );
+    curConfig.groups[ curConfig.groups.length - 1 ].elements.push( synth ); 
+    genElementConfigHTML();
+  }
 }
 
 /////////////// /////////////// /////////////// ///////////////
 function libSampleClick( songId )
 {
   // add to Clipboard
-  sample = new CSample( sampleLibrary[ songId ].filename );
+  var sample = new CSample( sampleLibrary[ songId ].filename );
   curConfig.groups[ curConfig.groups.length - 1 ].elements.push( sample ); 
   genElementConfigHTML();
 }
@@ -257,22 +261,20 @@ function playElement( status )
     var ce = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
     var seqType = curConfig.groups[ cursorGroup ].seqType;
 
-    stopAllAudio();
-
     if( status == "START" )
     {
+      playElemAudio( ce );
+
       ce.id = "slElement." + cursorGroup + "." + cursorElement;
       ce.playing = true;
 
       document.getElementById( ce.id ).classList.add( 'css_playing' );
-      playElemAudio( ce );
 
       if( seqType != seqTypes[ 0 ] )
-      {
         moveCursor( "RIGHT" );
-        didNavFlag = false;
-      }
     }
+    else if( status == "STOP" )
+      rampDownAudio();
   }
 }
 
