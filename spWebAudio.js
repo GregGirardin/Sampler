@@ -26,7 +26,7 @@
     Out  <-----------  
 */
 
-const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "new1" ];
+const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "slowSquare" ];
 
 class CSample // A Sample in the config.
 {
@@ -67,7 +67,7 @@ class CLibSynth // synthesized chords w/ Web Audio API generated sounds
   }
 }
 
-var audioSource = [];
+var audioSource;
 var masterLevel, dryLevel, reverbLevel, delayLevel;
 var reverbBlock, delayBlock, tremoloBlock, phaserBlock,
     chorusBlock, distortionBlock, envelopeBlock;
@@ -167,12 +167,11 @@ function stopAudio( element )
         element.sampler = undefined;
       }
       else
-        for( var sourceIx = 0;sourceIx < activeSourcesCount;sourceIx++ )
-          if( audioSource[ sourceIx ] )
-          {
-            audioSource[ sourceIx ].disconnect();
-            audioSource[ sourceIx ] = undefined;
-          }
+        if( audioSource )
+        {
+          audioSource.disconnect();
+          audioSource = undefined;
+        }
 
       activeSourcesCount = 0;
     }
@@ -261,6 +260,16 @@ function playElemAudio( elem )
     if( inst == "None" ) 
       inst = synth.instrument;
 
+    var frequencies = [];
+    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+      if( synth.notes & ( 1 << noteIx ) ) // notes are a bit field
+      {
+        var noteOffset = noteIx - 9 + synth.octave * 12; // semitone offset from A440
+        var freq = 440 * Math.pow( 2, noteOffset / 12 );
+        var voices = curConfig.groups[ cursorGroup ].thickenFlag ? [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // create detuned voices for thickness
+        frequencies = frequencies.concat( voices );
+      }
+
     switch( inst ) 
     {
       case "None": break;
@@ -268,73 +277,41 @@ function playElemAudio( elem )
       case "square":
       case "sawtooth":
       case "triangle":
-
-        // Oscillators are louder than samplers.
-        var frequencies = [];
-        var sourceIx = 0;
-        for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-          if( synth.notes & ( 1 << noteIx ) ) // notes are a bit field
-          {
-            var noteOffset = noteIx - 9 + synth.octave * 12; // semitone offset from A440
-            var freq = 440 * Math.pow( 2, noteOffset / 12 );
-            var voices = curConfig.groups[ cursorGroup ].thickenFlag ? [ freq *.995, freq, freq * 1.005 ] : [ freq ];
-
-            // Oscillators are louder than samples for some reason so normalize by reducing volume
-            // for( voice of voices )
-            // {
-            //   var voiceFreq = freq * voice;
-            //   var s = new Tone.Oscillator( { type : inst, frequency : voiceFreq, volume : -18 } ).connect( masterLevel );
-            //   audioSource[ sourceIx ] = s;
-            //   s.start();
-            //   sourceIx++;
-            // }
-
-            s = new Tone.PolySynth( Tone.Synth, { oscillator: { partials : [ 0, 2, 3, 4 ], } } );
-            s.set( { volume: -18, harmonicity: 3.01, modulationIndex: 14,
-                      oscillator: { type: inst },
-                      envelope: { attack: 0.2, decay: 0.3, sustain: 0.9, release: 1.2 },
-                      modulation: { type: "square" },
-                      modulationEnvelope: { attack: 0.01, decay: 0.5, sustain: 0.2, release: 0.1 }
+      case "slowSquare":
+       
+        s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
+        if( inst == "slowSquare" )
+        {
+          s.set( {  volume: -18, harmonicity: 3.01, modulationIndex: 14,
+                    oscillator: { type: "square" },
+                    envelope: { attack : 2, decay : 1, sustain: 0.9, release: 2.2 },
+                    modulation: { type : "triangle" },
+                    modulationEnvelope : { attack: 2, decay: 3.5, sustain: 5.2, release: 0.1 },
+                    filter : { type : "lowshelf", frequency : 2000, rolloff : -12 }
                     } );
-
+          
+          f = new Tone.Filter( 5500, "highpass");
+          f.connect( masterLevel );
+          s.connect( f );
+        }
+        else
+        {
+          s.set( {  volume : -18, // Oscillators are louder than samplers.
+                    harmonicity : 3.01, modulationIndex: 14,
+                    oscillator : { type : inst },
+                    } );
           s.connect( masterLevel );
-          audioSource[ sourceIx ] = s;
-          sourceIx++;
+        }
 
-          s.triggerAttack( voices );
-          activeSourcesCount = sourceIx;
-          }
-
+        s.triggerAttack( frequencies );
+        audioSource = s;
         break;
 
-      case "new1":
-        s = new Tone.PolySynth( Tone.Synth, { oscillator: { partials : [ 0, 2, 3, 4 ], } } );
-        s.set( { volume: -18, harmonicity: 3.01, modulationIndex: 14,
-                  oscillator: { type: "triangle" },
-                  envelope: { attack: 0.2, decay: 0.3, sustain: 0.9, release: 1.2 },
-                  modulation: { type: "square" },
-                  modulationEnvelope: { attack: 0.01, decay: 0.5, sustain: 0.2, release: 0.1 }
-                } );
-
-        s.connect( masterLevel );
-        audioSource[ sourceIx ] = s;
-        s.triggerAttack( [ 220, 221, 222 ] );
-        break;
-
-      default: // not an oscillator.
-
-        notesToPlay = [];
-        for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-          if( synth.notes & ( 1 << noteIx ) ) // notes are a bit field
-          {
-            var noteOffset = noteIx - 9 + synth.octave * 12; // semitone offset from A440
-            var freq = 440 * Math.pow( 2, noteOffset / 12 );
-            notesToPlay.push( freq );
-          }
+      case "piano":
 
         elem.sampler = samplers[ inst ];
-        elem.sampler.triggerAttack( notesToPlay );
-        elem.sampler.notesToPlay = notesToPlay;
+        elem.sampler.triggerAttack( frequencies );
+        elem.sampler.notesToPlay = frequencies;
         break;
       }
   }
