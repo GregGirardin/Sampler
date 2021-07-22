@@ -87,18 +87,15 @@ function initWebAudio()
   reverbLevel = new Tone.Gain( 0 ).connect( reverbBlock );
   delayLevel = new Tone.Gain( 0 ).connect( delayBlock );
 
-  tremoloBlock = new Tone.Tremolo( { frequency : 3, depth : 1 } );
+  tremoloBlock = new Tone.Tremolo( { frequency : 3, depth : 1, wet : 0 } );
   tremoloBlock.connect( dryLevel );
   tremoloBlock.connect( delayLevel );
   tremoloBlock.connect( reverbLevel );
-  tremoloBlock.wet.value = 0;
 
-  phaserBlock = new Tone.Phaser( { frequency : 1, octaves : 3, baseFrequency : 1000 } );
-  phaserBlock.wet.value = 0;
+  phaserBlock = new Tone.Phaser( { frequency : 1, octaves : 3, baseFrequency : 1000, wet : 0 } );
   phaserBlock.connect( tremoloBlock );
 
-  chorusBlock = new Tone.Chorus( { frequency : 1, delayTime : 2.5, depth : .5 } );
-  chorusBlock.wet.value = 0;
+  chorusBlock = new Tone.Chorus( { frequency : 1, delayTime : 2.5, depth : .5, wet : 0 } );
   chorusBlock.connect( phaserBlock );
 
   distortionBlock = new Tone.Distortion( 1 );
@@ -112,7 +109,7 @@ function initWebAudio()
   samplers[ 'piano' ].connect( masterLevel );
 }
 
-function startAudio()
+function initWebAudio2() // stuff we can't do until a user click
 {
   tremoloBlock.start();
   chorusBlock.start();
@@ -220,7 +217,7 @@ function playElemAudio( elem )
 {
   if( firstTime )
   {
-    startAudio();
+    initWebAudio2();
     firstTime = false;
   }
 
