@@ -6,8 +6,6 @@
     |
   Master Gain <- The volume
     |
-  Envelope
-    |
   Distortion
     |
   Chorus
@@ -22,13 +20,13 @@
     |         |        |
     Dry       RGain    DGain <- FX levels
     |         |        |
-    |         Reverb   Delay <- Parallel FX
+    |         Reverb   Delay <- Parallel FX so we play trails
     |         |        |
     |         /       /
     Out  <-----------  
 */
 
-const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle" ];
+const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "new1" ];
 
 class CSample // A Sample in the config.
 {
@@ -69,9 +67,7 @@ class CLibSynth // synthesized chords w/ Web Audio API generated sounds
   }
 }
 
-const NUM_SOURCES = 4;
-
-var audioSource = []; // Use a PolySynth?
+var audioSource = [];
 var masterLevel, dryLevel, reverbLevel, delayLevel;
 var reverbBlock, delayBlock, tremoloBlock, phaserBlock,
     chorusBlock, distortionBlock, envelopeBlock;
@@ -80,7 +76,7 @@ var samplers = {};
 function initWebAudio()
 {
   // build chain from bottom up
-  reverbBlock = new Tone.Reverb( { decay : 10, wet : 1 } ).toDestination();
+  reverbBlock = new Tone.Reverb( { preDelay : .2, decay : 10, wet : 1 } ).toDestination();
   delayBlock = new Tone.FeedbackDelay( { delayTime : .4, feedback : 0.5, wet : 1 } ).toDestination();
 
   dryLevel = new Tone.Gain( 1 ).toDestination();
@@ -98,15 +94,14 @@ function initWebAudio()
   chorusBlock = new Tone.Chorus( { frequency : 1, delayTime : 2.5, depth : .5, wet : 0 } );
   chorusBlock.connect( phaserBlock );
 
-  distortionBlock = new Tone.Distortion( 1 );
+  distortionBlock = new Tone.Chebyshev( 50 );
   distortionBlock.connect( chorusBlock );
   distortionBlock.wet.value = 0;
 
   masterLevel = new Tone.Gain( 0 );
   masterLevel.connect( distortionBlock );
 
-  samplers[ 'piano' ] = createSamplerInstrument( 'piano' );
-  samplers[ 'piano' ].connect( masterLevel );
+  samplers[ 'piano' ] = createSamplerInstrument( 'piano' ).connect( masterLevel )
 }
 
 function initWebAudio2() // stuff we can't do until a user click
@@ -145,6 +140,8 @@ function createSamplerInstrument( instrument )
   return sampler;
 }
 
+var activeSourcesCount;
+
 function stopAudio( element )
 {
   if( element.playing )
@@ -170,12 +167,14 @@ function stopAudio( element )
         element.sampler = undefined;
       }
       else
-        for( var sourceIx = 0;sourceIx < NUM_SOURCES;sourceIx++ )
+        for( var sourceIx = 0;sourceIx < activeSourcesCount;sourceIx++ )
           if( audioSource[ sourceIx ] )
           {
             audioSource[ sourceIx ].disconnect();
             audioSource[ sourceIx ] = undefined;
           }
+
+      activeSourcesCount = 0;
     }
   }
 }
@@ -271,26 +270,55 @@ function playElemAudio( elem )
       case "triangle":
 
         // Oscillators are louder than samplers.
+        var frequencies = [];
         var sourceIx = 0;
         for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
           if( synth.notes & ( 1 << noteIx ) ) // notes are a bit field
           {
             var noteOffset = noteIx - 9 + synth.octave * 12; // semitone offset from A440
-
             var freq = 440 * Math.pow( 2, noteOffset / 12 );
+            var voices = curConfig.groups[ cursorGroup ].thickenFlag ? [ freq *.995, freq, freq * 1.005 ] : [ freq ];
 
             // Oscillators are louder than samples for some reason so normalize by reducing volume
-            var s = new Tone.Oscillator( { type : inst,
-                                           frequency : freq,
-                                           volume : -18 } ).connect( masterLevel );
-            audioSource[ sourceIx ] = s;
-            s.start();
+            // for( voice of voices )
+            // {
+            //   var voiceFreq = freq * voice;
+            //   var s = new Tone.Oscillator( { type : inst, frequency : voiceFreq, volume : -18 } ).connect( masterLevel );
+            //   audioSource[ sourceIx ] = s;
+            //   s.start();
+            //   sourceIx++;
+            // }
 
-            sourceIx++;
-            if( sourceIx == NUM_SOURCES )
-              break;
+            s = new Tone.PolySynth( Tone.Synth, { oscillator: { partials : [ 0, 2, 3, 4 ], } } );
+            s.set( { volume: -18, harmonicity: 3.01, modulationIndex: 14,
+                      oscillator: { type: inst },
+                      envelope: { attack: 0.2, decay: 0.3, sustain: 0.9, release: 1.2 },
+                      modulation: { type: "square" },
+                      modulationEnvelope: { attack: 0.01, decay: 0.5, sustain: 0.2, release: 0.1 }
+                    } );
+
+          s.connect( masterLevel );
+          audioSource[ sourceIx ] = s;
+          sourceIx++;
+
+          s.triggerAttack( voices );
+          activeSourcesCount = sourceIx;
           }
 
+        break;
+
+      case "new1":
+        s = new Tone.PolySynth( Tone.Synth, { oscillator: { partials : [ 0, 2, 3, 4 ], } } );
+        s.set( { volume: -18, harmonicity: 3.01, modulationIndex: 14,
+                  oscillator: { type: "triangle" },
+                  envelope: { attack: 0.2, decay: 0.3, sustain: 0.9, release: 1.2 },
+                  modulation: { type: "square" },
+                  modulationEnvelope: { attack: 0.01, decay: 0.5, sustain: 0.2, release: 0.1 }
+                } );
+
+        s.connect( masterLevel );
+        audioSource[ sourceIx ] = s;
+        s.triggerAttack( [ 220, 221, 222 ] );
         break;
 
       default: // not an oscillator.

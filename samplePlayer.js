@@ -13,7 +13,7 @@ const MAX_GROUPS = 20;
 
 var cursorGroup = 0, cursorElement = 0; // cursor
 
-const attackTimes = [ "Fast", "Med", "Slow" ]; // 0, 1s, 3s
+const attackTimes = [ "Fast", "Med", "Slow" ];
 
 class CGroup
 {
@@ -21,13 +21,13 @@ class CGroup
   {
     this.objType = "CGroup";
     this.instrument = "None";
+    this.thickenFlag = false;
 
     this.elementName = groupName;
     this.seqType = "None"; // None, Single, Loop
     this.attackTime = attackTimes[ 0 ];
     this.elements = []; // CSample, CChord, etc.
 
-    this.compressorLevel = 0;
     this.masterLevel = 100;
     this.distortionLevel = 0;
     this.chorusLevel = 0;

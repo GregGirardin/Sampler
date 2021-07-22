@@ -177,6 +177,8 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
+  var checked = editElement.thickenFlag ? "checked" : "";
+  tmpHtml += "Fat: <input type='checkbox' id='editGroupThickenFlag' " + checked + "><br>";
 
   tmpHtml += "Attack:<select id='editGroupAttack'>";
   for( i = 0;i < attackTimes.length;i++ )
@@ -277,6 +279,7 @@ function saveEdits()
       case "CGroup":
         editElement.elementName = document.getElementById( "editGroupName" ).value;
         editElement.instrument = document.getElementById( "editGroupInstrument" ).value;
+        editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
         editElement.seqType = document.getElementById( "editGroupSequence" ).value;
         editElement.attackTime = document.getElementById( "editGroupAttack" ).value;
         editElement.masterLevel = document.getElementById( "editGroupMasterLevel" ).value;
