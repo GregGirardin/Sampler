@@ -1,7 +1,5 @@
 // Functions that generation HTML content.
 
-const seqTypes = [ "None", "Next" ];
-
 /////////////// /////////////// /////////////// ///////////////
 function genElementConfigHTML()
 {
@@ -48,10 +46,10 @@ function genElementConfigHTML()
       if( g.elements[ j ].playing )
         classes += ' css_playing';
       
-      if( g.elements[ j ].objType == "CSynth" ) // make sure there's an instrument
+      if( g.elements[ j ].objType == "CChord" ) // make sure there's an instrument
       {
-        var libSynth = synthFromName( g.elements[ j ].elementName ); // if this is a synth and is in the library.
-        if( !libSynth || (libSynth.instrument == "None" && g.instrument == "None" ) )
+        var libChord = chordFromName( g.elements[ j ].elementName ); // if this is a Chord and is in the library.
+        if( !libChord || ( libChord.instrument == "None" && g.instrument == "None" ) )
           classes += ' css_noInstrument';
       }
 
@@ -72,7 +70,7 @@ function genElementConfigHTML()
 
   document.getElementById( 'audioElements' ).innerHTML = tempHtml;
 
-  if( configEditedFlag || synthEditedFlag )
+  if( configEditedFlag || chordEditedFlag )
     document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
   else
     document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
@@ -136,18 +134,18 @@ A library can be specified by appending "?library=http://x.y.z/???.json" to this
   return undefined;
 }
 
-function genSynthLibraryHTML()
+function genChordLibraryHTML()
 {
   var tempHtml = "<hr>";
 
-  for( var i = 0;i < synthLibrary.length;i++ )
-    tempHtml += "<button id='libSynth." + i + "' class='css_synth'  onclick='synthClick( " + i + " )'" +
+  for( var i = 0;i < chordLibrary.length;i++ )
+    tempHtml += "<button id='libChord." + i + "' class='css_chord'  onclick='chordClick( " + i + " )'" +
                 " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
-                synthLibrary[ i ].elementName + "</button>\n";
+                chordLibrary[ i ].elementName + "</button>\n";
 
-  tempHtml += "<button onclick='synthAdd()' class='css_synth'> + </button>\n<br>\n<br>";
+  tempHtml += "<button onclick='chordAdd()' class='css_chord'> + </button>\n<br>\n<br>";
 
-  document.getElementById( 'synthDiv' ).innerHTML = tempHtml;
+  document.getElementById( 'chordDiv' ).innerHTML = tempHtml;
 }
 
 /////////////// /////////////// ///////////////
@@ -156,18 +154,9 @@ function genEditGroupHTML()
 {
   var tmpHtml = "<hr>";
   tmpHtml += "Name: <input contenteditable='true' id='editGroupName' value='" + editElement.elementName + "'><br>";
-  tmpHtml += "Sequence:<select id='editGroupSequence'>";
-
-  for( var i = 0;i < seqTypes.length;i++ )
-  {
-    tmpHtml += "<option value='" + seqTypes[ i ] + "' ";
-    if( editElement.seqType == seqTypes[ i ] )
-      tmpHtml += "selected='selected'";
-    tmpHtml += ">" + seqTypes[ i ] + "</option>";
-  }
-  tmpHtml += "</select><br>";
 
   tmpHtml += "Instrument:<select id='editGroupInstrument'>";
+
   for( i = 0;i < synthTypes.length;i++ )
   {
     tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
@@ -177,21 +166,23 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
+  var checked = editElement.sequence ? "checked" : "";
+  tmpHtml += "Sequence: <input type='checkbox' id='editGroupSequenceFlag' " + checked + "><br>";
+
   var checked = editElement.thickenFlag ? "checked" : "";
   tmpHtml += "Fat: <input type='checkbox' id='editGroupThickenFlag' " + checked + "><br>";
 
-  tmpHtml += "Attack:<select id='editGroupAttack'>";
-  for( i = 0;i < attackTimes.length;i++ )
+  tmpHtml += "Envelope:<select id='editGroupEnvelope'>";
+  for( i = 0;i < envelopeLabels.length;i++ )
   {
-    tmpHtml += "<option value='" + attackTimes[ i ] + "' ";
-    if( editElement.attackTime == attackTimes[ i ] )
+    tmpHtml += "<option value='" + envelopeLabels[ i ] + "' ";
+    if( editElement.envelope == envelopeLabels[ i ] )
       tmpHtml += "selected='selected'";
-    tmpHtml += ">" + attackTimes[ i ] + "</option>";
+    tmpHtml += ">" + envelopeLabels[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
   tmpHtml += "Master: <input type='range' id='editGroupMasterLevel' min='0' max='100' value='" + editElement.masterLevel + "'><br>";
-
   tmpHtml += "Chorus: <input type='range' id='editGroupChorusLevel' min='0' max='100' value='" + editElement.chorusLevel + "'><br>";
   tmpHtml += "Phaser: <input type='range' id='editGroupPhaserLevel' min='0' max='100' value='" + editElement.phaserLevel + "'><br>";
   tmpHtml += "Tremolo: <input type='range' id='editGroupTremoloLevel' min='0' max='100' value='" + editElement.tremoloLevel + "'><br>";
@@ -203,6 +194,7 @@ function genEditGroupHTML()
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
+////////////////////////////
 function genEditSampleHTML()
 {
   var tmpHtml = "<hr>";
@@ -215,12 +207,12 @@ function genEditSampleHTML()
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
-// for editing a Synth.
-function genEditSynthHTML()
+////////////////////////////
+function genEditChordHTML()
 {
-  var tmpHtml = "<hr>Name: <input contenteditable='true' id='editSynthName' value='" + editElement.elementName + "'><br>";
+  var tmpHtml = "<hr>Name: <input contenteditable='true' id='editChordName' value='" + editElement.elementName + "'><br>";
 
-  tmpHtml += "Octave:<select id='editSynthOctave'>";
+  tmpHtml += "Octave:<select id='editChordOctave'>";
   for( i = 3;i >= -3;i-- )
   {
     tmpHtml += "<option value='" + i + "' ";
@@ -230,7 +222,7 @@ function genEditSynthHTML()
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Instrument:<select id='editSynthInstrument'>";
+  tmpHtml += "Instrument:<select id='editChordInstrument'>";
   for( i = 0;i < synthTypes.length;i++ )
   {
     tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
@@ -245,8 +237,8 @@ function genEditSynthHTML()
 
   const noteNames = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
   const blackKeys = [         1,         3,              6,         8,        10 ];
-  // Two octave keyboard
 
+  // Two octave keyboard
   for( var note = 0;note < 32;note++ )
   {
     var css_class = ( blackKeys.includes( note % 12 ) ) ? 'css_blackKey' : 'css_whiteKey';
@@ -261,9 +253,7 @@ function genEditSynthHTML()
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
-function configFX()
-{
-}
+function configFX() { }
 
 function saveEdits()
 {
@@ -280,8 +270,8 @@ function saveEdits()
         editElement.elementName = document.getElementById( "editGroupName" ).value;
         editElement.instrument = document.getElementById( "editGroupInstrument" ).value;
         editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
-        editElement.seqType = document.getElementById( "editGroupSequence" ).value;
-        editElement.attackTime = document.getElementById( "editGroupAttack" ).value;
+        editElement.sequence = document.getElementById( "editGroupSequenceFlag" ).value;
+        editElement.envelope = document.getElementById( "editGroupEnvelope" ).value;
         editElement.masterLevel = document.getElementById( "editGroupMasterLevel" ).value;
         editElement.distortionLevel = document.getElementById( "editGroupDistortionLevel" ).value;
         editElement.chorusLevel = document.getElementById( "editGroupChorusLevel" ).value;
@@ -294,11 +284,11 @@ function saveEdits()
         configEditedFlag = true;
         break;
 
-      case "CLibSynth":
-        editElement.elementName = document.getElementById( "editSynthName" ).value;
-        editElement.instrument = document.getElementById( "editSynthInstrument" ).value;
-        editElement.octave = document.getElementById( "editSynthOctave" ).value;
-        synthEditedFlag = true;
+      case "CLibChord":
+        editElement.elementName = document.getElementById( "editChordName" ).value;
+        editElement.instrument = document.getElementById( "editChordInstrument" ).value;
+        editElement.octave = document.getElementById( "editChordOctave" ).value;
+        chordEditedFlag = true;
         break;
     }
 
@@ -306,5 +296,5 @@ function saveEdits()
   document.getElementById( 'multiuse' ).innerHTML = "";
 
   genElementConfigHTML();
-  genSynthLibraryHTML();
+  genChordLibraryHTML();
 }

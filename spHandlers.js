@@ -13,7 +13,7 @@ function dropElem( ev )
   const slGroup = "slGroup.";
   const cbStr = "clipboard";
   const libSamp = "libSample.";
-  const libSynthID = "libSynth.";
+  const libChordID = "libChord.";
 
   ev.preventDefault();
   var dragElem = ev.dataTransfer.getData( "dragElem" );
@@ -93,16 +93,16 @@ function dropElem( ev )
       curConfig.groups.splice( fromGroup, 1 );
     }
   }
-  else if( ( dragElem.substring( 0, libSynthID.length ) == libSynthID ) &&
+  else if( ( dragElem.substring( 0, libChordID.length ) == libChordID ) &&
            ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Synth into config 
   {
-    var sampIx = dragElem.substring( libSynthID.length, );
-    var libSynth = synthLibrary[ sampIx ];
+    var sampIx = dragElem.substring( libChordID.length, );
+    var libChord = chordLibrary[ sampIx ];
     var indexes = ev.target.id.substring( slElem.length, ).split( "." );
     var toGroup = parseInt( indexes[ 0 ] );
     var toElementIx = parseInt( indexes[ 1 ] );
 
-    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CSynth( libSynth.elementName ) );
+    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CChord( libChord.elementName ) );
   }
   else if( ev.target.id == "trashCan" )
   {
@@ -119,10 +119,10 @@ function dropElem( ev )
       var delGroup = parseInt( dragElem.substring( slGroup.length, ) );
       curConfig.groups.splice( delGroup, 1 );
     }
-    else if( dragElem.substring( 0, libSynthID.length ) == libSynthID )
+    else if( dragElem.substring( 0, libChordID.length ) == libChordID )
     {
-      var delSynth = parseInt( dragElem.substring( libSynthID.length, ) );
-      synthLibrary.splice( delSynth, 1 );
+      var delChord = parseInt( dragElem.substring( libChordID.length, ) );
+      synthLibrary.splice( delChord, 1 );
     }
     else if( dragElem.substring( 0, cbStr.length ) == cbStr )
       curConfig.groups[ curConfig.groups.length - 1 ].elements = [];
@@ -131,7 +131,7 @@ function dropElem( ev )
   configEditedFlag = true;
 
   genElementConfigHTML();
-  genSynthLibraryHTML();
+  genChordLibraryHTML();
 }
 
 var helpState = false;
@@ -192,12 +192,12 @@ function elemClick( groupIndex, sampleIndex )
     {
       if( editElement.objType == "CSample" )
         genEditSampleHTML();
-      else if( editElement.objType == "CSynth" )
+      else if( editElement.objType == "CChord" )
       {
         // Clicked a synth in the config, but we actually edit the synth in the Library
-        editElement = synthFromName( editElement.elementName );
+        editElement = chordFromName( editElement.elementName );
         if( editElement )
-          genEditSynthHTML();
+          genEditChordHTML();
       }
     }
   }
@@ -206,18 +206,18 @@ function elemClick( groupIndex, sampleIndex )
 }
 
 /////////////// /////////////// /////////////// ///////////////
-function synthClick( synthIndex )
+function chordClick( synthIndex )
 {
   if( editMode )
   {
     saveEdits();
-    editElement = synthLibrary[ synthIndex ];
-    genEditSynthHTML();
+    editElement = chordLibrary[ synthIndex ];
+    genEditChordHTML();
   }
   else
   {
     // add to Clipboard
-    var synth = new CSynth( synthLibrary[ synthIndex ].elementName );
+    var synth = new CChord( chordLibrary[ synthIndex ].elementName );
     curConfig.groups[ curConfig.groups.length - 1 ].elements.push( synth ); 
     genElementConfigHTML();
   }
@@ -245,36 +245,41 @@ function groupAdd()
     alert( "Max Groups reached" );
 }
 
-function synthAdd()
+function chordAdd()
 {
-  synthLibrary.push( new CLibSynth( "New" ) );
-  synthEditedFlag = true;
+  chordLibrary.push( new CLibChord( "New" ) );
+  chordEditedFlag = true;
   document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
 
-  genSynthLibraryHTML();
+  genChordLibraryHTML();
 }
 
-function playElement( status )
+function playComplete( playElem )
+{
+  // if( playElem.elem )
+  //   playElem.elem.classList.remove( 'css_playing' );
+
+  genElementConfigHTML();
+}
+
+function playElement( action )
 {
   if( ( cursorGroup != undefined ) && ( cursorElement != undefined ) )
   {
-    var ce = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
-    var seqType = curConfig.groups[ cursorGroup ].seqType;
-
-    if( status == "START" )
+    if( action == "START" )
     {
+      var ce = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
+      ce.group = cursorGroup;
+
       playElemAudio( ce );
 
-      ce.id = "slElement." + cursorGroup + "." + cursorElement;
-      ce.playing = true;
-
-      document.getElementById( ce.id ).classList.add( 'css_playing' );
-
-      if( seqType != seqTypes[ 0 ] )
+      if( curConfig.groups[ cursorGroup ].sequence )
         moveCursor( "RIGHT" );
     }
-    else if( status == "STOP" )
-      rampDownAudio();
+    else if( action == "STOP" )
+      releaseAudio();
+
+    genElementConfigHTML();
   }
 }
 

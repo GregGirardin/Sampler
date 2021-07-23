@@ -1,19 +1,25 @@
 // Main js file.
 
 var configEditedFlag = false;
-var synthEditedFlag = false;
+var chordEditedFlag = false;
 var sampleLibrary = {}; // object of ClLibrarySample
-var synthLibrary = []; // array of CSynth
+var chordLibrary = []; // array of CChord
 var curConfig;
 
 var editElement; // What we're editing if "Mode_Edit"
 
 // Constants.
-const MAX_GROUPS = 20;
+const MAX_GROUPS = 32;
 
 var cursorGroup = 0, cursorElement = 0; // cursor
 
-const attackTimes = [ "Fast", "Med", "Slow" ];
+const envelopeLabels = [ "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
+const envelopeParams =
+{
+  Fast : { attack : .1, decay : 0, sustain: 1, release: .1 },
+  Med : { attack : .5, decay : 1, sustain: 0.9, release: 1 },
+  Slow : { attack : 5, decay : .9, sustain: 0.9, release: 3 },
+}
 
 class CGroup
 {
@@ -24,8 +30,8 @@ class CGroup
     this.thickenFlag = false;
 
     this.elementName = groupName;
-    this.seqType = "None"; // None, Single, Loop
-    this.attackTime = attackTimes[ 0 ];
+    this.sequence = false;
+    this.envelope = envelopeLabels[ 0 ];
     this.elements = []; // CSample, CChord, etc.
 
     this.masterLevel = 100;
@@ -67,7 +73,7 @@ function sampleListInit()
 
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
-  getFileFromServer( synthConfigFile, gotSynthLib );
+  getFileFromServer( chordConfigFile, gotChordLib );
 
   document.getElementById( 'serverURL' ).value = serverURL;
   document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
@@ -78,6 +84,6 @@ function sampleListInit()
   footSwitchButtons[ 0 ] = new FootSwitchButton( "BUTTON1" );
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
 
-  genSynthLibraryHTML();
+  genChordLibraryHTML();
   initWebAudio();
 }

@@ -7,7 +7,7 @@ var serverURL = 'http://192.168.0.2:8080/'; // this is where samples.json and al
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 
 const configFile = 'sampleConfig.json';
-const synthConfigFile = 'synthConfig.json';
+const chordConfigFile = 'chordConfig.json';
 
 function gotSamples( file, data )
 {
@@ -26,16 +26,16 @@ function gotConfig( file, data )
     console.log( "No config." );
 }
 
-function gotSynthLib( file, data )
+function gotChordLib( file, data )
 {
   if( data )
   {
-    synthLibrary = JSON.parse( data );
-    genSynthLibraryHTML();
+    chordLibrary = JSON.parse( data );
+    genChordLibraryHTML();
     genElementConfigHTML();
   }
   else
-    console.log( "No Synth Library." );
+    console.log( "No Chord Library." );
 }
 
 function getFileFromServer( filename, callback )
@@ -84,16 +84,16 @@ function sampleConfigSave()
     configEditedFlag = false;
   }
 
-  if( synthEditedFlag ) // Save the Synth Library.
+  if( chordEditedFlag ) // Save the Synth Library.
   {
-    configData = JSON.stringify( synthLibrary, null, "  " );
+    configData = JSON.stringify( chordLibrary, null, "  " );
     formData = new FormData();
     formData.append( "data", configData );
 
     var xhr = new XMLHttpRequest();
-    xhr.open( 'post', serverURL + synthConfigFile );
+    xhr.open( 'post', serverURL + chordConfigFile );
     xhr.send( formData );
-    synthEditedFlag = false;
+    chordEditedFlag = false;
   }
 
   document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
