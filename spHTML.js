@@ -19,7 +19,7 @@ function genElementConfigHTML()
       cursorElement = 0;
   }
 
-  var tempHtml = "<div id='sampleListName' onClick='setSampleConfigName()'>" + curConfig.name + "</div><br>";
+  var tempHtml = ""; // "<div id='sampleListName' onClick='setSampleConfigName()'>" + curConfig.name + "</div><br>";
 
   for( var i = 0;i < curConfig.groups.length;i++ )
   {

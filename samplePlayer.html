@@ -20,16 +20,18 @@
   <button class='css_modeButton' id='Help'              onclick='toggleHelp();'>Help</button>
   <button class='css_modeButton' id='editButton'        onclick='toggleEdit();'>Edit</button>
   <button class='css_modeButton' id='configFX'          onclick='configFX();'>FX</button>
+  <button class='css_modeButton' id='arpeggiator'       onclick='arpeggiatorTog();'>Arp</button>
+  <button class='css_modeButton' id='tempoButton'       onclick='tapTempo();'>Tempo</button>
   <hr>
   <div id='footSwitchButtons' align='left'>
     Tap
     <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&larr;</button>
     <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&rarr;</button>
-    <button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB" );'>&larr;&larr;</button>
+    <button class='css_FSButton' id='fsBBTap' onclick='buttonEvent( "EVENT_TAP", "BUTTONB" );'>&uarr;&darr;</button>
     Hold
-    <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>&uarr;</button>
-    <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>&darr;</button>
-    <button class='css_FSButton' id='fsBBHold' onclick='buttonEvent( "EVENT_HOLD", "BUTTONB" );'>&uarr;&uarr;</button>
+    <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>Filters</button>
+    <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>Arp</button>
+    <button class='css_FSButton' id='fsBBHold' onclick='buttonEvent( "EVENT_HOLD", "BUTTONB" );'>Tempo</button>
     Double Tap
     <button class='css_FSButton' id='fsB1DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON1" );'>&#62;</button>
     <button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON2" );'>&#8800;</button>
@@ -37,10 +39,10 @@
   </div>
   <div id='audioElements'></div>
   <hr>
-  <h3> Samples </h3>
+  <h3> Audio </h3>
   <div id='libraryDiv'></div>
   <hr>
-  <h3> Chord Library </h3>
+  <h3> Chords </h3>
   <div id='chordDiv'></div>
   <div id='multiuse'></div>
 </div>

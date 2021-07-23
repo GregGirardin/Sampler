@@ -18,40 +18,50 @@ B2  ___________/--------------|
 
 B1  ______/-----------*-\____
 B2  ______/--------\ <-- Both Tap
-                      
+
+In Tempo mode we bypass these features for accuracy.
 */
 const clickHoldTO = 250;
 
 var footSwitchButtons = []; // array of buttons
 var bothHeldTimer;
 
-var fsMode = "PM"; // Play Mode. May add other modes if necessary.
+var tapMode = "NavLR";
 
 var fsButtonMap = 
 {
-  "EVENT_TAP" : { // Event type
+  "EVENT_TAP" : { // Event type.
     "BUTTON1" : { // Event source
       id : 'fsB1Tap', // the DOM element to highlight
-      PM : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } }, // performance mode info
+      NavLR : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } }, // Nav Left right
+      NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
+      Tempo : { html :    "Tap", action : function() { tapTempo( ); } }, // tap tempo
+      Filter : { html : "Filter Low", action : function() { filterMod( "low" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
-      PM : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
+      NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
+      NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
+      Tempo : { html :    "Set", action : function() { setTempo(); } },
+      Filter : { html : "Filter Hi", action : function() { filterMod( "hi" ); } }, 
     },
     "BUTTONB" : { 
       id : 'fsBBTap',
-      PM : { html : "&rarr&rarr;", action : function() { moveCursor( 'START' );} },
+      NavLR : { html : "&uarr;&darr;", action : function() { changeTapMode( "NavUD" ); } },
+      NavUD : { html : "&larr;&rarr;", action : function() { changeTapMode( "NavLR" ); } },
+      Tempo : { html : "-", action : function() { } }, // No 'both' in Tempo mode
+      Filter : { html : "Wah", action : function() { filterMod( "wah" ); } }, 
     },
   },
 
   "EVENT_DTAP" : {
     "BUTTON1" : {
       id : 'fsB1DTap',
-      PM : { html : "&#62;", action : function() { playElement( 'START' ); } },
+      Default : { html : "&#62;", action : function() { playElement( 'START' ); } },
     },
     "BUTTON2" : {
       id : 'fsB2DTap',
-      PM : { html : "#8800;", action : function() { playElement( 'STOP' ) } },
+      Default : { html : "#8800;", action : function() { playElement( 'STOP' ) } },
     },
     // No Double tap of both
   },
@@ -59,15 +69,16 @@ var fsButtonMap =
   "EVENT_HOLD" : {
     "BUTTON1" : {
       id : 'fsB1Hold',
-      PM :  { html : "&uarr;", action : function() { moveCursor( 'UP' ); } }, 
+      Default :  { html : "Filter", action : function() { changeTapMode( "Filter" ); } },
+      Filter :   { html : "NavLR", action : function() { changeTapMode( "NavLR" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Hold',
-      PM : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
+      Default :  { html : "Arp", action : function() { changeTapMode( "Arp" ); } },
     },
     "BUTTONB" : {
       id : 'fsBBHold',
-      PM : { html :   "Play", action : function() { moveCursor( 'TOP' ); } },
+      Default : { html : "Tempo", action : function() { changeTapMode( "Tempo" ); } }
     },
   }
 };
@@ -92,7 +103,10 @@ class FootSwitchButton
 
   setState( newState )
   {
-    if( newState != this.buttonState )
+    // button presses need to be accurate and deterministic when setting tempo, so no hold or double tap functions
+    if( tapMode == "tempo" )
+      buttonEvent( "EVENT_TAP", this.buttonID );
+    else if( newState != this.buttonState )
     {
       this.buttonState = newState;
 
@@ -163,17 +177,58 @@ class FootSwitchButton
   }
 }
 
-// TBD. Call class method directly?
+var lastTapTime = undefined;
+const MIN_TEMPO_MS = 20;
+const MAX_TEMPO_MS = 2000;
+function tapTempo()
+{
+  var currentTime = Date.now();
+
+  if( lastTapTime )
+  {
+    var diff;
+
+    diff = currentTime - lastTapTime;
+    if( ( diff > MIN_TEMPO_MS ) && ( diff <MAX_TEMPO_MS ) )
+    {
+      currentTempo = diff;
+      console.log( "Tempo=", 60000 / currentTempo ); // X ms/b = X/1000 S/b = 1000/X b/S = 1000 * 60 / X * b/M
+    }
+  }
+  lastTapTime = currentTime;
+}
+
+function setTempo()
+{
+  lastTapTime = undefined;
+  changeTapMode( "NavLR" );
+}
+
 function holdTimerCB( ButtonID )
 {
   footSwitchButtons[ ( ButtonID == "BUTTON1" ) ? 0 : 1 ].holdTimerCB();
 }
 
+function filterMod( param )
+{
+  console.log( "Filter mod ", param ); // tbd
+}
+
+function changeTapMode( newTapMode )
+{
+  tapMode = newTapMode;
+
+  for( var b of [ "BUTTON1", "BUTTON2", "BUTTONB" ] )
+    document.getElementById( fsButtonMap[ "EVENT_TAP" ][ b ].id ).innerHTML = fsButtonMap[ "EVENT_TAP" ][ b ][ tapMode ].html; 
+}
+
 function buttonEvent( event, buttonID )
 {
-  fsButtonMap[ event ][ buttonID ][ fsMode ].action();
-  var elem = document.getElementById( fsButtonMap[ event ][ buttonID ].id );
-  elem.classList.add( 'css_highlight_red' );
+  if( event == "EVENT_TAP" )
+    fsButtonMap[ event ][ buttonID ][ tapMode ].action();
+  else
+    fsButtonMap[ event ][ buttonID ][ "Default" ].action();
+  document.getElementById( fsButtonMap[ event ][ buttonID ].id ).classList.add( 'css_highlight_red' );
   setTimeout( buttonHLTimer, 100 );
 }
 

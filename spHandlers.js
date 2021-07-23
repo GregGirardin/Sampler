@@ -324,3 +324,16 @@ function keyboardPressed( note )
     elem.classList.add( 'css_pressedKey' );
   }
 }
+
+var arpeggiatorFlag = false;
+
+function arpeggiatorTog()
+{
+  arpeggiatorFlag = 1 - arpeggiatorFlag;
+
+  var elem = document.getElementById( 'arpeggiator' );
+  if( arpeggiatorFlag )
+    elem.classList.add( 'css_highlight_red' );
+  else
+    elem.classList.remove( 'css_highlight_red' );
+}

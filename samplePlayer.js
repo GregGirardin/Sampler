@@ -60,6 +60,9 @@ class CSampleConfig
 //////////////////////////// ////////////////////////////
 window.onload = sampleListInit; // set up main entry point
 
+var currentTempo = 500; // tempo in ms;
+var flashTempoTimer, clearTempoTimer;
+
 /////////////// /////////////// /////////////// ///////////////
 function sampleListInit()
 {
@@ -86,4 +89,19 @@ function sampleListInit()
 
   genChordLibraryHTML();
   initWebAudio();
+
+  flashTempoTimer = setTimeout( flashTempo, currentTempo );
+}
+
+function flashTempo()
+{
+  document.getElementById( 'tempoButton' ).classList.add( 'css_highlight_red' );
+
+  clearTempoTimer = setTimeout( clearTempoFlash, 100 );
+  flashTempoTimer = setTimeout( flashTempo, currentTempo );
+}
+
+function clearTempoFlash()
+{
+  document.getElementById( 'tempoButton' ).classList.remove( 'css_highlight_red' );
 }
