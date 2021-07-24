@@ -331,9 +331,9 @@ function arpeggiatorTog()
 {
   arpeggiatorFlag = 1 - arpeggiatorFlag;
 
-  var elem = document.getElementById( 'arpeggiator' );
+  var elem = document.getElementById( 'fsB2Hold' );
   if( arpeggiatorFlag )
-    elem.classList.add( 'css_highlight_red' );
+     elem.innerHTML = "Arp  On";
   else
-    elem.classList.remove( 'css_highlight_red' );
+     elem.innerHTML = "Arp Off";
 }

@@ -28,7 +28,8 @@
     Out  <-----------  
 */
 
-const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "noise" ];
+const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "noise", "test1", "test2", "test3", "test4", "test5" ];
+const arpTypes = [ "None", "Up", "Down", "UpStair", "DownStair" ];
 
 class CSample // A Sample in the config.
 {
@@ -45,7 +46,6 @@ class CSample // A Sample in the config.
 
 // Synth is handled opposite of samples in that most information about the synth
 // is in the library, not in the current config.
-
 class CChord // A synth in the config. Just a name referring to the CLibSynth
 {
   constructor( name )
@@ -79,28 +79,28 @@ function initWebAudio()
 {
   // build chain from bottom up
   reverbBlock = new Tone.Reverb( { preDelay : .2, decay : 10, wet : 1 } ).toDestination();
-  delayBlock = new Tone.FeedbackDelay( { delayTime : .4, feedback : 0.5, wet : 1 } ).toDestination();
+  delayBlock = new Tone.FeedbackDelay( { delayTime : .4, maxDelay : 2, feedback : 0.6, wet : 1 } ).toDestination();
 
   dryLevel = new Tone.Gain( 1 ).toDestination();
   reverbLevel = new Tone.Gain( 0 ).connect( reverbBlock );
   delayLevel = new Tone.Gain( 0 ).connect( delayBlock );
 
-  tremoloBlock = new Tone.Tremolo( { frequency : 3, depth : 1, wet : 0 } );
+  tremoloBlock = new Tone.Tremolo( { frequency : 4, depth : 1, wet : 0, spread : 0 } );
   tremoloBlock.connect( dryLevel );
   tremoloBlock.connect( delayLevel );
   tremoloBlock.connect( reverbLevel );
 
-  phaserBlock = new Tone.Phaser( { frequency : 1, octaves : 3, baseFrequency : 1000, wet : 0 } );
+  phaserBlock = new Tone.Phaser( { frequency : .4, octaves : 4, baseFrequency : 700, wet : 0 } );
   phaserBlock.connect( tremoloBlock );
 
-  chorusBlock = new Tone.Chorus( { frequency : 1, delayTime : 2.5, depth : .5, wet : 0 } );
+  chorusBlock = new Tone.Chorus( { frequency : .5, delayTime : 2.5, depth : 1, wet : 0 } );
   chorusBlock.connect( phaserBlock );
 
-  distortionBlock = new Tone.Chebyshev( 50 );
+  distortionBlock = new Tone.Chebyshev( 10 );
   distortionBlock.connect( chorusBlock );
   distortionBlock.wet.value = 0;
 
-  filterBlock = new Tone.Filter( 1000, "highpass" );
+  filterBlock = new Tone.Filter( 20000, "lowpass" );
   filterBlock.connect( distortionBlock );
 
   masterLevel = new Tone.Gain( 0 );
@@ -117,6 +117,8 @@ function initWebAudio2() // stuff we can't do until a user click
 
 function createSynths() // create all synths and connect them to masterLevel
 {
+  // Oscillators are louder than samplers so we normalize volumes.
+
   for( var ix = 0;ix < synthTypes.length;ix++ )
   {
     var sType = synthTypes[ ix ];
@@ -124,7 +126,6 @@ function createSynths() // create all synths and connect them to masterLevel
     switch( sType )
     {
       case "piano":
-
         s = new Tone.Sampler( { urls : {  A0 : "A0.mp3",
                                           C1 : "C1.mp3", "D#1" : "Ds1.mp3", "F#1" : "Fs1.mp3", A1 : "A1.mp3",
                                           C2 : "C2.mp3", "D#2" : "Ds2.mp3", "F#2" : "Fs2.mp3", A2 : "A2.mp3",
@@ -142,10 +143,59 @@ function createSynths() // create all synths and connect them to masterLevel
       case "square":
       case "sawtooth":
       case "triangle":
-
         s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
-        // Oscillators are louder than samplers.
-        s.set( {  volume : -18, oscillator : { type : sType }, } );
+        s.set( {  volume : -12, oscillator : { type : sType }, } );
+        break;
+
+      case "test1":
+        s = new Tone.PolySynth( Tone.AMSynth );
+        s.set( {  polyphony : 24,
+                  volume : -6,
+                  harmonicity : 3.999,
+                  oscillator : { type: "square" },
+                  envelope : { attack: 0.03, decay: 0.3, sustain: 0.7, release: 0.8 },
+                  modulation : { volume: 12, type: "square6" },
+                  modulationEnvelope : { attack: 2, decay: 3, sustain: 0.8, release: 0.1 } } );
+        break;
+
+      case "test2":
+        s = new Tone.PolySynth( Tone.Synth );
+        s.set( {  polyphony : 12,
+                  volume : -6,
+                  harmonicity : 2,
+                  oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
+                  modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
+                  modulationEnvelope : { attack: 0.006, decay: 0.2, sustain: 0.2, release: 0.4 } });
+        break;
+
+      case "test3":
+        s = new Tone.PolySynth( Tone.AMSynth );
+        s.set( {  polyphony : 12,
+                  volume : 0,
+                  harmonicity : 2,
+                  oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
+                  envelope : { attack: 0.006, decay: 4, sustain: 0.04, release: 1.2 },
+                  modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
+                  modulationEnvelope : { attack: 0.006, decay: 0.2, sustain: 0.2, release: 0.4 } } );
+        break;
+      
+      case "test4":
+        s = new Tone.PolySynth( Tone.FMSynth );
+        s.set( {  polyphony : 24,
+                  volume : -6,
+                  harmonicity : 3.01,
+                  modulationIndex : 14,
+                  oscillator : { type: "triangle" },
+                  envelope : { attack: 0.2, decay: 0.3, sustain: 0.9, release: 1.2 },
+                  modulation : { type: "square" },
+                  modulationEnvelope : { attack: 0.01, decay: 0.5, sustain: 0.2, release: 0.1 } } );
+        break;
+  
+      case "test5":
+        s = new Tone.PolySynth( Tone.Synth );
+        s.set({ volume : -8,
+                oscillator: { type: "fatsine4", spread: 60, count: 10 },
+                envelope: { attack: 0.4, decay: 0.01, sustain: 1, attackCurve: "sine", releaseCurve: "sine", release: 0.4 } });
         break;
 
       case "noise":
@@ -155,6 +205,7 @@ function createSynths() // create all synths and connect them to masterLevel
       default:
         continue;
     }
+
     s.connect( masterLevel );
     instruments[ sType ] = s;
   }
@@ -252,9 +303,21 @@ function playElemAudio( elem )
       }
 
       var at = curConfig.groups[ elem.group ].envelope;
-      if( at == envelopeLabels[ 0 ] ) { p.fadeIn = 0; p.fadeOut = 0; }
-      else if( at == envelopeLabels[ 1 ] ) { p.fadeIn = 1; p.fadeOut = 1; }
-      else if( at == envelopeLabels[ 2 ] ) { p.fadeIn = 5; p.fadeOut = 5; }
+      if( at == envelopeLabels[ 1 ] )
+      {
+        p.fadeIn = 1;
+        p.fadeOut = 1;
+      }
+      else if( at == envelopeLabels[ 2 ] )
+      {
+        p.fadeIn = 5;
+        p.fadeOut = 5;
+      }
+      else // Default / Fast
+      {
+        p.fadeIn = 0;
+        p.fadeOut = 0;
+      };
 
       libSample.player.loop = elem.loopFlag;
     }
@@ -279,10 +342,43 @@ function playElemAudio( elem )
           frequencies = frequencies.concat( voices );
         }
 
-    instruments[ inst ].set( {  envelope : envelopeParams[ curConfig.groups[ cursorGroup ].envelope ] } );
+    if( curConfig.groups[ cursorGroup ].envelope != "None" ) // instrument may have a default envelope
+      instruments[ inst ].set( { envelope : envelopeParams[ curConfig.groups[ cursorGroup ].envelope ] } );
     activeElement.synth = instruments[ inst ];
     activeElement.notes = frequencies;
     instruments[ inst ].triggerAttack( frequencies );
+  }
+}
+
+function doFilterAction( action )
+{
+  switch( action )
+  {
+    case "off":
+      filterBlock.type = "lowpass";
+      filterBlock.frequency.rampTo( 15000, 2 );
+      break;
+
+    case "low":
+      filterBlock.frequency.rampTo( 200, 1 );
+      break;
+
+    case "hi":
+      filterBlock.frequency.rampTo( 10000, 1 );
+      break;
+
+    case "type":
+      switch( filterBlock.type )
+      {
+        case "lowpass":
+          filterBlock.type = "bandpass";
+          break;
+    
+        case "bandpass":
+          filterBlock.type = "lowpass";
+          break;
+      }
+     break;
   }
 }
 

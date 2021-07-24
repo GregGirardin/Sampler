@@ -253,8 +253,6 @@ function genEditChordHTML()
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
-function configFX() { }
-
 function saveEdits()
 {
   if( editElement )
@@ -262,32 +260,32 @@ function saveEdits()
     {
       case "CSample":
         editElement.elementName = document.getElementById( "editSampleName" ).value; 
-        editElement.loopFlag = document.getElementById( "editSampleLoopFlag" ).checked;
+        editElement.loopFlag    = document.getElementById( "editSampleLoopFlag" ).checked;
         configEditedFlag = true;
         break;
     
       case "CGroup":
-        editElement.elementName = document.getElementById( "editGroupName" ).value;
-        editElement.instrument = document.getElementById( "editGroupInstrument" ).value;
-        editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
-        editElement.sequence = document.getElementById( "editGroupSequenceFlag" ).value;
-        editElement.envelope = document.getElementById( "editGroupEnvelope" ).value;
-        editElement.masterLevel = document.getElementById( "editGroupMasterLevel" ).value;
+        editElement.elementName     = document.getElementById( "editGroupName" ).value;
+        editElement.instrument      = document.getElementById( "editGroupInstrument" ).value;
+        editElement.thickenFlag     = document.getElementById( "editGroupThickenFlag" ).checked;
+        editElement.sequence        = document.getElementById( "editGroupSequenceFlag" ).checked;
+        editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
+        editElement.masterLevel     = document.getElementById( "editGroupMasterLevel" ).value;
         editElement.distortionLevel = document.getElementById( "editGroupDistortionLevel" ).value;
-        editElement.chorusLevel = document.getElementById( "editGroupChorusLevel" ).value;
-        editElement.phaserLevel = document.getElementById( "editGroupPhaserLevel" ).value;
-        editElement.tremoloLevel = document.getElementById( "editGroupTremoloLevel" ).value;
-        editElement.dryLevel = document.getElementById( "editGroupDryLevel" ).value;
-        editElement.delayLevel = document.getElementById( "editGroupDelayLevel" ).value;
-        editElement.reverbLevel = document.getElementById( "editGroupReverbLevel" ).value;
+        editElement.chorusLevel     = document.getElementById( "editGroupChorusLevel" ).value;
+        editElement.phaserLevel     = document.getElementById( "editGroupPhaserLevel" ).value;
+        editElement.tremoloLevel    = document.getElementById( "editGroupTremoloLevel" ).value;
+        editElement.dryLevel        = document.getElementById( "editGroupDryLevel" ).value;
+        editElement.delayLevel      = document.getElementById( "editGroupDelayLevel" ).value;
+        editElement.reverbLevel     = document.getElementById( "editGroupReverbLevel" ).value;
 
         configEditedFlag = true;
         break;
 
       case "CLibChord":
-        editElement.elementName = document.getElementById( "editChordName" ).value;
-        editElement.instrument = document.getElementById( "editChordInstrument" ).value;
-        editElement.octave = document.getElementById( "editChordOctave" ).value;
+        editElement.elementName   = document.getElementById( "editChordName" ).value;
+        editElement.instrument    = document.getElementById( "editChordInstrument" ).value;
+        editElement.octave        = document.getElementById( "editChordOctave" ).value;
         chordEditedFlag = true;
         break;
     }

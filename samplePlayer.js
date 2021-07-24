@@ -13,7 +13,7 @@ const MAX_GROUPS = 32;
 
 var cursorGroup = 0, cursorElement = 0; // cursor
 
-const envelopeLabels = [ "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
+const envelopeLabels = [ "None", "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
 const envelopeParams =
 {
   Fast : { attack : .1, decay : 0, sustain: 1, release: .1 },
