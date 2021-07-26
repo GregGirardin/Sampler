@@ -51,7 +51,15 @@ function genElementConfigHTML()
         var libChord = chordFromName( g.elements[ j ].elementName ); // if this is a Chord and is in the library.
         if( !libChord || ( libChord.instrument == "None" && g.instrument == "None" ) )
           classes += ' css_noInstrument';
+        
+        classes += " css_Chord";
       }
+
+      if( g.elements[ j ].objType == "CSample" )
+        classes += " css_Sample";
+      
+      if( g.elements[ j ].objType == "CGroup" )
+        classes += " css_Group";
 
       tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +

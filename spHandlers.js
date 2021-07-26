@@ -340,7 +340,7 @@ function arpeggiatorTog()
   }
   else
   {
-    stopArpeggio();
+    // stopArpeggio(); this does a hard stop. Clearing arpeggiatorFlag will make it stop after the current arp.
     elem.innerHTML = "Arp";
   }
 }

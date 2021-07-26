@@ -105,39 +105,7 @@ function createSynths() // create all synths and connect them to masterLevel
         s.set( {  volume : -12, oscillator : { type : sType }, } );
         break;
 
-      case "test1":
-        s = new Tone.PolySynth( Tone.AMSynth );
-        s.set( {  polyphony : 24,
-                  volume : -6,
-                  harmonicity : 3.999,
-                  oscillator : { type: "square" },
-                  envelope : { attack: 0.03, decay: 0.3, sustain: 0.7, release: 0.8 },
-                  modulation : { volume: 12, type: "square6" },
-                  modulationEnvelope : { attack: 2, decay: 3, sustain: 0.8, release: 0.1 } } );
-        break;
-
-      case "test2":
-        s = new Tone.PolySynth( Tone.Synth );
-        s.set( {  polyphony : 12,
-                  volume : -6,
-                  harmonicity : 2,
-                  oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
-                  modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
-                  modulationEnvelope : { attack: 0.006, decay: 0.2, sustain: 0.2, release: 0.4 } });
-        break;
-
-      case "test3":
-        s = new Tone.PolySynth( Tone.AMSynth );
-        s.set( {  polyphony : 12,
-                  volume : 0,
-                  harmonicity : 2,
-                  oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
-                  envelope : { attack: 0.006, decay: 4, sustain: 0.04, release: 1.2 },
-                  modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
-                  modulationEnvelope : { attack: 0.006, decay: 0.2, sustain: 0.2, release: 0.4 } } );
-        break;
-      
-      case "test4":
+      case "SynthPipe":
         s = new Tone.PolySynth( Tone.FMSynth );
         s.set( {  polyphony : 24,
                   volume : -6,
@@ -148,8 +116,41 @@ function createSynths() // create all synths and connect them to masterLevel
                   modulation : { type: "square" },
                   modulationEnvelope : { attack: 0.01, decay: 0.5, sustain: 0.2, release: 0.1 } } );
         break;
+
+      case "SynReed":
+        s = new Tone.PolySynth( Tone.AMSynth );
+        s.set( {  polyphony : 24,
+                  volume : -6,
+                  harmonicity : 3.999,
+                  oscillator : { type: "square" },
+                  envelope : { attack: 0.03, decay: 0.3, sustain: 0.7, release: 0.8 },
+                  modulation : { volume: 12, type: "square6" },
+                  modulationEnvelope : { attack: 2, decay: 3, sustain: 0.8, release: 0.1 } } );
+        break;
+
+      case "SynKeys":
+        s = new Tone.PolySynth( Tone.Synth );
+        s.set( {  polyphony : 24,
+                  volume : -6,
+                  harmonicity : 2,
+                  oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
+                  modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
+                  modulationEnvelope : { attack: 0.006, decay: 0.2, sustain: 0.2, release: 0.4 } });
+        break;
+
+      case "Pluck":
+        s = new Tone.PolySynth( Tone.AMSynth );
+        s.set( {  polyphony : 12,
+                  volume : 0,
+                  harmonicity : 2,
+                  oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
+                  envelope : { attack: 0.006, decay: 4, sustain: 0.04, release: 1.2 },
+                  modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
+                  modulationEnvelope : { attack: 0.006, decay: 0.2, sustain: 0.2, release: 0.4 } } );
+        break;
+      
   
-      case "test5":
+      case "MiscE":
         s = new Tone.PolySynth( Tone.Synth );
         s.set({ volume : -8,
                 oscillator: { type: "fatsine4", spread: 60, count: 10 },
@@ -305,7 +306,9 @@ function playElemAudio( audioElem )
     if( curConfig.groups[ cursorGroup ].envelope != "None" ) // instrument may have a default envelope
       instruments[ inst ].set( { envelope : envelopeParams[ curConfig.groups[ cursorGroup ].envelope ] } );
     activeElement.synth = instruments[ inst ];
+
     activeElement.notes = frequencies;
+      
     activeElement.synth.triggerAttack( frequencies );
   }
 }
@@ -367,20 +370,21 @@ function arpTimerCB()
 {
   arpTimer = undefined;
 
-  if( arpeggiatorFlag && activeElement )
+  if( activeElement )
   {
-    if( activeElement.nextElem && arpNoteIndex == 0 ) // want to go to the next arpeggio
+    if( arpNoteIndex == 0 && ( activeElement.nextElem || !arpeggiatorFlag ) ) // want to go to the next arpeggio or finish.
     {
       activeElement.elem.playing = false;
       var tmp = activeElement.nextElem;
       activeElement.nextElem = undefined;
       activeElement = undefined;
-      doArpeggio( tmp );
+      if( arpeggiatorFlag )
+        doArpeggio( tmp );
     }
     else
     {
-      activeElement.synth.triggerAttackRelease( arpNotes[ arpNoteIndex++ ], arpTime / 1000 );
-      if( arpNoteIndex == arpNotes.length )
+      activeElement.synth.triggerAttackRelease( arpNotes[ arpNoteIndex ], arpTime / 1000 );
+      if( ++arpNoteIndex == arpNotes.length )
         arpNoteIndex = 0;
 
       arpTimer = setTimeout( arpTimerCB, arpTime );

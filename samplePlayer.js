@@ -13,7 +13,7 @@ const MAX_GROUPS = 32;
 
 var cursorGroup = 0, cursorElement = 0; // cursor
 
-const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "noise", "test1", "test2", "test3", "test4", "test5" ];
+const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 const arpSpeeds = [ "1x", "2x", "3x", "4x" ];
 const arpSequences = [ "1234", "4321", "1324", "4231" ];
 const envelopeLabels = [ "None", "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
