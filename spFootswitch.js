@@ -42,7 +42,7 @@ var fsButtonMap =
       id : 'fsB2Tap',
       NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
       NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
-      Tempo : { html :    "Set", action : function() { setTempo(); } },
+      Tempo : { html :    "Set", action : function() { exitTempoMode(); } },
       Filter : { html : "Filter Hi", action : function() { doFilterAction( "hi" ); } }, 
     },
     "BUTTONB" : { 
@@ -195,7 +195,7 @@ function tapTempo()
     diff = currentTime - lastTapTime;
     if( ( diff > MIN_TEMPO_MS ) && ( diff < MAX_TEMPO_MS ) )
     {
-      currentTempo = diff; // Milliseconds
+      setTempoMs( diff );
       delayBlock.set( { delayTime : currentTempo / 1000 } );
       tremoloBlock.set( { frequency : 1000 / currentTempo } ) ;
       document.getElementById( "tempoButton" ).innerHTML = Math.round( 60000 / currentTempo ) + " bpm";
@@ -204,7 +204,15 @@ function tapTempo()
   lastTapTime = currentTime;
 }
 
-function setTempo()
+function setTempoMs( newTempoMs )
+{
+  currentTempo = newTempoMs;
+
+  // tell the arpeggiator.
+  arpSetTempo( currentTempo );
+}
+
+function exitTempoMode()
 {
   lastTapTime = undefined;
   changeTapMode( "NavLR" );

@@ -122,7 +122,7 @@ function dropElem( ev )
     else if( dragElem.substring( 0, libChordID.length ) == libChordID )
     {
       var delChord = parseInt( dragElem.substring( libChordID.length, ) );
-      synthLibrary.splice( delChord, 1 );
+      chordLibrary.splice( delChord, 1 );
     }
     else if( dragElem.substring( 0, cbStr.length ) == cbStr )
       curConfig.groups[ curConfig.groups.length - 1 ].elements = [];
@@ -264,6 +264,8 @@ function playComplete( playElem )
 
 function playElement( action )
 {
+  saveEdits();
+
   if( ( cursorGroup != undefined ) && ( cursorElement != undefined ) )
   {
     if( action == "START" )
@@ -294,10 +296,7 @@ function toggleEdit()
   editMode = !editMode;
 
   var b = document.getElementById( 'editButton' );
-  if( editMode )
-    b.classList.add( 'css_highlight_red' );
-  else
-    b.classList.remove( 'css_highlight_red' );
+  editMode ? b.classList.add( 'css_highlight_red' ) : b.classList.remove( 'css_highlight_red' );
 
   document.getElementById( 'multiuse' ).innerHTML = "";
 }
@@ -333,7 +332,15 @@ function arpeggiatorTog()
 
   var elem = document.getElementById( 'fsB2Hold' );
   if( arpeggiatorFlag )
-     elem.innerHTML = "Arp  On";
+  {
+    elem.innerHTML = "~Arp";
+    sampElem = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
+    sampElem.group = cursorGroup; // tbd, this should be set earlier.
+    doArpeggio( sampElem );
+  }
   else
-     elem.innerHTML = "Arp Off";
+  {
+    stopArpeggio();
+    elem.innerHTML = "Arp";
+  }
 }

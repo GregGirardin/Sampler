@@ -182,6 +182,26 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
+  tmpHtml += "Arp Sequence:<select id='editGroupArpSequence'>";
+  for( i = 0;i < arpSequences.length;i++ )
+  {
+    tmpHtml += "<option value='" + arpSequences[ i ] + "' ";
+    if( editElement.arpSequence == arpSequences[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + arpSequences[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  tmpHtml += "Arp Speed:<select id='editGroupArpSpeed'>";
+  for( i = 0;i < arpSpeeds.length;i++ )
+  {
+    tmpHtml += "<option value='" + arpSpeeds[ i ] + "' ";
+    if( editElement.arpSpeed == arpSpeeds[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + arpSpeeds[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
   tmpHtml += "Master: <input type='range' id='editGroupMasterLevel' min='0' max='100' value='" + editElement.masterLevel + "'><br>";
   tmpHtml += "Chorus: <input type='range' id='editGroupChorusLevel' min='0' max='100' value='" + editElement.chorusLevel + "'><br>";
   tmpHtml += "Phaser: <input type='range' id='editGroupPhaserLevel' min='0' max='100' value='" + editElement.phaserLevel + "'><br>";
@@ -270,6 +290,8 @@ function saveEdits()
         editElement.thickenFlag     = document.getElementById( "editGroupThickenFlag" ).checked;
         editElement.sequence        = document.getElementById( "editGroupSequenceFlag" ).checked;
         editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
+        editElement.arpSpeed        = document.getElementById( "editGroupArpSpeed" ).value;
+        editElement.arpSequence     = document.getElementById( "editGroupArpSequence" ).value;
         editElement.masterLevel     = document.getElementById( "editGroupMasterLevel" ).value;
         editElement.distortionLevel = document.getElementById( "editGroupDistortionLevel" ).value;
         editElement.chorusLevel     = document.getElementById( "editGroupChorusLevel" ).value;

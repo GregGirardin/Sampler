@@ -28,51 +28,9 @@
     Out  <-----------  
 */
 
-const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "noise", "test1", "test2", "test3", "test4", "test5" ];
-const arpTypes = [ "None", "Up", "Down", "UpStair", "DownStair" ];
-
-class CSample // A Sample in the config.
-{
-  constructor( filename )
-  {
-    this.objType = "CSample";
-    this.elementName = filename;
-    this.playing = false;
-
-    this.filename = filename; // filename on the server.
-    this.loopFlag = false;
-  }
-}
-
-// Synth is handled opposite of samples in that most information about the synth
-// is in the library, not in the current config.
-class CChord // A synth in the config. Just a name referring to the CLibSynth
-{
-  constructor( name )
-  {
-    this.objType = "CChord";
-    this.elementName = name; // name of a CLibChord in the library
-    this.playing = false;
-  }
-}
-
-class CLibChord
-{
-  constructor( name )
-  {
-    this.objType = "CLibChord";
-    this.elementName = name;
-
-    this.notes = 0x0; // bit field of pressed keys bit 0 is a C
-    this.instrument = synthTypes[ 0 ]; // can provide a default instrument if not in Group
-    this.octave = 0;
-  }
-}
-
 var audioSource;
 var masterLevel, dryLevel, reverbLevel, delayLevel;
-var reverbBlock, delayBlock, tremoloBlock, phaserBlock,
-    chorusBlock, distortionBlock, filterBlock;
+var reverbBlock, delayBlock, tremoloBlock, phaserBlock, chorusBlock, distortionBlock, filterBlock;
 var instruments = {};
 
 function initWebAudio()
@@ -109,7 +67,7 @@ function initWebAudio()
   createSynths();
 }
 
-function initWebAudio2() // stuff we can't do until a user click
+function initWebAudio2()
 {
   tremoloBlock.start();
   chorusBlock.start();
@@ -232,16 +190,16 @@ function releaseAudio()
   activeElement = undefined;
 }
 
-function setEffectLevels( grp, rampTime )
+function setEffectLevels( g, t )
 {
-  masterLevel.gain.rampTo( grp.masterLevel / 100, rampTime );
-  dryLevel.gain.rampTo( grp.dryLevel / 100, rampTime );
-  delayLevel.gain.rampTo( grp.delayLevel / 100, rampTime );
-  reverbLevel.gain.rampTo( grp.reverbLevel / 100, rampTime );
-  tremoloBlock.wet.rampTo( grp.tremoloLevel / 100, rampTime );
-  phaserBlock.wet.rampTo( grp.phaserLevel / 100, rampTime );
-  chorusBlock.wet.rampTo( grp.chorusLevel / 100, rampTime );
-  distortionBlock.wet.rampTo( grp.distortionLevel / 100, rampTime );
+  masterLevel.gain.rampTo( g.masterLevel / 100, this );
+  dryLevel.gain.rampTo( g.dryLevel / 100, t );
+  delayLevel.gain.rampTo( g.delayLevel / 100, t );
+  reverbLevel.gain.rampTo( g.reverbLevel / 100, t );
+  tremoloBlock.wet.rampTo( g.tremoloLevel / 100, t );
+  phaserBlock.wet.rampTo( g.phaserLevel / 100, t );
+  chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
+  distortionBlock.wet.rampTo( g.distortionLevel / 100, t );
 }
 
 var firstTime = true;
@@ -258,7 +216,7 @@ function samplePlayCompleteCB()
   }
 }
 
-function playElemAudio( elem )
+function playElemAudio( audioElem )
 {
   if( firstTime )
   {
@@ -266,67 +224,69 @@ function playElemAudio( elem )
     firstTime = false;
   }
 
+  if( arpeggiatorFlag && audioElem.objType == "CChord" )
+  {
+    if( activeElement )
+      if( activeElement.elem.objType == "CSample" )
+        releaseAudio();
+    doArpeggio( audioElem );
+    return;
+  }
+
   if( activeElement )
     releaseAudio();
 
+  setEffectLevels( curConfig.groups[ audioElem.group ], 0 );
+
+  audioElem.playing = true;
+
   activeElement = {};
-  activeElement.elem = elem;
+  activeElement.elem = audioElem;
 
-  saveEdits();
-  setEffectLevels( curConfig.groups[ elem.group ], 0 );
-
-  elem.playing = true;
-
-  if( elem.objType == "CSample" )
+  if( audioElem.objType == "CSample" )
   {
-    var libSample = sampleLibrary[ elem.elementName ]; // the ClLibrarySample
-    var p;
+    if( arpeggiatorFlag && arpTimer ) // Can't arpeggiate samples.
+    {
+      clearTimeout( arpTimer );
+      arpTimer = undefined;
+    }
+    var libSample = sampleLibrary[ audioElem.elementName ]; // the ClLibrarySample
 
     if( libSample )
     {
+      var player;
+
       if( !libSample.player )
       {
         // We put the Player in the ClLibrarySample so there is only 1 instance per sample.
         // The same sample may be in multiple groups.
         // First time we need to create the player and connect it.
-        p = new Tone.Player( serverURL + libSample.filename );
-        p.volume.level = 0;
-        p.onstop = samplePlayCompleteCB;
-        p.autostart = true;
-        p.connect( masterLevel );
-        libSample.player = p;
+        player = new Tone.Player( serverURL + libSample.filename );
+        player.volume.level = 0;
+        player.onstop = samplePlayCompleteCB;
+        player.autostart = true;
+        player.connect( masterLevel );
+        libSample.player = player;
       }
       else
       {
         libSample.player.start();
-        p = libSample.player;
+        player = libSample.player;
       }
 
-      var at = curConfig.groups[ elem.group ].envelope;
-      if( at == envelopeLabels[ 1 ] )
-      {
-        p.fadeIn = 1;
-        p.fadeOut = 1;
-      }
-      else if( at == envelopeLabels[ 2 ] )
-      {
-        p.fadeIn = 5;
-        p.fadeOut = 5;
-      }
-      else // Default / Fast
-      {
-        p.fadeIn = 0;
-        p.fadeOut = 0;
-      };
+      // Do the envelop for samples using fadeIn / fadeOut.
+      var env = curConfig.groups[ audioElem.group ].envelope; 
+      if( env == envelopeLabels[ 1 ] ) { player.fadeIn = 1; player.fadeOut = 1; }
+      else if( env == envelopeLabels[ 2 ] ) { player.fadeIn = 5; player.fadeOut = 5; }
+      else { player.fadeIn = 0; player.fadeOut = 0; }
 
-      libSample.player.loop = elem.loopFlag;
+      libSample.player.loop = audioElem.loopFlag;
     }
   }
-  else if( elem.objType == "CChord" )
+  else if( audioElem.objType == "CChord" )
   {
-    var inst = curConfig.groups[ elem.group ].instrument; // Group instrument has priority
-
-    chord = chordFromName( elem.elementName ); // from the chord Lib
+    var inst = curConfig.groups[ audioElem.group ].instrument; // Group instrument has priority
+    var chord = chordFromName( audioElem.elementName ); // from the chord Lib
 
     if( inst == "None" ) 
       inst = chord.instrument; // chords can have a default instrument
@@ -346,7 +306,7 @@ function playElemAudio( elem )
       instruments[ inst ].set( { envelope : envelopeParams[ curConfig.groups[ cursorGroup ].envelope ] } );
     activeElement.synth = instruments[ inst ];
     activeElement.notes = frequencies;
-    instruments[ inst ].triggerAttack( frequencies );
+    activeElement.synth.triggerAttack( frequencies );
   }
 }
 
@@ -359,24 +319,14 @@ function doFilterAction( action )
       filterBlock.frequency.rampTo( 15000, 2 );
       break;
 
-    case "low":
-      filterBlock.frequency.rampTo( 200, 1 );
-      break;
-
-    case "hi":
-      filterBlock.frequency.rampTo( 10000, 1 );
-      break;
+    case "low": filterBlock.frequency.rampTo( 200, 1 ); break;
+    case "hi": filterBlock.frequency.rampTo( 10000, 1 ); break;
 
     case "type":
       switch( filterBlock.type )
       {
-        case "lowpass":
-          filterBlock.type = "bandpass";
-          break;
-    
-        case "bandpass":
-          filterBlock.type = "lowpass";
-          break;
+        case "lowpass": filterBlock.type = "bandpass"; break;
+        case "bandpass": filterBlock.type = "lowpass"; break;
       }
      break;
   }
@@ -394,4 +344,138 @@ function chordFromName( cName ) // get the CLibChord by name
     }
 
   return s;
+}
+
+var arpNoteIndex = 0;
+var arpNotes = [];
+var arpTime;
+var arpTimer;
+
+function arpSetTempo( arpTempo )
+{
+  if( activeElement )
+    switch( curConfig.groups[ activeElement.elem.group ].arpSpeed )
+    {
+      case "1x": arpTime = currentTempo;    break;
+      case "2x": arpTime = currentTempo / 2;break;
+      case "3x": arpTime = currentTempo / 3;break;
+      case "4x": arpTime = currentTempo / 4;break;
+    }
+}
+
+function arpTimerCB()
+{
+  arpTimer = undefined;
+
+  if( arpeggiatorFlag && activeElement )
+  {
+    if( activeElement.nextElem && arpNoteIndex == 0 ) // want to go to the next arpeggio
+    {
+      activeElement.elem.playing = false;
+      var tmp = activeElement.nextElem;
+      activeElement.nextElem = undefined;
+      activeElement = undefined;
+      doArpeggio( tmp );
+    }
+    else
+    {
+      activeElement.synth.triggerAttackRelease( arpNotes[ arpNoteIndex++ ], arpTime / 1000 );
+      if( arpNoteIndex == arpNotes.length )
+        arpNoteIndex = 0;
+
+      arpTimer = setTimeout( arpTimerCB, arpTime );
+    }
+  }
+  else
+    activeElement = undefined;
+}
+
+function doArpeggio( audioElem )
+{
+  if( audioElem.objType != "CChord" )
+    return;
+
+  if( arpTimer ) // Arpeggiator is currently running. We'll start arping this chord after this sequence completes.
+  {
+    if( activeElement ) // tbd. Should always be true.'
+    {
+      if( !activeElement.nextElem ) 
+        activeElement.nextElem = audioElem;
+    }
+    else
+      console.log( "!activeElement" );
+    return;
+  }
+
+  audioElem.playing = true;
+  genElementConfigHTML();
+
+  setEffectLevels( curConfig.groups[ audioElem.group ], 0 );
+
+  var inst = curConfig.groups[ audioElem.group ].instrument; // Group instrument has priority
+  var chord = chordFromName( audioElem.elementName ); // from the chord Lib
+
+  if( inst == "None" ) 
+    inst = chord.instrument; // chords can have a default instrument
+
+  activeElement = {};
+  activeElement.elem = audioElem;
+  activeElement.synth = instruments[ inst ];
+
+  arpNoteIndex = 0;
+  arpNotes = [];
+  if( inst != "noise" )
+  {
+    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+      if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
+      {
+        var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
+        var freq = 440 * Math.pow( 2, noteOffset / 12 );
+        arpNotes.push( freq );
+      }
+    
+    if( arpNotes.length >= 3 )
+      switch( curConfig.groups[ audioElem.group ].arpSequence )
+      {
+        case "4321":
+          arpNotes = arpNotes.reverse();
+          break;
+
+        case "1324":
+          for( var index = 1;index < arpNotes.length - 1;index += 2 )
+          {
+            var tmp = arpNotes[ index ];
+            arpNotes[ index ] = arpNotes[ index + 1 ];
+            arpNotes[ index + 1 ] = tmp;
+          }
+          break;
+
+        case "4231":
+          arpNotes = arpNotes.reverse();
+          for( var index = 1;index < arpNotes.length - 1;index += 2 )
+          {
+            var tmp = arpNotes[ index ];
+            arpNotes[ index ] = arpNotes[ index + 1 ];
+            arpNotes[ index + 1 ] = tmp;
+          }
+
+        break;
+      }
+
+    arpSetTempo( currentTempo );
+    arpTimerCB();
+  }
+}
+
+function stopArpeggio()
+{
+  if( activeElement )
+    activeElement.playing = false;
+  activeElement = undefined;
+
+  if( arpTimer )
+  {
+    clearTimeout( arpTimer );
+    arpTimer = undefined;
+  } 
 }

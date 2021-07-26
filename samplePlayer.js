@@ -13,7 +13,11 @@ const MAX_GROUPS = 32;
 
 var cursorGroup = 0, cursorElement = 0; // cursor
 
+const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "noise", "test1", "test2", "test3", "test4", "test5" ];
+const arpSpeeds = [ "1x", "2x", "3x", "4x" ];
+const arpSequences = [ "1234", "4321", "1324", "4231" ];
 const envelopeLabels = [ "None", "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
+
 const envelopeParams =
 {
   Fast : { attack : .1, decay : 0, sustain: 1, release: .1 },
@@ -31,6 +35,8 @@ class CGroup
 
     this.elementName = groupName;
     this.sequence = false;
+    this.arpSpeed = arpSpeeds[ 0 ];
+    this.arpSequence = arpSequences[ 0 ];
     this.envelope = envelopeLabels[ 0 ];
     this.elements = []; // CSample, CChord, etc.
 
@@ -57,10 +63,48 @@ class CSampleConfig
   }
 }
 
+class CSample // A Sample in the config.
+{
+  constructor( filename )
+  {
+    this.objType = "CSample";
+    this.elementName = filename;
+    this.playing = false;
+
+    this.filename = filename; // filename on the server.
+    this.loopFlag = false;
+  }
+}
+
+// Synth is handled opposite of samples in that most information about the synth
+// is in the library, not in the current config.
+class CChord // A Chord in the config. Just a name referring to the CLibChord
+{
+  constructor( name )
+  {
+    this.objType = "CChord";
+    this.elementName = name; // name of a CLibChord in the library
+    this.playing = false;
+  }
+}
+
+class CLibChord
+{
+  constructor( name )
+  {
+    this.objType = "CLibChord";
+    this.elementName = name;
+
+    this.notes = 0x0; // bit field of pressed keys bit 0 is a C
+    this.instrument = synthTypes[ 0 ]; // can provide a default instrument if not in Group
+    this.octave = 0;
+  }
+}
+
 //////////////////////////// ////////////////////////////
 window.onload = sampleListInit; // set up main entry point
 
-var currentTempo = 500; // tempo in ms;
+var currentTempo;
 var flashTempoTimer, clearTempoTimer;
 
 /////////////// /////////////// /////////////// ///////////////
@@ -88,9 +132,11 @@ function sampleListInit()
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
 
   genChordLibraryHTML();
-  initWebAudio();
+
+  setTempoMs( 500 );
 
   flashTempoTimer = setTimeout( flashTempo, currentTempo );
+  initWebAudio();
 }
 
 function flashTempo()
