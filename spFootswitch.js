@@ -207,9 +207,6 @@ function tapTempo()
 function setTempoMs( newTempoMs )
 {
   currentTempo = newTempoMs;
-
-  // tell the arpeggiator.
-  arpSetTempo( currentTempo );
 }
 
 function exitTempoMode()

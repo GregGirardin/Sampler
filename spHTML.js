@@ -46,7 +46,7 @@ function genElementConfigHTML()
       if( g.elements[ j ].playing )
         classes += ' css_playing';
       
-      if( g.elements[ j ].objType == "CChord" ) // make sure there's an instrument
+      if( g.elements[ j ].objType == "CChordRef" ) // make sure there's an instrument
       {
         var libChord = chordFromName( g.elements[ j ].elementName ); // if this is a Chord and is in the library.
         if( !libChord || ( libChord.instrument == "None" && g.instrument == "None" ) )
@@ -58,9 +58,9 @@ function genElementConfigHTML()
       if( g.elements[ j ].objType == "CSample" )
         classes += " css_Sample";
       
-      if( g.elements[ j ].objType == "CGroup" )
+      if( g.elements[ j ].objType == "CGroupRef" )
         classes += " css_Group";
-
+      
       tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
                   g.elements[ j ].elementName + "</button>\n";
@@ -156,6 +156,29 @@ function genChordLibraryHTML()
   document.getElementById( 'chordDiv' ).innerHTML = tempHtml;
 }
 
+function genEditGroupRefHTML()
+{
+  var groupNames = [];
+  for( var i = 0;i < curConfig.groups.length - 1;i++ )
+    groupNames.push( curConfig.groups[ i ].elementName );
+
+  var tmpHtml = "<hr>";
+  tmpHtml += "Group:<select id='editGroupRefGroup'>";
+
+  for( i = 0;i < groupNames.length;i++ )
+  {
+    tmpHtml += "<option value='" + groupNames[ i ] + "' ";
+    if( editElement.elementName == groupNames[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + groupNames[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  var checked = editElement.loopFlag ? "checked" : "";
+  tmpHtml += "Loop: <input type='checkbox' id='editGroupRefLoopFlag' " + checked + "><br>";
+
+  document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+}
 /////////////// /////////////// ///////////////
 /////////////// /////////////// ///////////////
 function genEditGroupHTML()
@@ -200,13 +223,13 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Arp Speed:<select id='editGroupArpSpeed'>";
-  for( i = 0;i < arpSpeeds.length;i++ )
+  tmpHtml += "Arp Speed:<select id='editGroupArpNPB'>";
+  for( i = 0;i < arpNPBs.length;i++ )
   {
-    tmpHtml += "<option value='" + arpSpeeds[ i ] + "' ";
-    if( editElement.arpSpeed == arpSpeeds[ i ] )
+    tmpHtml += "<option value='" + arpNPBs[ i ] + "' ";
+    if( editElement.arpNPB == arpNPBs[ i ] )
       tmpHtml += "selected='selected'";
-    tmpHtml += ">" + arpSpeeds[ i ] + "</option>";
+    tmpHtml += ">" + arpNPBs[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
@@ -298,7 +321,7 @@ function saveEdits()
         editElement.thickenFlag     = document.getElementById( "editGroupThickenFlag" ).checked;
         editElement.sequence        = document.getElementById( "editGroupSequenceFlag" ).checked;
         editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
-        editElement.arpSpeed        = document.getElementById( "editGroupArpSpeed" ).value;
+        editElement.arpNPB          = document.getElementById( "editGroupArpNPB" ).value;
         editElement.arpSequence     = document.getElementById( "editGroupArpSequence" ).value;
         editElement.masterLevel     = document.getElementById( "editGroupMasterLevel" ).value;
         editElement.distortionLevel = document.getElementById( "editGroupDistortionLevel" ).value;
@@ -308,7 +331,6 @@ function saveEdits()
         editElement.dryLevel        = document.getElementById( "editGroupDryLevel" ).value;
         editElement.delayLevel      = document.getElementById( "editGroupDelayLevel" ).value;
         editElement.reverbLevel     = document.getElementById( "editGroupReverbLevel" ).value;
-
         configEditedFlag = true;
         break;
 
@@ -317,6 +339,12 @@ function saveEdits()
         editElement.instrument    = document.getElementById( "editChordInstrument" ).value;
         editElement.octave        = document.getElementById( "editChordOctave" ).value;
         chordEditedFlag = true;
+        break;
+      
+      case "CGroupRef":
+        editElement.elementName = document.getElementById( "editGroupRefGroup" ).value;
+        editElement.loopFlag    = document.getElementById( "editGroupRefLoopFlag" ).checked;
+        configEditedFlag = true;
         break;
     }
 

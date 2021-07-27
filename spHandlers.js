@@ -102,7 +102,21 @@ function dropElem( ev )
     var toGroup = parseInt( indexes[ 0 ] );
     var toElementIx = parseInt( indexes[ 1 ] );
 
-    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CChord( libChord.elementName ) );
+    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CChordRef( libChord.elementName ) );
+  }
+  else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
+           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Group into config
+  {
+    var groupId = parseInt( dragElem.substring( slGroup.length, ) );
+    // make sure no loops. don't drop self into self or allow groups that contain groups.
+    // otherwise loop reference detection will be difficult.
+    var groupRef = new CGroupRef( curConfig.groups[ groupId ].elementName );
+
+    var indexes = ev.target.id.substring( slElem.length, ).split( "." );
+    var toGroup = parseInt( indexes[ 0 ] );
+    var toElementIx = parseInt( indexes[ 1 ] );
+
+    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, groupRef );
   }
   else if( ev.target.id == "trashCan" )
   {
@@ -166,14 +180,13 @@ function setSampleConfigName()
   }
 }
 
-/////////////// /////////////// /////////////// ///////////////
 function groupClick( groupIndex )
 {
   if( editMode )
   {
     saveEdits();
     editElement = curConfig.groups[ groupIndex ];
-    genEditGroupHTML()
+    genEditGroupHTML();
   }
 }
 
@@ -192,13 +205,15 @@ function elemClick( groupIndex, sampleIndex )
     {
       if( editElement.objType == "CSample" )
         genEditSampleHTML();
-      else if( editElement.objType == "CChord" )
+      else if( editElement.objType == "CChordRef" )
       {
         // Clicked a synth in the config, but we actually edit the synth in the Library
         editElement = chordFromName( editElement.elementName );
         if( editElement )
           genEditChordHTML();
       }
+      else if ( editElement.objType == "CGroupRef" )
+        genEditGroupRefHTML();
     }
   }
 
@@ -217,7 +232,7 @@ function chordClick( synthIndex )
   else
   {
     // add to Clipboard
-    var synth = new CChord( chordLibrary[ synthIndex ].elementName );
+    var synth = new CChordRef( chordLibrary[ synthIndex ].elementName );
     curConfig.groups[ curConfig.groups.length - 1 ].elements.push( synth ); 
     genElementConfigHTML();
   }
@@ -328,19 +343,11 @@ var arpeggiatorFlag = false;
 
 function arpeggiatorTog()
 {
-  arpeggiatorFlag = 1 - arpeggiatorFlag;
+  arpeggiatorFlag = !arpeggiatorFlag;
 
   var elem = document.getElementById( 'fsB2Hold' );
   if( arpeggiatorFlag )
-  {
-    elem.innerHTML = "~Arp";
-    sampElem = curConfig.groups[ cursorGroup ].elements[ cursorElement ];
-    sampElem.group = cursorGroup; // tbd, this should be set earlier.
-    doArpeggio( sampElem );
-  }
+    elem.classList.add( 'css_cursor' );
   else
-  {
-    // stopArpeggio(); this does a hard stop. Clearing arpeggiatorFlag will make it stop after the current arp.
-    elem.innerHTML = "Arp";
-  }
+    elem.classList.remove( 'css_cursor' );
 }

@@ -14,7 +14,7 @@ const MAX_GROUPS = 32;
 var cursorGroup = 0, cursorElement = 0; // cursor
 
 const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
-const arpSpeeds = [ "1x", "2x", "3x", "4x" ];
+const arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
 const arpSequences = [ "1234", "4321", "1324", "4231" ];
 const envelopeLabels = [ "None", "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
 
@@ -23,6 +23,18 @@ const envelopeParams =
   Fast : { attack : .1, decay : 0, sustain: 1, release: .1 },
   Med : { attack : .5, decay : 1, sustain: 0.9, release: 1 },
   Slow : { attack : 5, decay : .9, sustain: 0.9, release: 3 },
+}
+
+class CConfig
+{
+  constructor( sampListName )
+  {
+    this.name = sampListName;
+    this.sampleBaseURL = undefined; // The prefix of the path to all the samples
+    this.groups = [];
+    this.groups.push( new CGroup( "Group" ) );
+    this.groups.push( new CGroup( "Clipboard" ) );
+  }
 }
 
 class CGroup
@@ -35,10 +47,10 @@ class CGroup
 
     this.elementName = groupName;
     this.sequence = false;
-    this.arpSpeed = arpSpeeds[ 0 ];
+    this.arpNPB = 4;
     this.arpSequence = arpSequences[ 0 ];
     this.envelope = envelopeLabels[ 0 ];
-    this.elements = []; // CSample, CChord, etc.
+    this.elements = []; // CSample, CChordRef, CGroupRef.
 
     this.masterLevel = 100;
     this.distortionLevel = 0;
@@ -51,15 +63,13 @@ class CGroup
   }
 }
 
-class CSampleConfig
+class CGroupRef // a reference to a group that can be placed in a group.
 {
-  constructor( sampListName )
+  constructor( groupName )
   {
-    this.name = sampListName;
-    this.sampleBaseURL = undefined; // The prefix of the path to all the samples
-    this.groups = [];
-    this.groups.push( new CGroup( "Group" ) );
-    this.groups.push( new CGroup( "Clipboard" ) );
+    this.objType = "CGroupRef";
+    this.elementName = groupName;
+    this.loopFlag = false;
   }
 }
 
@@ -78,11 +88,11 @@ class CSample // A Sample in the config.
 
 // Synth is handled opposite of samples in that most information about the synth
 // is in the library, not in the current config.
-class CChord // A Chord in the config. Just a name referring to the CLibChord
+class CChordRef // A Chord in the config. Just a name referring to the CLibChord
 {
   constructor( name )
   {
-    this.objType = "CChord";
+    this.objType = "CChordRef";
     this.elementName = name; // name of a CLibChord in the library
     this.playing = false;
   }
@@ -116,7 +126,7 @@ function sampleListInit()
     serverURL = server;
 
   configEditedFlag = false;
-  curConfig = new CSampleConfig( "Sample List" );
+  curConfig = new CConfig( "Sample List" );
 
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
