@@ -225,7 +225,7 @@ function playElemAudio( audioElem )
     firstTime = false;
   }
 
-  if( arpeggiatorFlag && audioElem.objType == "CChordRef" )
+  if( arpeggiatorFlag )
   {
     if( activeElement )
       if( activeElement.elem.objType == "CSample" )
@@ -410,8 +410,8 @@ function arpTimerCB() // call once per beat. We queue all notes for the next bea
 // set up the arpNotes
 function doArpeggio( audioElem )
 {
-  if( activeElement ) // tbd. Should always be true.'
-    if( activeElement.arpTimer ) // Arpeggiator is currently running. We'll start arping this chord after this sequence completes.
+  if( activeElement )
+    if( activeElement.arpTimer ) // Arpeggiator is currently running. We'll start arping after this sequence completes.
     {
       activeElement.nextElem = audioElem;
       return;
@@ -424,9 +424,7 @@ function doArpeggio( audioElem )
 
   activeElement = {};
   activeElement.arpNotesPerBeat = curConfig.groups[ audioElem.group ].arpNPB;
-
   activeElement.elem = audioElem;
-
   activeElement.arpNoteIndex = 0;
   activeElement.arpNotes = [];
 
@@ -463,6 +461,59 @@ function doArpeggio( audioElem )
           }
           break;
       }
+  }
+  else if( audioElem.objType == "CGroupRef" && ( instrument != "None" ) )
+  {
+    // Arp this entire sequence.
+    var grp = undefined; // Find group
+    for( var ix = 0;ix < curConfig.groups.length;ix++ )
+      if( curConfig.groups[ ix ].elementName == audioElem.elementName )
+      {
+        grp = curConfig.groups[ ix ];
+        break;
+      }
+    if( grp )
+    {
+      activeElement.synth = instruments[ instrument ];
+
+      for( var seqIx = 0;seqIx < grp.elements.length;seqIx++ )
+        if( grp.elements[ seqIx ].objType == "CChordRef" ) // only add CChordRef, not samples or groups.
+        {
+          var chord = chordFromName( grp.elements[ seqIx ].elementName ); // from the chord Lib
+          if( !chord )
+            continue;
+
+          var chordArpNotes = []; // the arp notes for this particular chord of the group
+          for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+            if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
+            {
+              var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
+              var freq = 440 * Math.pow( 2, noteOffset / 12 );
+              chordArpNotes.push( freq ); // An array notes
+            }
+          
+
+          if( chordArpNotes.length >= 3 )
+            switch( curConfig.groups[ audioElem.group ].arpSequence )
+            {
+              case "4321": chordArpNotes = chordArpNotes.reverse(); break;
+              case "1324":
+              case "4231":
+                if( curConfig.groups[ audioElem.group ].arpSequence == "4231" )
+                  chordArpNotes = chordArpNotes.reverse();
+
+                for( var index = 1;index < chordArpNotes.length - 1;index += 2 )
+                {
+                  var tmp = chordArpNotes[ index ];
+                  chordArpNotes[ index ] = chordArpNotes[ index + 1 ];
+                  chordArpNotes[ index + 1 ] = tmp;
+                }
+                break;
+            }
+
+          activeElement.arpNotes = activeElement.arpNotes.concat( chordArpNotes );
+        }
+    }
   }
   else
     return;
