@@ -338,16 +338,3 @@ function keyboardPressed( note )
     elem.classList.add( 'css_pressedKey' );
   }
 }
-
-var arpeggiatorFlag = false;
-
-function arpeggiatorTog()
-{
-  arpeggiatorFlag = !arpeggiatorFlag;
-
-  var elem = document.getElementById( 'fsB2Hold' );
-  if( arpeggiatorFlag )
-    elem.classList.add( 'css_cursor' );
-  else
-    elem.classList.remove( 'css_cursor' );
-}

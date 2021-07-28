@@ -15,14 +15,14 @@ var cursorGroup = 0, cursorElement = 0; // cursor
 
 const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 const arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
-const arpSequences = [ "1234", "4321", "1324", "4231" ];
+const arpSequences = [ "1234", "4321", "1324", "4231", "B-T", "T-B" ]; 
 const envelopeLabels = [ "None", "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
 
 const envelopeParams =
 {
-  Fast : { attack : .1, decay : 0, sustain: 1, release: .1 },
-  Med : { attack : .5, decay : 1, sustain: 0.9, release: 1 },
-  Slow : { attack : 5, decay : .9, sustain: 0.9, release: 3 },
+  Fast : { attack : .1, decay :  0, sustain:   1, release: .1 },
+  Med  : { attack : .5, decay :  1, sustain: 0.9, release:  1 },
+  Slow : { attack :  5, decay : .9, sustain: 0.9, release:  3 },
 }
 
 class CConfig
@@ -44,7 +44,8 @@ class CGroup
     this.objType = "CGroup";
     this.instrument = "None";
     this.thickenFlag = false;
-
+    this.playing = false;
+    
     this.elementName = groupName;
     this.sequence = false;
     this.arpNPB = 4;
@@ -145,12 +146,17 @@ function sampleListInit()
 
   setTempoMs( 500 );
 
-  flashTempoTimer = setTimeout( flashTempo, currentTempo );
+  flashTempo();
   initWebAudio();
 }
 
 function flashTempo()
 {
+  if( clearTempoTimer )
+    clearTimeout( clearTempoTimer );
+  if( flashTempoTimer )
+    clearTimeout( flashTempoTimer );
+
   document.getElementById( 'tempoButton' ).classList.add( 'css_highlight_red' );
 
   clearTempoTimer = setTimeout( clearTempoFlash, 100 );

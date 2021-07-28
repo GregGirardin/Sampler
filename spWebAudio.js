@@ -58,7 +58,13 @@ function initWebAudio()
   distortionBlock.connect( chorusBlock );
   distortionBlock.wet.value = 0;
 
-  filterBlock = new Tone.Filter( 20000, "lowpass" );
+  filterBlock = new Tone.AutoFilter();
+  filterBlock.set( {  frequency : .5,
+                      depth : 1,
+                      baseFrequency : 200,
+                      octaves : 5,
+                      filter : { rolloff : -24 , Q : 2 } } );
+  filterBlock.wet.value = 0;
   filterBlock.connect( distortionBlock );
 
   masterLevel = new Tone.Gain( 0 );
@@ -71,6 +77,8 @@ function initWebAudio2()
 {
   tremoloBlock.start();
   chorusBlock.start();
+  filterBlock.start();
+  Tone.start();
 }
 
 function createSynths() // create all synths and connect them to masterLevel
@@ -185,6 +193,10 @@ function releaseAudio()
     }
     else if( activeElement.elem.objType == "CChordRef" )
       activeElement.synth.triggerRelease( activeElement.notes );
+    
+    if( activeElement.arpTimer );
+      clearTimeout( activeElement.arpTimer );
+
     playComplete( activeElement.elem );
   }
 
@@ -193,7 +205,7 @@ function releaseAudio()
 
 function setEffectLevels( g, t )
 {
-  masterLevel.gain.rampTo( g.masterLevel / 100, this );
+  masterLevel.gain.rampTo( g.masterLevel / 100, t );
   dryLevel.gain.rampTo( g.dryLevel / 100, t );
   delayLevel.gain.rampTo( g.delayLevel / 100, t );
   reverbLevel.gain.rampTo( g.reverbLevel / 100, t );
@@ -225,32 +237,33 @@ function playElemAudio( audioElem )
     firstTime = false;
   }
 
+  setEffectLevels( curConfig.groups[ audioElem.group ], .5 );
+
   if( arpeggiatorFlag )
   {
     if( activeElement )
-      if( activeElement.elem.objType == "CSample" )
+      if( !activeElement.arpTimer )
         releaseAudio();
-    doArpeggio( audioElem );
-    return;
+    
+    if( audioElem.objType != "CSample" )
+    {
+      doArpeggio( audioElem );
+      return;
+    }
   }
 
   if( activeElement )
     releaseAudio();
-
-  setEffectLevels( curConfig.groups[ audioElem.group ], 0 );
 
   audioElem.playing = true;
 
   activeElement = {};
   activeElement.elem = audioElem;
 
+  flashTempo(); // sync flash to our playing
+
   if( audioElem.objType == "CSample" )
   {
-    if( arpeggiatorFlag && arpTimer ) // Can't arpeggiate samples.
-    {
-      clearTimeout( activeElement.arpTimer );
-      activeElement.arpTimer = undefined;
-    }
     var libSample = sampleLibrary[ audioElem.elementName ]; // the ClLibrarySample
 
     if( libSample )
@@ -320,7 +333,6 @@ function playElemAudio( audioElem )
     if( grp )
     {
       activeElement.synth = instruments[ grp.instrument ];
-
       activeElement.seqNotesPerBeat = grp.arpNPB;
       activeElement.seqChords = []; // an array of note arrays
       activeElement.loopFlag = audioElem.loopFlag;
@@ -407,15 +419,85 @@ function arpTimerCB() // call once per beat. We queue all notes for the next bea
   }
 }
 
+function arpChord( chord, seq )
+{
+  var arpNotes = [];
+  if( ( seq == "B-T" ) || ( seq == "T-B" ) )
+  {
+    var firstNote = true;
+    var bassNote = [];
+    var trebNotes = [];
+
+    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+      if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
+      {
+        var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
+        var freq = 440 * Math.pow( 2, noteOffset / 12 );
+        if( firstNote )
+          bassNote = [ freq ];
+        else
+          trebNotes.push( freq );
+
+        firstNote = false;
+      }
+    if( seq == "B-T" )
+    {
+      arpNotes.push( bassNote );
+      arpNotes.push( trebNotes );
+    }
+    else
+    {
+      arpNotes.push( trebNotes );
+      arpNotes.push( bassNote );
+    }
+  }
+  else
+  {
+    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+      if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
+      {
+        var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
+        var freq = 440 * Math.pow( 2, noteOffset / 12 );
+        arpNotes.push( [ freq ] ); // An array notes
+      }
+
+    if( arpNotes >= 3 )
+      switch( seq )
+      {
+        case "4321":
+          arpNotes = arpNotes.reverse();
+          break;
+        case "1324":
+        case "4231":
+          if( seq == "4231" )
+            arpNotes = arpNotes.reverse();
+
+          for( var index = 1;index < arpNotes.length - 1;index += 2 )
+          {
+            var tmp = arpNotes[ index ];
+            arpNotes[ index ] = arpNotes[ index + 1 ];
+            arpNotes[ index + 1 ] = tmp;
+          }
+          break;
+        default:
+          break;
+      }
+  }
+  
+  return arpNotes;
+}
+
 // set up the arpNotes
 function doArpeggio( audioElem )
 {
   if( activeElement )
-    if( activeElement.arpTimer ) // Arpeggiator is currently running. We'll start arping after this sequence completes.
+    if( activeElement.arpTimer ) // Arpeggiator is currently running. We'll start arping after this beat completes.
     {
       activeElement.nextElem = audioElem;
       return;
     }
+
+  flashTempo(); // sync flash to our playing
 
   audioElem.playing = true;
   genElementConfigHTML();
@@ -423,10 +505,8 @@ function doArpeggio( audioElem )
   var instrument = curConfig.groups[ audioElem.group ].instrument; // Group instrument
 
   activeElement = {};
-  activeElement.arpNotesPerBeat = curConfig.groups[ audioElem.group ].arpNPB;
   activeElement.elem = audioElem;
   activeElement.arpNoteIndex = 0;
-  activeElement.arpNotes = [];
 
   if( audioElem.objType == "CChordRef" )
   {
@@ -435,32 +515,10 @@ function doArpeggio( audioElem )
     if( instrument == "None" )
       instrument = chord.instrument; // chords can have a default instrument
     activeElement.synth = instruments[ instrument ];
+    var seq = curConfig.groups[ audioElem.group ].arpSequence;
 
-    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-      if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
-      {
-        var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
-        var freq = 440 * Math.pow( 2, noteOffset / 12 );
-        activeElement.arpNotes.push( freq ); // An array notes
-      }
-
-    if( activeElement.arpNotes.length >= 3 )
-      switch( curConfig.groups[ audioElem.group ].arpSequence )
-      {
-        case "4321": activeElement.arpNotes = activeElement.arpNotes.reverse(); break;
-        case "1324":
-        case "4231":
-          if( curConfig.groups[ audioElem.group ].arpSequence == "4231" )
-            activeElement.arpNotes = activeElement.arpNotes.reverse();
-
-          for( var index = 1;index < activeElement.arpNotes.length - 1;index += 2 )
-          {
-            var tmp = activeElement.arpNotes[ index ];
-            activeElement.arpNotes[ index ] = activeElement.arpNotes[ index + 1 ];
-            activeElement.arpNotes[ index + 1 ] = tmp;
-          }
-          break;
-      }
+    activeElement.arpNotes = arpChord( chord, seq );
+    activeElement.arpNotesPerBeat = curConfig.groups[ audioElem.group ].arpNPB;
   }
   else if( audioElem.objType == "CGroupRef" && ( instrument != "None" ) )
   {
@@ -472,8 +530,11 @@ function doArpeggio( audioElem )
         grp = curConfig.groups[ ix ];
         break;
       }
+
     if( grp )
     {
+      activeElement.arpNotes = [];
+
       activeElement.synth = instruments[ instrument ];
 
       for( var seqIx = 0;seqIx < grp.elements.length;seqIx++ )
@@ -483,35 +544,8 @@ function doArpeggio( audioElem )
           if( !chord )
             continue;
 
-          var chordArpNotes = []; // the arp notes for this particular chord of the group
-          for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-            if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
-            {
-              var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
-              var freq = 440 * Math.pow( 2, noteOffset / 12 );
-              chordArpNotes.push( freq ); // An array notes
-            }
-          
-
-          if( chordArpNotes.length >= 3 )
-            switch( curConfig.groups[ audioElem.group ].arpSequence )
-            {
-              case "4321": chordArpNotes = chordArpNotes.reverse(); break;
-              case "1324":
-              case "4231":
-                if( curConfig.groups[ audioElem.group ].arpSequence == "4231" )
-                  chordArpNotes = chordArpNotes.reverse();
-
-                for( var index = 1;index < chordArpNotes.length - 1;index += 2 )
-                {
-                  var tmp = chordArpNotes[ index ];
-                  chordArpNotes[ index ] = chordArpNotes[ index + 1 ];
-                  chordArpNotes[ index + 1 ] = tmp;
-                }
-                break;
-            }
-
-          activeElement.arpNotes = activeElement.arpNotes.concat( chordArpNotes );
+          activeElement.arpNotes = activeElement.arpNotes.concat( arpChord( chord, grp.arpSequence ) );
+          activeElement.arpNotesPerBeat = grp.arpNPB;
         }
     }
   }
@@ -535,25 +569,13 @@ function stopArpeggio()
   activeElement = undefined;
 }
 
-function doFilterAction( action )
+function doModAudio( modifier, state )
 {
-  switch( action )
+  switch( modifier )
   {
-    case "off":
-      filterBlock.type = "lowpass";
-      filterBlock.frequency.rampTo( 15000, 2 );
-      break;
-
-    case "low": filterBlock.frequency.rampTo( 200, 1 ); break;
-    case "hi": filterBlock.frequency.rampTo( 10000, 1 ); break;
-
-    case "type":
-      switch( filterBlock.type )
-      {
-        case "lowpass": filterBlock.type = "bandpass"; break;
-        case "bandpass": filterBlock.type = "lowpass"; break;
-      }
-     break;
+    case "filter":  filterBlock.wet.rampTo( state ? 1 : 0, .2 ); break;
+    case "tremolo": tremoloBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
+    case "chorus":  chorusBlock.wet.rampTo( state ? 1 : 0, .5 ); break;
   }
 }
 

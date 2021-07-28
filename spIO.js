@@ -72,6 +72,14 @@ function sampleConfigSave()
 
   if( configEditedFlag )
   {
+    // clear any state that shouldn't be saved in the config json.
+    for( var i = 0;i < curConfig.groups.length;i++ )
+    {
+      var g = curConfig.groups[ i ];
+      for( var j = 0;j < g.elements.length;j++ )
+        g.elements[ j ].playing = undefined;
+    }
+
     var configData = JSON.stringify( curConfig, null, "  " );
 
     var formData = new FormData();

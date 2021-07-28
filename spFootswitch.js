@@ -35,54 +35,55 @@ var fsButtonMap =
       id : 'fsB1Tap', // the DOM element to highlight
       NavLR : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } }, // Nav Left right
       NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
-      Tempo : { html :    "Tap", action : function() { tapTempo(); } }, // tap tempo
-      Filter : { html : "Filter Low", action : function() { doFilterAction( "low" ); } },
+      Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
+      Modifier : { html : "Filter", action : function() { setModMode( "filter" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
       NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
       NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
-      Tempo : { html :    "Set", action : function() { exitTempoMode(); } },
-      Filter : { html : "Filter Hi", action : function() { doFilterAction( "hi" ); } }, 
+      Tempo : { html :    "Set", action : function() { exitTempoMode(); changeMode( "NavLR" ); } },
+      Modifier : { html : "Tremolo", action : function() { setModMode( "tremolo" ); } },
     },
     "BUTTONB" : { 
       id : 'fsBBTap',
-      NavLR : { html : "&uarr;&darr;", action : function() { changeTapMode( "NavUD" ); } },
-      NavUD : { html : "&larr;&rarr;", action : function() { changeTapMode( "NavLR" ); } },
-      Tempo : { html : "-", action : function() { } }, // No 'both' in Tempo mode
-      Filter : { html : "Toggle", action : function() { doFilterAction( "type" ); } }, 
+      NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
+      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      Tempo : { html : "-", action : function() { } },
+      Modifier : { html : "Chorus", action : function() { setModMode( "chorus" ); } },
     },
   },
 
   "EVENT_DTAP" : {
     "BUTTON1" : {
       id : 'fsB1DTap',
+      Tempo : { html : "-", action : function() { } },
       Default : { html : "&#62;", action : function() { playElement( 'START' ); } },
     },
     "BUTTON2" : {
       id : 'fsB2DTap',
+      Tempo : { html : "-", action : function() { } },
       Default : { html : "&#8800;", action : function() { playElement( 'STOP' ) } },
     },
-      "BUTTONB" : { } // No Double tap of both
+    "BUTTONB" : { } // No Double tap of both
   },
 
   "EVENT_HOLD" : {
     "BUTTON1" : {
       id : 'fsB1Hold',
-      Filter :   { html : "NavLR", action : function()
-        {
-          doFilterAction( "off" );
-          changeTapMode( "NavLR" );
-        } },
-      Default :  { html : "Filter", action : function() { changeTapMode( "Filter" ); } },
+      Modifier : { html : "NavLR", action : function() { setModMode( "off" ); changeMode( "NavLR" ); } },
+      Tempo : { html : "-", action : function() { } },
+      Default :  { html : "Mod", action : function() { changeMode( "Modifier" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Hold',
+      Tempo : { html : "-", action : function() { } },
       Default :  { html : "Arp", action : function() { arpeggiatorTog() } },
     },
     "BUTTONB" : {
       id : 'fsBBHold',
-      Default : { html : "Tempo", action : function() { changeTapMode( "Tempo" ); } }
+      Tempo : { html : "-", action : function() { } },
+      Default : { html : "Tempo", action : function() { changeMode( "Tempo" ); } }
     },
   }
 };
@@ -212,7 +213,6 @@ function setTempoMs( newTempoMs )
 function exitTempoMode()
 {
   lastTapTime = undefined;
-  changeTapMode( "NavLR" );
 }
 
 function holdTimerCB( ButtonID )
@@ -220,7 +220,7 @@ function holdTimerCB( ButtonID )
   footSwitchButtons[ ( ButtonID == "BUTTON1" ) ? 0 : 1 ].holdTimerCB();
 }
 
-function changeTapMode( newTapMode )
+function changeMode( newTapMode )
 {
   tapMode = newTapMode;
 
@@ -232,6 +232,66 @@ function changeTapMode( newTapMode )
       else if ( fsButtonMap[ e ][ b ][ "Default" ] )
         document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ "Default" ].html;
     }
+}
+
+var arpeggiatorFlag = false;
+
+function arpeggiatorTog()
+{
+  arpeggiatorFlag = !arpeggiatorFlag;
+
+  var elem = document.getElementById( 'fsB2Hold' );
+  if( arpeggiatorFlag )
+    elem.classList.add( 'css_cursor' ); // TBD. this is to highlight that it's on.
+  else
+    elem.classList.remove( 'css_cursor' );
+}
+
+var modFilterState = false;
+var modTremoloState = false;
+var modChorusState = false;
+
+function setModMode( modifier )
+{
+  var domElem;
+  var state = false;
+
+  switch( modifier )
+  {
+    case "filter":
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTON1" ].id );
+      modFilterState = !modFilterState;
+      if( modFilterState )
+        state = true;
+      break;
+
+    case "tremolo":
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTON2" ].id );
+      modTremoloState = !modTremoloState;
+      if( modTremoloState )
+        state = true;
+      break;
+
+    case "chorus":
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTONB" ].id );
+      modChorusState = !modChorusState;
+      if( modChorusState )
+        state = true;
+      break;
+    
+    case "off":
+      if( modFilterState ) setModMode( "filter" );
+      if( modTremoloState ) setModMode( "tremolo" );
+      if( modChorusState ) setModMode( "chorus" );
+      break;
+  }
+  if( domElem )
+    if( state )
+      domElem.classList.add( "css_cursor" ); // TBD. this is to highlight that it's on.
+    else
+      domElem.classList.remove( "css_cursor" );
+
+  doModAudio( modifier, state );
 }
 
 function buttonEvent( event, buttonID )
