@@ -48,8 +48,7 @@ function genElementConfigHTML()
       
       if( g.elements[ j ].objType == "CChordRef" ) // make sure there's an instrument
       {
-        var libChord = chordFromName( g.elements[ j ].elementName ); // if this is a Chord and is in the library.
-        if( !libChord || ( libChord.instrument == "None" && g.instrument == "None" ) )
+        if( g.elements[ j ].instrument == "None" && g.instrument == "None" )
           classes += ' css_noInstrument';
         
         classes += " css_Chord";
@@ -147,7 +146,7 @@ function genChordLibraryHTML()
   var tempHtml = "<hr>";
 
   for( var i = 0;i < chordLibrary.length;i++ )
-    tempHtml += "<button id='libChord." + i + "' class='css_chord'  onclick='chordClick( " + i + " )'" +
+    tempHtml += "<button id='libChord." + i + "' class='css_chord' onclick='chordClick( " + i + " )'" +
                 " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
                 chordLibrary[ i ].elementName + "</button>\n";
 
@@ -197,11 +196,14 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
-  var checked = editElement.sequence ? "checked" : "";
-  tmpHtml += "Sequence: <input type='checkbox' id='editGroupSequenceFlag' " + checked + "><br>";
+  tmpHtml += "Sequence Mode:";
+
+  for( i = 0;i < seqModes.length;i++ )
+    tmpHtml += "<input type='radio' id='editGroupSequenceMode" + i + "' name='sequenceType'" +
+               ( editElement.seqMode == seqModes[ i ] ? "checked" : "") + ">" + seqModes[ i ];
 
   var checked = editElement.thickenFlag ? "checked" : "";
-  tmpHtml += "Fat: <input type='checkbox' id='editGroupThickenFlag' " + checked + "><br>";
+  tmpHtml += "<br>Fat: <input type='checkbox' id='editGroupThickenFlag' " + checked + "><br>";
 
   tmpHtml += "Envelope:<select id='editGroupEnvelope'>";
   for( i = 0;i < envelopeLabels.length;i++ )
@@ -223,7 +225,7 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Arp Speed:<select id='editGroupArpNPB'>";
+  tmpHtml += "Arp Notes/b:<select id='editGroupArpNPB'>";
   for( i = 0;i < arpNPBs.length;i++ )
   {
     tmpHtml += "<option value='" + arpNPBs[ i ] + "' ";
@@ -245,7 +247,7 @@ function genEditGroupHTML()
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
-////////////////////////////
+//////////////////////////// ////////////////////////////
 function genEditSampleHTML()
 {
   var tmpHtml = "<hr>";
@@ -258,7 +260,45 @@ function genEditSampleHTML()
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
-////////////////////////////
+//////////////////////////// ////////////////////////////
+function genEditChordRefHTML()
+{
+  var tmpHtml = "Instrument:<select id='editChordRefInstrument'>";
+
+  for( i = 0;i < synthTypes.length;i++ )
+  {
+    tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
+    if( editElement.instrument == synthTypes[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + synthTypes[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  tmpHtml += "Play beats:<select id='editChordRefBeats'>";
+
+  for( i = 0;i < loopCount.length;i++ )
+  {
+    tmpHtml += "<option value='" + loopCount[ i ] + "' ";
+    if( editElement.playBeats == loopCount[ i ] )
+      tmpHtml += "selected='selected'";
+    tmpHtml += ">" + loopCount[ i ] + "</option>";
+  }
+  tmpHtml += "</select><br>";
+
+  //tmpHtml += "Arp Count:<select id='editChordRefArpCount'>";
+  // for( i = 0;i < loopCount.length;i++ )
+  // {
+  //   tmpHtml += "<option value='" + loopCount[ i ] + "' ";
+  //   if( editElement.arpCount == loopCount[ i ] )
+  //     tmpHtml += "selected='selected'";
+  //   tmpHtml += ">" + loopCount[ i ] + "</option>";
+  // }
+  // tmpHtml += "</select><br>";
+
+  document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
+}
+
+//////////////////////////// ////////////////////////////
 function genEditChordHTML()
 {
   var tmpHtml = "<hr>Name: <input contenteditable='true' id='editChordName' value='" + editElement.elementName + "'><br>";
@@ -273,18 +313,7 @@ function genEditChordHTML()
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Instrument:<select id='editChordInstrument'>";
-  for( i = 0;i < synthTypes.length;i++ )
-  {
-    tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
-    if( editElement.instrument == synthTypes[ i ] )
-      tmpHtml += "selected='selected'";
-    tmpHtml += ">" + synthTypes[ i ] + "</option>";
-  }
-  tmpHtml += "</select><br>";
   tmpHtml += "<div class='css_keyboard'><br>";
-
-  //document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 
   const noteNames = [ 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B' ];
   const blackKeys = [         1,         3,              6,         8,        10 ];
@@ -297,13 +326,15 @@ function genEditChordHTML()
     if( ( 1 << note ) & editElement.notes )
       css_class += ' css_pressedKey';
 
-    tmpHtml += "<button id='keyboardKey_" + note + "' class='" + css_class + "' onclick='keyboardPressed( " + note + " );'>" + noteNames[ note % 12 ] + "</button>";
+    tmpHtml += "<button id='keyboardKey_" + note + "' class='" + css_class +
+               "' onclick='keyboardPressed( " + note + " );'>" + noteNames[ note % 12 ] + "</button>";
   }
   tmpHtml += "<br><br></div>";
 
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
+//////////////////////////// ////////////////////////////
 function saveEdits()
 {
   if( editElement )
@@ -316,10 +347,20 @@ function saveEdits()
         break;
     
       case "CGroup":
-        editElement.elementName     = document.getElementById( "editGroupName" ).value;
-        editElement.instrument      = document.getElementById( "editGroupInstrument" ).value;
-        editElement.thickenFlag     = document.getElementById( "editGroupThickenFlag" ).checked;
-        editElement.sequence        = document.getElementById( "editGroupSequenceFlag" ).checked;
+        editElement.elementName = document.getElementById( "editGroupName" ).value;
+        editElement.instrument  = document.getElementById( "editGroupInstrument" ).value;
+        editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
+
+        for( var i = 0;i < seqModes.length;i++ )
+        {
+          var str = "editGroupSequenceMode" + i;
+          if( document.getElementById( str ).checked )
+          {
+            editElement.seqMode = seqModes[ i ];
+            break;
+          }
+        }
+
         editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
         editElement.arpNPB          = document.getElementById( "editGroupArpNPB" ).value;
         editElement.arpSequence     = document.getElementById( "editGroupArpSequence" ).value;
@@ -331,6 +372,14 @@ function saveEdits()
         editElement.dryLevel        = document.getElementById( "editGroupDryLevel" ).value;
         editElement.delayLevel      = document.getElementById( "editGroupDelayLevel" ).value;
         editElement.reverbLevel     = document.getElementById( "editGroupReverbLevel" ).value;
+        configEditedFlag = true;
+        break;
+
+      case "CChordRef":
+        editElement.instrument = document.getElementById( "editChordRefInstrument" ).value;
+        editElement.playBeats = document.getElementById( "editChordRefBeats" ).value;
+        // editElement.arpCount = document.getElementById( "editChordRefArpCount" ).value;
+
         configEditedFlag = true;
         break;
 

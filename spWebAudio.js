@@ -191,9 +191,12 @@ function releaseAudio()
         if( libSample.player )
           libSample.player.stop();
     }
-    else if( activeElement.elem.objType == "CChordRef" )
-      activeElement.synth.triggerRelease( activeElement.notes );
-    
+    else // "CChordRef" or CGroupRef
+      activeElement.synth.triggerRelease( activeElement.chordNotes );
+
+    if( activeElement.grpTimer )
+      clearTimeout( activeElement.grpTimer );
+
     if( activeElement.arpTimer );
       clearTimeout( activeElement.arpTimer );
 
@@ -209,10 +212,13 @@ function setEffectLevels( g, t )
   dryLevel.gain.rampTo( g.dryLevel / 100, t );
   delayLevel.gain.rampTo( g.delayLevel / 100, t );
   reverbLevel.gain.rampTo( g.reverbLevel / 100, t );
-  tremoloBlock.wet.rampTo( g.tremoloLevel / 100, t );
   phaserBlock.wet.rampTo( g.phaserLevel / 100, t );
-  chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
   distortionBlock.wet.rampTo( g.distortionLevel / 100, t );
+
+  if( !modTremoloState ) // Modifier is on?
+    tremoloBlock.wet.rampTo( g.tremoloLevel / 100, t );
+  if( !modChorusState )
+    chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
 }
 
 var firstTime = true;
@@ -225,10 +231,21 @@ function samplePlayCompleteCB()
   {
     activeElement.elem.playing = false;
     playComplete( activeElement.elem );
-    //activeElement = undefined;
+    // activeElement = undefined;
   }
 }
 
+// Can this element be arpeggiated?
+function elemCanArpeggiate( audioElem )
+{
+  if( audioElem.objType == "CSample" )
+    return false;
+  
+  return true;
+}
+
+//////////////////////////////////// ////////////////////////////////////
+//////////////////////////////////// ////////////////////////////////////
 function playElemAudio( audioElem )
 {
   if( firstTime )
@@ -239,17 +256,19 @@ function playElemAudio( audioElem )
 
   setEffectLevels( curConfig.groups[ audioElem.group ], .5 );
 
-  if( arpeggiatorFlag )
+  if( arpeggiatorFlag && elemCanArpeggiate( audioElem ) )
   {
     if( activeElement )
-      if( !activeElement.arpTimer )
+      if( activeElement.arpTimer )
+      {
+        activeElement.nextElem = audioElem; // Queue the next arp. Want to complete the current arp of the current beat.
+        return;
+      }
+      else
         releaseAudio();
-    
-    if( audioElem.objType != "CSample" )
-    {
-      doArpeggio( audioElem );
-      return;
-    }
+
+    doArpeggio( audioElem );
+    return;
   }
 
   if( activeElement )
@@ -262,125 +281,144 @@ function playElemAudio( audioElem )
 
   flashTempo(); // sync flash to our playing
 
-  if( audioElem.objType == "CSample" )
+  switch( audioElem.objType )
   {
-    var libSample = sampleLibrary[ audioElem.elementName ]; // the ClLibrarySample
-
-    if( libSample )
-    {
-      var player;
-
-      if( !libSample.player )
-      {
-        // We put the Player in the ClLibrarySample so there is only 1 instance per sample.
-        // The same sample may be in multiple groups.
-        // First time we need to create the player and connect it.
-        player = new Tone.Player( serverURL + libSample.filename );
-        player.volume.level = 0;
-        player.onstop = samplePlayCompleteCB;
-        player.autostart = true;
-        player.connect( masterLevel );
-        libSample.player = player;
-      }
-      else
-      {
-        libSample.player.start();
-        player = libSample.player;
-      }
-
-      // Do the envelop for samples using fadeIn / fadeOut.
-      var env = curConfig.groups[ audioElem.group ].envelope; 
-      if( env == envelopeLabels[ 1 ] ) { player.fadeIn = 1; player.fadeOut = 1; }
-      else if( env == envelopeLabels[ 2 ] ) { player.fadeIn = 5; player.fadeOut = 5; }
-      else { player.fadeIn = 0; player.fadeOut = 0; }
-
-      libSample.player.loop = audioElem.loopFlag;
-    }
+    case "CSample": playCSample( audioElem ); break;
+    case "CChordRef": playCChordRef( audioElem ); break;
+    case "CGroupRef": playCGroupRef( audioElem ); break;
   }
-  else if( audioElem.objType == "CChordRef" )
+
+}
+
+function playCSample( audioElem )
+{
+  var libSample = sampleLibrary[ audioElem.elementName ]; // the ClLibrarySample
+
+  if( libSample )
   {
-    var instrument = curConfig.groups[ audioElem.group ].instrument; // Group instrument has priority
-    var chord = chordFromName( audioElem.elementName ); // from the chord Lib
+    var player;
 
-    if( instrument == "None" ) 
-      instrument = chord.instrument; // chords can have a default instrument
-
-    var frequencies = [];
-    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-      if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
-      {
-        var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
-        var freq = 440 * Math.pow( 2, noteOffset / 12 );
-        var voices = curConfig.groups[ cursorGroup ].thickenFlag ? [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // detuned voices for thickness
-        frequencies = frequencies.concat( voices );
-      }
-
-    if( curConfig.groups[ cursorGroup ].envelope != "None" ) // instrument may have a default envelope
-      instruments[ instrument ].set( { envelope : envelopeParams[ curConfig.groups[ cursorGroup ].envelope ] } );
-    activeElement.synth = instruments[ instrument ];
-    activeElement.notes = frequencies;
-    activeElement.synth.triggerAttack( frequencies );
-  }
-  else if( audioElem.objType == "CGroupRef" )
-  {
-    var grp = undefined; // Find group
-    for( var ix = 0;ix < curConfig.groups.length;ix++ )
-      if( curConfig.groups[ ix ].elementName == audioElem.elementName )
-      {
-        grp = curConfig.groups[ ix ];
-        break;
-      }
-    if( grp )
+    if( !libSample.player )
     {
-      activeElement.synth = instruments[ grp.instrument ];
-      activeElement.seqNotesPerBeat = grp.arpNPB;
-      activeElement.seqChords = []; // an array of note arrays
-      activeElement.loopFlag = audioElem.loopFlag;
-
-      for( var seqIx = 0;seqIx < grp.elements.length;seqIx++ )
-        if( grp.elements[ seqIx ].objType == "CChordRef" ) // only add CChordRef, not samples or groups.
-        {
-          var chord = chordFromName( grp.elements[ seqIx ].elementName );
-          var freqs = [];
-          for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-          {
-            if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
-            {
-              var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
-              freqs.push( 440 * Math.pow( 2, noteOffset / 12 ) );
-            }
-          }
-          activeElement.seqChords.push( freqs ); // An array of note arrays.
-        }
+      // We put the Player in the ClLibrarySample so there is only 1 instance per sample.
+      // The same sample may be in multiple groups.
+      // First time we need to create the player and connect it.
+      player = new Tone.Player( serverURL + libSample.filename );
+      player.volume.level = 0;
+      player.onstop = samplePlayCompleteCB;
+      player.autostart = true;
+      player.connect( masterLevel );
+      libSample.player = player;
     }
-    activeElement.seqNoteIndex = 0;
+    else
+    {
+      libSample.player.start();
+      player = libSample.player;
+    }
+
+    // Do the envelop for samples using fadeIn / fadeOut.
+    var env = curConfig.groups[ audioElem.group ].envelope; 
+    if( env == envelopeLabels[ 1 ] ) { player.fadeIn = 1; player.fadeOut = 1; }
+    else if( env == envelopeLabels[ 2 ] ) { player.fadeIn = 5; player.fadeOut = 5; }
+    else { player.fadeIn = 0; player.fadeOut = 0; }
+
+    libSample.player.loop = audioElem.loopFlag;
+  }
+}
+
+function playCChordRef( audioElem )
+{
+  var chord = chordFromName( audioElem.elementName ); // from the chord Lib
+  var instrument = audioElem.instrument;
+  if( instrument == "None" ) 
+    instrument = curConfig.groups[ audioElem.group ].instrument; // Use Group instrument
+
+  if( !instrument )
+    return;
+
+  var frequencies = [];
+  for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+    if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
+    {
+      var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
+      var freq = 440 * Math.pow( 2, noteOffset / 12 );
+      var voices = curConfig.groups[ cursorGroup ].thickenFlag ? [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // detuned voices for thickness
+      frequencies = frequencies.concat( voices );
+    }
+
+  if( curConfig.groups[ cursorGroup ].envelope != "None" ) // instrument may have a default envelope
+    instruments[ instrument ].set( { envelope : envelopeParams[ curConfig.groups[ cursorGroup ].envelope ] } );
+  activeElement.synth = instruments[ instrument ];
+  activeElement.chordNotes = frequencies;
+  activeElement.synth.triggerAttack( frequencies );
+
+  // if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
+}
+
+function playCGroupRef( audioElem )
+{
+  var grp = undefined;
+  for( var ix = 0;ix < curConfig.groups.length;ix++ )
+    if( curConfig.groups[ ix ].elementName == audioElem.elementName )
+    {
+      grp = curConfig.groups[ ix ];
+      break;
+    }
+
+  if( grp )
+  {
+    activeElement.synth = instruments[ grp.instrument ];
+    activeElement.loopFlag = audioElem.loopFlag;
+    activeElement.grpChordIndex = 0;
+    activeElement.beatsRemaining = 0;
+    activeElement.group = grp;
     grpPlayTimerCB();
   }
 }
 
-// this is for playing groups that are placed in other groups.
-// Could just put this functionality with the ARP as it's very similar
-// We use the ARP NPB value.
+// Play group placed in other groups.
+// Play each CChordRef for CChordRef.playBeats beats. Repeat if loopFlag.
 function grpPlayTimerCB()
 {
   if( !activeElement ) // This is our flag to stop playing the sequence.
     return;
 
-  var noteTime = Tone.now();
-  var noteLength = currentTempo / activeElement.seqNotesPerBeat / 1000; // tempo is Ms.
-
-  for( var beatIx = 0;beatIx < activeElement.seqNotesPerBeat;beatIx++ )
+  if( activeElement.beatsRemaining-- > 0 )
   {
-    activeElement.synth.triggerAttackRelease( activeElement.seqChords[ activeElement.seqNoteIndex ], noteLength * .9, noteTime );
-    noteTime += noteLength;
-    if( ++activeElement.seqNoteIndex == activeElement.seqChords.length )
-      if( activeElement.loopFlag )
-        activeElement.seqNoteIndex = 0;
-      else
-        return; // done. don't reschedule the timer.
+    // Are we done playing this Chord?
+    activeElement.grpTimer = setTimeout( grpPlayTimerCB, currentTempo );
+    return;
   }
+  if( activeElement.chordNotes )
+    activeElement.synth.triggerRelease( activeElement.chordNotes );
 
-  activeElement.seqTimer = setTimeout( grpPlayTimerCB, currentTempo );
+  if( ( activeElement.grpChordIndex == activeElement.group.elements.length ) && !activeElement.loopFlag )
+    return; // this was the last chord. We're done.
+
+  var playElem = activeElement.group.elements[ activeElement.grpChordIndex ];
+  if( playElem.objType == "CChordRef" ) // Group must be all CChordRefs. TBD, skip groups and samples.
+  {
+    activeElement.chordNotes = [];
+    var chord = chordFromName( playElem.elementName );
+    if( chord )
+    {
+      for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+        if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
+        {
+          var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
+          activeElement.chordNotes.push( 440 * Math.pow( 2, noteOffset / 12 ) );
+        }
+
+      activeElement.beatsRemaining = playElem.playBeats;
+      activeElement.synth.triggerAttack( activeElement.chordNotes );
+
+      activeElement.grpChordIndex += 1;
+      if( ( activeElement.grpChordIndex >= activeElement.group.elements.length ) && activeElement.loopFlag )
+        activeElement.grpChordIndex = 0; // loop
+
+      activeElement.grpTimer = setTimeout( grpPlayTimerCB, currentTempo );
+    }
+  }
 }
 
 function arpTimerCB() // call once per beat. We queue all notes for the next beat.
@@ -461,7 +499,7 @@ function arpChord( chord, seq )
         arpNotes.push( [ freq ] ); // An array notes
       }
 
-    if( arpNotes >= 3 )
+    if( arpNotes.length >= 3 )
       switch( seq )
       {
         case "4321":
@@ -490,13 +528,6 @@ function arpChord( chord, seq )
 // set up the arpNotes
 function doArpeggio( audioElem )
 {
-  if( activeElement )
-    if( activeElement.arpTimer ) // Arpeggiator is currently running. We'll start arping after this beat completes.
-    {
-      activeElement.nextElem = audioElem;
-      return;
-    }
-
   flashTempo(); // sync flash to our playing
 
   audioElem.playing = true;
@@ -573,7 +604,7 @@ function doModAudio( modifier, state )
 {
   switch( modifier )
   {
-    case "filter":  filterBlock.wet.rampTo( state ? 1 : 0, .2 ); break;
+    case "filter": filterBlock.wet.rampTo( state ? 1 : 0, .2 ); break;
     case "tremolo": tremoloBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
     case "chorus":  chorusBlock.wet.rampTo( state ? 1 : 0, .5 ); break;
   }

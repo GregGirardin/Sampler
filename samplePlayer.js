@@ -5,25 +5,21 @@ var chordEditedFlag = false;
 var sampleLibrary = {}; // object of ClLibrarySample
 var chordLibrary = []; // array of CChord
 var curConfig;
-
 var editElement; // What we're editing if "Mode_Edit"
 
-// Constants.
+var cursorGroup = 0, cursorElement = 0;
+
 const MAX_GROUPS = 32;
-
-var cursorGroup = 0, cursorElement = 0; // cursor
-
-const synthTypes = [ "None", "piano", "sine", "square", "sawtooth", "triangle", "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
+const synthTypes = [  "None", "piano", "sine", "square", "sawtooth", "triangle",
+                      "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 const arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
+const loopCount = [ 1, 2, 4, 8, 16, 32 ];
 const arpSequences = [ "1234", "4321", "1324", "4231", "B-T", "T-B" ]; 
-const envelopeLabels = [ "None", "Fast", "Med", "Slow" ]; // Just hardcode some envelopes. We can expose all the params if we need to.
-
-const envelopeParams =
-{
-  Fast : { attack : .1, decay :  0, sustain:   1, release: .1 },
-  Med  : { attack : .5, decay :  1, sustain: 0.9, release:  1 },
-  Slow : { attack :  5, decay : .9, sustain: 0.9, release:  3 },
-}
+const seqModes = [ "None", "Manual", "Cont" ];
+const envelopeLabels = [ "None", "Fast", "Med", "Slow" ];
+const envelopeParams = {  Fast : { attack : .1, decay :  0, sustain:   1, release: .1 },
+                          Med  : { attack : .5, decay :  1, sustain: 0.9, release:  1 },
+                          Slow : { attack :  5, decay : .9, sustain: 0.9, release:  3 } };
 
 class CConfig
 {
@@ -45,9 +41,9 @@ class CGroup
     this.instrument = "None";
     this.thickenFlag = false;
     this.playing = false;
-    
+
     this.elementName = groupName;
-    this.sequence = false;
+    this.seqMode = seqModes[ 0 ];
     this.arpNPB = 4;
     this.arpSequence = arpSequences[ 0 ];
     this.envelope = envelopeLabels[ 0 ];
@@ -80,10 +76,10 @@ class CSample // A Sample in the config.
   {
     this.objType = "CSample";
     this.elementName = filename;
-    this.playing = false;
-
     this.filename = filename; // filename on the server.
     this.loopFlag = false;
+
+    this.playing = false;
   }
 }
 
@@ -94,7 +90,11 @@ class CChordRef // A Chord in the config. Just a name referring to the CLibChord
   constructor( name )
   {
     this.objType = "CChordRef";
+    this.instrument = "None";
+    this.instrument = synthTypes[ 0 ]; // can provide a default instrument if not in Group
+    this.playBeats = 4; // How long to play
     this.elementName = name; // name of a CLibChord in the library
+
     this.playing = false;
   }
 }
@@ -107,7 +107,6 @@ class CLibChord
     this.elementName = name;
 
     this.notes = 0x0; // bit field of pressed keys bit 0 is a C
-    this.instrument = synthTypes[ 0 ]; // can provide a default instrument if not in Group
     this.octave = 0;
   }
 }
@@ -137,7 +136,7 @@ function sampleListInit()
   document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
 
   document.addEventListener( 'keydown', keyPressedHandler );
-  document.addEventListener( 'keyup', keyRelHandler );
+  document.addEventListener( 'keyup',   keyRelHandler );
 
   footSwitchButtons[ 0 ] = new FootSwitchButton( "BUTTON1" );
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );

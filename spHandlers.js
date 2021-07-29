@@ -206,18 +206,13 @@ function elemClick( groupIndex, sampleIndex )
       if( editElement.objType == "CSample" )
         genEditSampleHTML();
       else if( editElement.objType == "CChordRef" )
-      {
-        // Clicked a synth in the config, but we actually edit the synth in the Library
-        editElement = chordFromName( editElement.elementName );
-        if( editElement )
-          genEditChordHTML();
-      }
+        genEditChordRefHTML();
       else if ( editElement.objType == "CGroupRef" )
         genEditGroupRefHTML();
     }
   }
 
-  genElementConfigHTML(); // need to indicate the cursor location
+  genElementConfigHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -290,7 +285,7 @@ function playElement( action )
 
       playElemAudio( ce );
 
-      if( curConfig.groups[ cursorGroup ].sequence )
+      if( curConfig.groups[ cursorGroup ].seqMode != seqModes[ 0 ] )
         moveCursor( "RIGHT" );
     }
     else if( action == "STOP" )
