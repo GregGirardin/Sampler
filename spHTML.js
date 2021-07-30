@@ -26,10 +26,11 @@ function genElementConfigHTML()
     var g = curConfig.groups[ i ];
     var classes = 'css_groupClass';
 
-    switch( g.seqType )
+    switch( g.seqMode )
     {
-      case "Single": break;
-      case "Next": classes += ' css_groupSeqNext'; break;
+      case "None": break;
+      case "Manual": classes += ' css_groupSeqMan'; break;
+      case "Cont": classes += ' css_groupSeqCont'; break;
     }
 
     if( i == curConfig.groups.length - 1 )
@@ -285,16 +286,6 @@ function genEditChordRefHTML()
   }
   tmpHtml += "</select><br>";
 
-  // tmpHtml += "Arp Count:<select id='editChordRefArpCount'>";
-  // for( i = 0;i < loopCount.length;i++ )
-  // {
-  //   tmpHtml += "<option value='" + loopCount[ i ] + "' ";
-  //   if( editElement.arpCount == loopCount[ i ] )
-  //     tmpHtml += "selected='selected'";
-  //   tmpHtml += ">" + loopCount[ i ] + "</option>";
-  // }
-  // tmpHtml += "</select><br>";
-
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
 
@@ -378,7 +369,6 @@ function saveEdits()
       case "CChordRef":
         editElement.instrument = document.getElementById( "editChordRefInstrument" ).value;
         editElement.playBeats = parseInt( document.getElementById( "editChordRefBeats" ).value );
-        //editElement.arpCount = document.getElementById( "editChordRefArpCount" ).value;
 
         configEditedFlag = true;
         break;

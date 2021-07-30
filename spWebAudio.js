@@ -139,7 +139,7 @@ function createSynths() // create all synths and connect them to masterLevel
       case "SynKeys":
         s = new Tone.PolySynth( Tone.Synth );
         s.set( {  polyphony : 24,
-                  volume : -6,
+                  volume : -12,
                   harmonicity : 2,
                   oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
                   modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
@@ -149,7 +149,7 @@ function createSynths() // create all synths and connect them to masterLevel
       case "Pluck":
         s = new Tone.PolySynth( Tone.AMSynth );
         s.set( {  polyphony : 12,
-                  volume : 0,
+                  volume : -3,
                   harmonicity : 2,
                   oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
                   envelope : { attack: 0.006, decay: 4, sustain: 0.04, release: 1.2 },
@@ -345,6 +345,13 @@ function playCSample( audioElem )
 function playCChordRef( audioElem )
 {
   var chord = chordFromName( audioElem.elementName ); // from the chord Lib
+  if( !chord )
+  {
+    audioElem.playing = false;
+    activeElement = undefined;
+    console.log( "No chord: ", audioElem.elementName );
+    return;
+  }
   var instrument = audioElem.instrument;
   if( instrument == "None" ) 
     instrument = curConfig.groups[ audioElem.group ].instrument; // Use Group instrument
