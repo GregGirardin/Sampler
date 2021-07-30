@@ -1,10 +1,20 @@
-var fs = require( 'fs' );
-var http = require( 'http' );
-var path = require('path');
+const fs = require( 'fs' );
+//const http = require( 'http' );
+const path = require( 'path' );
+const express = require( 'express' );
+const bodyParser = require( "body-parser" );
+const cors = require( 'cors' )
+const formidable = require( 'express-formidable' );
+const app = express();
 
 const serverPort = 8080;
 
-http.createServer( handleReq ).listen( serverPort );
+app.use( cors() );
+//app.use( bodyParser.json() );
+//app.use( bodyParser.urlencoded( { extended: false } ) );
+app.use( formidable() );
+
+// http.createServer( handleReq ).listen( serverPort );
 
 class SampleInfo
 {
@@ -20,12 +30,12 @@ class SampleInfo
 
 function handleReq( req, res )
 {
-  //console.log( req.url );
+  console.log( "GET:" + req.url );
 
   if( req.url == '/samples.json' ) // sampler requests this to get a listing of available sample files.
   {
     var samples = {};
-    var fileObjs = fs.readdirSync(__dirname );
+    var fileObjs = fs.readdirSync( __dirname + "/samples" );
 
     for( var i = 0;i < fileObjs.length;i++ )
     {
@@ -43,6 +53,10 @@ function handleReq( req, res )
   }
   else
   {
+    var ext = path.extname( req.url );
+    if( ext == '.mp3' )
+      req.url = "/samples" + req.url;
+
     try
     {
       var file = fs.readFileSync(  __dirname + req.url );
@@ -54,8 +68,6 @@ function handleReq( req, res )
 
     if( file )
     {
-      console.log( "Serving:" + req.url );
-      
       res.writeHead( 200 );
       res.end( file );
     }
@@ -63,8 +75,22 @@ function handleReq( req, res )
     {
       res.writeHead( 404 );
       res.end( "?" );
+      console.log( "  Failed." );
     }
   }
 }
 
-console.log( "Sample server listening on:" + serverPort );
+function handlePost( req, res )
+{
+  console.log( "POST:" + req.url );
+  // console.log( req.fields.data );
+
+  // let data = JSON.stringify( req.fields.data, null, 2 );
+  fs.writeFileSync( __dirname + req.url, req.fields.data );
+  res.end();
+}
+
+app.get( '/*', handleReq );
+app.post( '/*', handlePost );
+
+app.listen( serverPort, () => { console.log( 'Server is running' ); } );

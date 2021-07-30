@@ -335,7 +335,8 @@ function keyHandler( e, state )
 
     default:
       return;
-  }
+  } 
+
   footSwitchButtons[ ix ].setState( state );
 }
 
