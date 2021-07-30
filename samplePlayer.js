@@ -14,7 +14,7 @@ const synthTypes = [  "None", "piano", "sine", "square", "sawtooth", "triangle",
                       "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 const arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
 const loopCount = [ 1, 2, 4, 8, 16, 32 ];
-const arpSequences = [ "1234", "4321", "1324", "4231", "B-T", "T-B" ]; 
+const arpSequences = [ "1234", "4321", "1324", "4231", "12324323", "B-T", "T-B" ]; 
 const seqModes = [ "None", "Manual", "Cont" ];
 const envelopeLabels = [ "None", "Fast", "Med", "Slow" ];
 const envelopeParams = {  Fast : { attack : .1, decay :  0, sustain:   1, release: .1 },
@@ -92,7 +92,8 @@ class CChordRef // A Chord in the config. Just a name referring to the CLibChord
     this.objType = "CChordRef";
     this.instrument = "None";
     this.instrument = synthTypes[ 0 ]; // can provide a default instrument if not in Group
-    this.playBeats = 4; // How long to play
+    this.playBeats = 4; // How many beats to play 
+    //this.arpCount = 1; // How many times to arpeggiate
     this.elementName = name; // name of a CLibChord in the library
 
     this.playing = false;

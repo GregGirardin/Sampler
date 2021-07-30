@@ -285,7 +285,7 @@ function genEditChordRefHTML()
   }
   tmpHtml += "</select><br>";
 
-  //tmpHtml += "Arp Count:<select id='editChordRefArpCount'>";
+  // tmpHtml += "Arp Count:<select id='editChordRefArpCount'>";
   // for( i = 0;i < loopCount.length;i++ )
   // {
   //   tmpHtml += "<option value='" + loopCount[ i ] + "' ";
@@ -362,31 +362,30 @@ function saveEdits()
         }
 
         editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
-        editElement.arpNPB          = document.getElementById( "editGroupArpNPB" ).value;
+        editElement.arpNPB          = parseInt( document.getElementById( "editGroupArpNPB" ).value );
         editElement.arpSequence     = document.getElementById( "editGroupArpSequence" ).value;
-        editElement.masterLevel     = document.getElementById( "editGroupMasterLevel" ).value;
-        editElement.distortionLevel = document.getElementById( "editGroupDistortionLevel" ).value;
-        editElement.chorusLevel     = document.getElementById( "editGroupChorusLevel" ).value;
-        editElement.phaserLevel     = document.getElementById( "editGroupPhaserLevel" ).value;
-        editElement.tremoloLevel    = document.getElementById( "editGroupTremoloLevel" ).value;
-        editElement.dryLevel        = document.getElementById( "editGroupDryLevel" ).value;
-        editElement.delayLevel      = document.getElementById( "editGroupDelayLevel" ).value;
-        editElement.reverbLevel     = document.getElementById( "editGroupReverbLevel" ).value;
+        editElement.masterLevel     = parseInt( document.getElementById( "editGroupMasterLevel" ).value );
+        editElement.distortionLevel = parseInt( document.getElementById( "editGroupDistortionLevel" ).value );
+        editElement.chorusLevel     = parseInt( document.getElementById( "editGroupChorusLevel" ).value );
+        editElement.phaserLevel     = parseInt( document.getElementById( "editGroupPhaserLevel" ).value );
+        editElement.tremoloLevel    = parseInt( document.getElementById( "editGroupTremoloLevel" ).value );
+        editElement.dryLevel        = parseInt( document.getElementById( "editGroupDryLevel" ).value );
+        editElement.delayLevel      = parseInt( document.getElementById( "editGroupDelayLevel" ).value );
+        editElement.reverbLevel     = parseInt( document.getElementById( "editGroupReverbLevel" ).value );
         configEditedFlag = true;
         break;
 
       case "CChordRef":
         editElement.instrument = document.getElementById( "editChordRefInstrument" ).value;
-        editElement.playBeats = document.getElementById( "editChordRefBeats" ).value;
-        // editElement.arpCount = document.getElementById( "editChordRefArpCount" ).value;
+        editElement.playBeats = parseInt( document.getElementById( "editChordRefBeats" ).value );
+        //editElement.arpCount = document.getElementById( "editChordRefArpCount" ).value;
 
         configEditedFlag = true;
         break;
 
       case "CLibChord":
         editElement.elementName   = document.getElementById( "editChordName" ).value;
-        editElement.instrument    = document.getElementById( "editChordInstrument" ).value;
-        editElement.octave        = document.getElementById( "editChordOctave" ).value;
+        editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
         chordEditedFlag = true;
         break;
       

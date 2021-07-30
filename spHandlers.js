@@ -94,7 +94,7 @@ function dropElem( ev )
     }
   }
   else if( ( dragElem.substring( 0, libChordID.length ) == libChordID ) &&
-           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Synth into config 
+           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Chord into config 
   {
     var sampIx = dragElem.substring( libChordID.length, );
     var libChord = chordLibrary[ sampIx ];
@@ -103,6 +103,25 @@ function dropElem( ev )
     var toElementIx = parseInt( indexes[ 1 ] );
 
     curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CChordRef( libChord.elementName ) );
+  }
+  else if( ( dragElem.substring( 0, libChordID.length ) == libChordID ) &&
+           ( ev.target.id.substring( 0, libChordID.length ) == libChordID ) ) // Re-arranging a Chord in the Library
+  {
+    var fromIx = parseInt( dragElem.substring( libChordID.length, ) );
+    var toIx = parseInt( ev.target.id.substring( libChordID.length, ) );
+
+    if( toIx < fromIx )
+    {
+      chordLibrary.splice( toIx, 0, chordLibrary[ fromIx ] );
+      chordLibrary.splice( fromIx + 1, 1 );
+    }
+    else
+    {
+      chordLibrary.splice( toIx + 1, 0, chordLibrary[ fromIx ] );
+      chordLibrary.splice( fromIx, 1 );
+    }
+
+    chordEditedFlag = true;
   }
   else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
            ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Group into config
@@ -284,7 +303,6 @@ function playElement( action )
       ce.group = cursorGroup;
 
       playElemAudio( ce );
-
       if( curConfig.groups[ cursorGroup ].seqMode != seqModes[ 0 ] )
         moveCursor( "RIGHT" );
     }

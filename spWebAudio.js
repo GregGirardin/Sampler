@@ -203,6 +203,12 @@ function releaseAudio()
     playComplete( activeElement.elem );
   }
 
+  if( playNextTimer )
+  {
+    clearTimeout( playNextTimer );
+    playNextTimer = undefined;
+  }
+
   activeElement = undefined;
 }
 
@@ -233,6 +239,9 @@ function samplePlayCompleteCB()
     playComplete( activeElement.elem );
     // activeElement = undefined;
   }
+
+  if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
+    playElement( "START" );
 }
 
 // Can this element be arpeggiated?
@@ -287,7 +296,14 @@ function playElemAudio( audioElem )
     case "CChordRef": playCChordRef( audioElem ); break;
     case "CGroupRef": playCGroupRef( audioElem ); break;
   }
+}
 
+var playNextTimer;
+
+function playNextElementCB()
+{
+  playNextTimer = undefined;
+  playElement( "START" );
 }
 
 function playCSample( audioElem )
@@ -351,8 +367,10 @@ function playCChordRef( audioElem )
   activeElement.synth = instruments[ instrument ];
   activeElement.chordNotes = frequencies;
   activeElement.synth.triggerAttack( frequencies );
+  activeElement.group = curConfig.groups[ cursorGroup ];
 
-  // if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
+  if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
+    playNextTimer = setTimeout( playNextElementCB, currentTempo * audioElem.playBeats );
 }
 
 function playCGroupRef( audioElem )
@@ -385,7 +403,7 @@ function grpPlayTimerCB()
 
   if( activeElement.beatsRemaining-- > 0 )
   {
-    // Are we done playing this Chord?
+    // Are we done playing this Chord? If not return.
     activeElement.grpTimer = setTimeout( grpPlayTimerCB, currentTempo );
     return;
   }
@@ -393,8 +411,11 @@ function grpPlayTimerCB()
     activeElement.synth.triggerRelease( activeElement.chordNotes );
 
   if( ( activeElement.grpChordIndex == activeElement.group.elements.length ) && !activeElement.loopFlag )
+  {
+    if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
+      playNextTimer = setTimeout( playNextElementCB, 0 ); // just to loosly couple. Maybe could call directly.
     return; // this was the last chord. We're done.
-
+  }
   var playElem = activeElement.group.elements[ activeElement.grpChordIndex ];
   if( playElem.objType == "CChordRef" ) // Group must be all CChordRefs. TBD, skip groups and samples.
   {
@@ -449,7 +470,13 @@ function arpTimerCB() // call once per beat. We queue all notes for the next bea
         activeElement.arpNoteIndex = 0;
       noteTime += noteLength;
     }
-
+    if( activeElement.group.seqMode == seqModes[ 2 ] )
+      if( --activeElement.beatsRemaining == 0 )
+      {
+        playNextTimer = setTimeout( playNextElementCB, currentTempo ); 
+        return;
+      }
+    
     if( arpeggiatorFlag )
       activeElement.arpTimer = setTimeout( arpTimerCB, currentTempo );
     else
@@ -499,7 +526,7 @@ function arpChord( chord, seq )
         arpNotes.push( [ freq ] ); // An array notes
       }
 
-    if( arpNotes.length >= 3 )
+    if( arpNotes.length > 3 )
       switch( seq )
       {
         case "4321":
@@ -517,6 +544,10 @@ function arpChord( chord, seq )
             arpNotes[ index + 1 ] = tmp;
           }
           break;
+        
+        case "12324323":
+          arpNotes = [ arpNotes[ 0 ], arpNotes[ 1 ], arpNotes[ 2 ], arpNotes[ 1 ],
+                       arpNotes[ 3 ], arpNotes[ 2 ], arpNotes[ 1 ], arpNotes[ 2 ] ];
         default:
           break;
       }
@@ -538,6 +569,7 @@ function doArpeggio( audioElem )
   activeElement = {};
   activeElement.elem = audioElem;
   activeElement.arpNoteIndex = 0;
+  activeElement.group = curConfig.groups[ audioElem.group ];
 
   if( audioElem.objType == "CChordRef" )
   {
@@ -550,15 +582,16 @@ function doArpeggio( audioElem )
 
     activeElement.arpNotes = arpChord( chord, seq );
     activeElement.arpNotesPerBeat = curConfig.groups[ audioElem.group ].arpNPB;
+    activeElement.beatsRemaining = audioElem.playBeats;
   }
-  else if( audioElem.objType == "CGroupRef" && ( instrument != "None" ) )
+  else if( audioElem.objType == "CGroupRef" && ( instrument != "None" ) ) // Arp a group that's in another group.
   {
     // Arp this entire sequence.
     var grp = undefined; // Find group
-    for( var ix = 0;ix < curConfig.groups.length;ix++ )
-      if( curConfig.groups[ ix ].elementName == audioElem.elementName )
+    for( var i = 0;i < curConfig.groups.length;i++ )
+      if( curConfig.groups[ i ].elementName == audioElem.elementName )
       {
-        grp = curConfig.groups[ ix ];
+        grp = curConfig.groups[ i ];
         break;
       }
 
@@ -567,6 +600,7 @@ function doArpeggio( audioElem )
       activeElement.arpNotes = [];
 
       activeElement.synth = instruments[ instrument ];
+      activeElement.beatsRemaining = 0;
 
       for( var seqIx = 0;seqIx < grp.elements.length;seqIx++ )
         if( grp.elements[ seqIx ].objType == "CChordRef" ) // only add CChordRef, not samples or groups.
@@ -574,8 +608,17 @@ function doArpeggio( audioElem )
           var chord = chordFromName( grp.elements[ seqIx ].elementName ); // from the chord Lib
           if( !chord )
             continue;
-
-          activeElement.arpNotes = activeElement.arpNotes.concat( arpChord( chord, grp.arpSequence ) );
+          var notes = arpChord( chord, grp.arpSequence );
+          //  want to arp this chord for playBeats given we're playing arpNPB notes per beat
+          //  So we need playBeats * arpNPB notes of this chord. May need to add / prune to get the right number.
+          var nextNote = 0;
+          const arpNotes = grp.elements[ seqIx ].playBeats * grp.arpNPB;
+          activeElement.beatsRemaining += grp.elements[ seqIx ].playBeats; // Arping the whole sequence.
+          while( notes.length < arpNotes ) // Add more if too short
+            notes.push( notes[ nextNote++ ] ); // notes[] grows so we don't have to loop nextNote.
+          while( notes.length > arpNotes ) // Prune if too long
+            notes.pop();
+          activeElement.arpNotes = activeElement.arpNotes.concat( notes );
           activeElement.arpNotesPerBeat = grp.arpNPB;
         }
     }
@@ -604,7 +647,7 @@ function doModAudio( modifier, state )
 {
   switch( modifier )
   {
-    case "filter": filterBlock.wet.rampTo( state ? 1 : 0, .2 ); break;
+    case "filter":  filterBlock.wet.rampTo( state ? 1 : 0, .2 ); break;
     case "tremolo": tremoloBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
     case "chorus":  chorusBlock.wet.rampTo( state ? 1 : 0, .5 ); break;
   }
