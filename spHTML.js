@@ -227,6 +227,9 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
+  var checked = editElement.arpFlag ? "checked" : "";
+  tmpHtml += "<br>Arp: <input type='checkbox' id='editGroupArpFlag' " + checked + "><br>";
+
   tmpHtml += "Arp Notes/b:<select id='editGroupArpNPB'>";
   for( i = 0;i < arpNPBs.length;i++ )
   {
@@ -354,6 +357,7 @@ function saveEdits()
         }
 
         editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
+        editElement.arpFlag         = document.getElementById( "editGroupArpFlag" ).checked;
         editElement.arpNPB          = parseInt( document.getElementById( "editGroupArpNPB" ).value );
         editElement.arpSequence     = document.getElementById( "editGroupArpSequence" ).value;
         editElement.masterLevel     = parseInt( document.getElementById( "editGroupMasterLevel" ).value );

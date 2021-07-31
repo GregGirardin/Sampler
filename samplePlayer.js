@@ -44,6 +44,7 @@ class CGroup
 
     this.elementName = groupName;
     this.seqMode = seqModes[ 0 ];
+    this.arpFlag = false;
     this.arpNPB = 4;
     this.arpSequence = arpSequences[ 0 ];
     this.envelope = envelopeLabels[ 0 ];
