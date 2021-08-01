@@ -74,7 +74,7 @@ function dropElem( ev )
     var toGroup = parseInt( indexes[ 0 ] );
     var toElementIx = parseInt( indexes[ 1 ] );
 
-    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CSample( libSample.filename ) );
+    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CSample( libSample.displayName ) );
   }
   else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
            ( ev.target.id.substring( 0, slGroup.length ) == slGroup ) ) // Moving a group
@@ -156,6 +156,7 @@ function dropElem( ev )
     {
       var delChord = parseInt( dragElem.substring( libChordID.length, ) );
       chordLibrary.splice( delChord, 1 );
+      chordEditedFlag = true;
     }
     else if( dragElem.substring( 0, cbStr.length ) == cbStr )
       curConfig.groups[ curConfig.groups.length - 1 ].elements = [];

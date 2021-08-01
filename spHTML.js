@@ -105,15 +105,15 @@ function generateLibraryHTML()
 
   for( const[ key, value ] of Object.entries( sampleLibrary ) )
     t.push( value );
-  t.sort( function( a, b ){ return ( a.filename > b.filename ) ? 1 : -1 } );
+  t.sort( function( a, b ){ return ( a.displayName > b.displayName ) ? 1 : -1 } );
 
   if( !t.length )
     tmpHtml += "<h2>No Sample Library.</h2>";
   else
     for( var i = 0;i < t.length;i++ )
-      tmpHtml += "<button id='libSample." + t[ i ].filename +
+      tmpHtml += "<button id='libSample." + t[ i ].displayName +
                  "' class='css_librarySample' draggable='true' ondragstart='dragElem( event )'" + 
-                  "onclick='libSampleClick( \"" + t[ i ].filename + "\")'>" + t[ i ].filename + "</button>\n";
+                  "onclick='libSampleClick( \"" + t[ i ].displayName + "\")'>" + t[ i ].displayName + "</button>\n";
 
   document.getElementById( 'libraryDiv' ).innerHTML = tmpHtml;
 }

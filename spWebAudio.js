@@ -292,7 +292,7 @@ function playElemAudio( audioElem )
 
   switch( audioElem.objType )
   {
-    case "CSample": playCSample( audioElem ); break;
+    case "CSample":   playCSample( audioElem );   break;
     case "CChordRef": playCChordRef( audioElem ); break;
     case "CGroupRef": playCGroupRef( audioElem ); break;
   }
@@ -319,7 +319,7 @@ function playCSample( audioElem )
       // We put the Player in the ClLibrarySample so there is only 1 instance per sample.
       // The same sample may be in multiple groups.
       // First time we need to create the player and connect it.
-      player = new Tone.Player( serverURL + libSample.filename );
+      player = new Tone.Player( serverURL + "/" + libSample.filename );
       player.volume.level = 0;
       player.onstop = samplePlayCompleteCB;
       player.autostart = true;

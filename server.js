@@ -20,33 +20,38 @@ class SampleInfo
 {
   constructor( filename )
   {
-    this.filename = filename;
-    this.displayName = filename;
+    this.filename = filename; // path
+    this.displayName = filename.substring( filename.lastIndexOf( "/" ) + 1 );
 
     this.sampleLength = undefined;
     this.sampleVolume = undefined;
   }
 }
 
+function genSamples()
+{
+  var samples = {};
+  var fileObjs = fs.readdirSync( __dirname + "/samples" );
+
+  for( var i = 0;i < fileObjs.length;i++ )
+  {
+    var ext = path.extname( fileObjs[ i ] );
+    if( ( ext == '.mp3' ) || ( ext == '.wav' ) )
+    {
+      var sampleInfo = new SampleInfo( /* __dirname + */ "samples/" + fileObjs[ i ] );
+      samples[ fileObjs[ i ] ] = sampleInfo;
+    }
+  }
+  return samples;
+}
+
 function handleReq( req, res )
 {
   console.log( "GET:" + req.url );
 
-  if( req.url == '/samples.json' ) // sampler requests this to get a listing of available sample files.
+  if( req.url == 'samples.json' ) // sampler requests this to get a listing of available sample files.
   {
-    var samples = {};
-    var fileObjs = fs.readdirSync( __dirname + "/samples" );
-
-    for( var i = 0;i < fileObjs.length;i++ )
-    {
-      // console.log( fileObjs[ i ] );
-      var ext = path.extname( fileObjs[ i ] );
-      if( ( ext == '.mp3' ) || ( ext == '.wav' ) )
-      {
-        var sampleInfo = new SampleInfo( fileObjs[ i ] );
-        samples[ fileObjs[ i ] ] = sampleInfo;
-      }
-    }
+    var samples = genSamples();
 
     res.writeHead( 200 );
     res.end( JSON.stringify( samples ) );
@@ -54,12 +59,11 @@ function handleReq( req, res )
   else
   {
     var ext = path.extname( req.url );
-    if( ext == '.mp3' )
-      req.url = "/samples" + req.url;
 
     try
     {
       var file = fs.readFileSync(  __dirname + req.url );
+      //var file = fs.readFileSync( req.url );
     }
     catch
     {
@@ -92,5 +96,9 @@ function handlePost( req, res )
 
 app.get( '/*', handleReq );
 app.post( '/*', handlePost );
+
+// save samples.json locally so even if Nodejs isn't running a configuration could work on the server.
+// by servering the actual samples.json file vs generating it.
+fs.writeFileSync( 'samples.json', JSON.stringify( genSamples(), null, 2 ) );
 
 app.listen( serverPort, () => { console.log( 'Server is running' ); } );
