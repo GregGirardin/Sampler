@@ -2,7 +2,8 @@
 // file IO
 ///////////////////////// ///////////////////////// /////////////////////////
 
-var serverURL = 'http://192.168.0.2:8080'; // this is where samples.json and all the samples live.
+var serverURL = 'http://127.0.0.1:8080'; // this is where samples.json and all the samples live.
+// var serverURL = 'http://192.168.0.2:8080';
 // var serverURL = 'https://greggirardin.github.io/samples/';
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 
@@ -35,7 +36,7 @@ function gotChordLib( file, data )
     genElementConfigHTML();
   }
   else
-    console.log( "No Chord Library." );
+    console.log( "No chord library." );
 }
 
 function getFileFromServer( filename, callback )
@@ -43,7 +44,6 @@ function getFileFromServer( filename, callback )
   var xhr = new XMLHttpRequest();
 
   xhr.overrideMimeType( "application/json" );
-  console.log( serverURL + "/" + filename );
   xhr.open( "GET", serverURL + "/" + filename, true );
   xhr.onreadystatechange = function() {
     if ( xhr.readyState === 4 )

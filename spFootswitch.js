@@ -1,5 +1,6 @@
 /* Foot switch handling for two buttons. Assume the buttons are mapped to UP and DOWN.
-   8 functions: Tap L+R, Double Tap L+R, Hold L+R, Both Tap, Both hold
+ Tap L,R,LR, RL Double Tap L+R, Hold L+R
+ Airturn doesn't allow using both switches at the same time so can't do
 
           | Start Timer       clickHoldTO
   Time -----------------------|   Trigger Hold at 'up' for determinism.
@@ -11,20 +12,15 @@ B2 ___________________________|
 
 ***
 
-B1  ______/-------------------| Both Hold
-B2  ___________/--------------|
+B1  ______/-------------------| 
+B2  ___________/ <-- Button12
 
-***
-
-B1  ______/-----------*-\____
-B2  ______/--------\ <-- Both Tap
 
 In Tempo mode we bypass these features for accuracy.
 */
-const clickHoldTO = 250;
+const clickHoldTO = 500;
 
 var footSwitchButtons = []; // array of buttons
-var bothHeldTimer;
 
 var tapMode = "NavLR";
 
@@ -45,12 +41,21 @@ var fsButtonMap =
       Tempo : { html :    "Set", action : function() { exitTempoMode(); changeMode( "NavLR" ); } },
       Modifier : { html : "Tremolo", action : function() { setModMode( "tremolo" ); } },
     },
-    "BUTTONB" : { 
-      id : 'fsBBTap',
+
+    "BUTTON12" : { // tap 1 then 2
+      id : 'fsB12Tap',
       NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
       NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       Tempo : { html : "-", action : function() { } },
       Modifier : { html : "Chorus", action : function() { setModMode( "chorus" ); } },
+    },
+
+    "BUTTON21" : {
+      id : 'fsB21Tap',
+      NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
+      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      Tempo : { html : "-", action : function() { } },
+      Modifier : { html : "Distortion", action : function() { setModMode( "distortion" ); } },
     },
   },
 
@@ -65,7 +70,6 @@ var fsButtonMap =
       Tempo : { html : "-", action : function() { } },
       Default : { html : "&#8800;", action : function() { playElement( 'STOP' ) } },
     },
-    "BUTTONB" : { } // No Double tap of both
   },
 
   "EVENT_HOLD" : {
@@ -77,11 +81,6 @@ var fsButtonMap =
     },
     "BUTTON2" : {
       id : 'fsB2Hold',
-      Tempo : { html : "-", action : function() { } },
-      Default :  { html : "Arp", action : function() { arpeggiatorTog() } },
-    },
-    "BUTTONB" : {
-      id : 'fsBBHold',
       Tempo : { html : "-", action : function() { } },
       Default : { html : "Tempo", action : function() { changeMode( "Tempo" ); } }
     },
@@ -109,21 +108,29 @@ class FootSwitchButton
   setState( newState )
   {
     // button presses need to be accurate and deterministic when setting tempo, so no hold or double tap functions
-    if( tapMode == "tempo" )
-      buttonEvent( "EVENT_TAP", this.buttonID );
+    if( tapMode == "Tempo" )
+    {
+      if( newState ) // down.
+        buttonEvent( "EVENT_TAP", this.buttonID );
+    }
     else if( newState != this.buttonState )
     {
       this.buttonState = newState;
 
       if( newState ) // true = 'down'
       {
-        // Check for both buttons pressed
+        // Check for 1-2 or 2-1 tap
         var otherButtonIx = ( this.buttonID == "BUTTON1" ) ? 1 : 0;
-        if( footSwitchButtons[ otherButtonIx ].buttonState ) // both pressed ?
+        if( footSwitchButtons[ otherButtonIx ].pressedState )
         {
-          this.clearTimer(); // clear existing timers and set the 'both' timer.
+          this.clearTimer();
           footSwitchButtons[ otherButtonIx ].clearTimer();
-          bothHeldTimer = setTimeout( bothHoldTimerCB, clickHoldTO );
+          if( this.buttonID == "BUTTON1" )
+            buttonEvent( "EVENT_TAP", "BUTTON21" );
+          else
+            buttonEvent( "EVENT_TAP", "BUTTON12" );
+          footSwitchButtons[ otherButtonIx ].pressedState = false;
+          this.pressedState = false;
         }
         else
         {
@@ -137,28 +144,17 @@ class FootSwitchButton
           { // this is the second click.
             this.clearTimer();
             this.pressedState = false;
+            this.heldFlag = false;
             buttonEvent( "EVENT_DTAP", this.buttonID );
           }
         }
       }
       else // up
       {
-        if( this.holdTimerExpired )
+        if( this.heldFlag && this.holdTimerExpired ) // do here so you can hold and trigger on release
         {
           buttonEvent( "EVENT_HOLD", this.buttonID );
           this.holdTimerExpired = false;
-        }
-        else if( bothHeldTimer ) // both aren't pressed but they were previously
-        {
-          var otherButtonIx = ( this.buttonID == "BUTTON1" ) ? 1 : 0;
-          clearTimeout( bothHeldTimer );
-          bothHeldTimer = undefined;
-          this.clearTimer();
-          this.pressedState = false; 
-
-          footSwitchButtons[ otherButtonIx ].clearTimer();
-          footSwitchButtons[ otherButtonIx ].pressedState = false;
-          buttonEvent( "EVENT_TAP", "BUTTONB" );
         }
         this.heldFlag = false;
       }
@@ -183,7 +179,7 @@ class FootSwitchButton
 }
 
 var lastTapTime = undefined;
-const MIN_TEMPO_MS = 20;
+const MIN_TEMPO_MS = 20; 
 const MAX_TEMPO_MS = 2000;
 function tapTempo()
 {
@@ -191,23 +187,29 @@ function tapTempo()
 
   if( lastTapTime )
   {
-    var diff;
-
-    diff = currentTime - lastTapTime;
+    var diff = currentTime - lastTapTime;
     if( ( diff > MIN_TEMPO_MS ) && ( diff < MAX_TEMPO_MS ) )
-    {
       setTempoMs( diff );
-      delayBlock.set( { delayTime : currentTempo / 1000 } );
-      tremoloBlock.set( { frequency : 1000 / currentTempo } ) ;
-      document.getElementById( "tempoButton" ).innerHTML = Math.round( 60000 / currentTempo ) + " bpm";
-    }
+    lastTapTime = undefined;
   }
-  lastTapTime = currentTime;
+  else
+    lastTapTime = currentTime;
 }
 
 function setTempoMs( newTempoMs )
 {
   currentTempo = newTempoMs;
+
+  if( curConfig.groups[ cursorGroup ].tempoMs != newTempoMs )
+  {
+    curConfig.groups[ cursorGroup ].tempoMs = newTempoMs;
+    configEditedFlag = true;
+  }
+
+  delayBlock.set( { delayTime : currentTempo / 1000 } );
+  tremoloBlock.set( { frequency : 1000 / currentTempo } ) ;
+
+  document.getElementById( "tempoButton" ).innerHTML = Math.round( 60000 / currentTempo ) + " bpm";
 }
 
 function exitTempoMode()
@@ -225,12 +227,13 @@ function changeMode( newTapMode )
   tapMode = newTapMode;
 
   for( var e of [ "EVENT_TAP", "EVENT_DTAP", "EVENT_HOLD" ] )
-    for( var b of [ "BUTTON1", "BUTTON2", "BUTTONB" ] )
+    for( var b of [ "BUTTON1", "BUTTON2", "BUTTON12", "BUTTON21" ] )
     {
-      if( fsButtonMap[ e ][ b ][ tapMode ] )
-        document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ tapMode ].html;
-      else if ( fsButtonMap[ e ][ b ][ "Default" ] )
-        document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ "Default" ].html;
+      if( fsButtonMap[ e ][ b ] )
+        if( fsButtonMap[ e ][ b ][ tapMode ] )
+          document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ tapMode ].html;
+        else if ( fsButtonMap[ e ][ b ][ "Default" ] )
+          document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ "Default" ].html;
     }
 }
 
@@ -250,6 +253,7 @@ function arpeggiatorTog()
 var modFilterState = false;
 var modTremoloState = false;
 var modChorusState = false;
+var modDistState = false;
 
 function setModMode( modifier )
 {
@@ -273,16 +277,24 @@ function setModMode( modifier )
       break;
 
     case "chorus":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTONB" ].id );
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTON12" ].id );
       modChorusState = !modChorusState;
       if( modChorusState )
         state = true;
       break;
-    
+  
+    case "distortion":
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTON21" ].id );
+      modDistState = !modDistState;
+      if( modDistState )
+        state = true;
+      break;
+
     case "off":
       if( modFilterState ) setModMode( "filter" );
       if( modTremoloState ) setModMode( "tremolo" );
       if( modChorusState ) setModMode( "chorus" );
+      if( modDistState ) setModMode( "distortion" );
       break;
   }
   if( domElem )
@@ -310,14 +322,6 @@ function buttonHLTimer() // Highlight timer.
   var buttons = document.getElementsByClassName( 'css_FSButton' );
   for( i = 0;i < buttons.length;i++ )
     buttons[ i ].classList.remove( 'css_highlight_red' );
-}
-
-function bothHoldTimerCB() // Both buttons were held.
-{
-  bothHeldTimer = undefined; // clear. It's used as a flag below.
-  buttonEvent( "EVENT_HOLD", "BUTTONB" );
-  footSwitchButtons[ 0 ].pressedState = false;
-  footSwitchButtons[ 1 ].pressedState = false;
 }
 
 function keyHandler( e, state )
@@ -353,12 +357,24 @@ function moveCursor( dir )
   
     case 'UP':
       if( cursorGroup > 0 )
+      {
         cursorGroup -= 1;
+        if( curConfig.groups[ cursorGroup ].seqMode != seqModes[ 0 ] )
+          cursorElement = 0; // amost certain want to start from the beginning
+
+        setTempoMs( curConfig.groups[ cursorGroup ].tempoMs );
+      }
       break;
 
     case 'DOWN':
       if( cursorGroup < curConfig.groups.length - 2 )
+      {
         cursorGroup += 1;
+        if( curConfig.groups[ cursorGroup ].seqMode != seqModes[ 0 ] )
+          cursorElement = 0;
+
+        setTempoMs( curConfig.groups[ cursorGroup ].tempoMs );
+      }
       break;
 
     case 'START':

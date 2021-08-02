@@ -216,6 +216,8 @@ function elemClick( groupIndex, sampleIndex )
   cursorGroup = groupIndex;
   cursorElement = sampleIndex;
 
+  setTempoMs( curConfig.groups[ cursorGroup ].tempoMs );
+
   if( editMode )
   {
     saveEdits();

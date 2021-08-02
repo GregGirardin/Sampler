@@ -43,6 +43,7 @@ class CGroup
     this.playing = false;
 
     this.elementName = groupName;
+    this.tempoMs = 500;
     this.seqMode = seqModes[ 0 ];
     this.arpFlag = false;
     this.arpNPB = 4;
@@ -125,7 +126,10 @@ function sampleListInit()
   const urlParams = new URLSearchParams( window.location.search );
   var server = urlParams.get( 'serverURL' );
   if( server ) // Server URL provided by user
+  {
     serverURL = server;
+    console.log( "Server URL:" + serverURL );
+  }
 
   configEditedFlag = false;
   curConfig = new CConfig( "Sample List" );
@@ -145,10 +149,10 @@ function sampleListInit()
 
   genChordLibraryHTML();
 
-  setTempoMs( 500 );
-
   flashTempo();
   initWebAudio();
+
+  setTempoMs( 500 );
 }
 
 function flashTempo()

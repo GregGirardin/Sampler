@@ -1,30 +1,21 @@
 const fs = require( 'fs' );
-//const http = require( 'http' );
 const path = require( 'path' );
 const express = require( 'express' );
-const bodyParser = require( "body-parser" );
 const cors = require( 'cors' )
 const formidable = require( 'express-formidable' );
 const app = express();
 
-const serverPort = 8080;
-
 app.use( cors() );
-//app.use( bodyParser.json() );
-//app.use( bodyParser.urlencoded( { extended: false } ) );
 app.use( formidable() );
 
-// http.createServer( handleReq ).listen( serverPort );
+const serverPort = 8080;
 
 class SampleInfo
 {
   constructor( filename )
   {
-    this.filename = filename; // path
-    this.displayName = filename.substring( filename.lastIndexOf( "/" ) + 1 );
-
-    this.sampleLength = undefined;
-    this.sampleVolume = undefined;
+    this.filename = filename; // includes path
+    this.displayName = filename.substring( filename.lastIndexOf( "/" ) + 1 ); // just the filename
   }
 }
 
@@ -63,7 +54,6 @@ function handleReq( req, res )
     try
     {
       var file = fs.readFileSync(  __dirname + req.url );
-      //var file = fs.readFileSync( req.url );
     }
     catch
     {
@@ -87,9 +77,6 @@ function handleReq( req, res )
 function handlePost( req, res )
 {
   console.log( "POST:" + req.url );
-  // console.log( req.fields.data );
-
-  // let data = JSON.stringify( req.fields.data, null, 2 );
   fs.writeFileSync( __dirname + req.url, req.fields.data );
   res.end();
 }
@@ -97,8 +84,8 @@ function handlePost( req, res )
 app.get( '/*', handleReq );
 app.post( '/*', handlePost );
 
-// save samples.json locally so even if Nodejs isn't running a configuration could work on the server.
-// by servering the actual samples.json file vs generating it.
+// Save samples.json locally so even if Nodejs isn't running a configuration could work on the server
+// by serveing a hardcoded samples.json file.
 fs.writeFileSync( 'samples.json', JSON.stringify( genSamples(), null, 2 ) );
 
-app.listen( serverPort, () => { console.log( 'Server is running' ); } );
+app.listen( serverPort, () => { console.log( 'Server is running on ' + serverPort ); } );

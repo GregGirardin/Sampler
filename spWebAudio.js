@@ -219,9 +219,10 @@ function setEffectLevels( g, t )
   delayLevel.gain.rampTo( g.delayLevel / 100, t );
   reverbLevel.gain.rampTo( g.reverbLevel / 100, t );
   phaserBlock.wet.rampTo( g.phaserLevel / 100, t );
-  distortionBlock.wet.rampTo( g.distortionLevel / 100, t );
 
-  if( !modTremoloState ) // Modifier is on?
+  if( !modDistState ) // Modifier is on?
+    distortionBlock.wet.rampTo( g.distortionLevel / 100, t );
+  if( !modTremoloState )
     tremoloBlock.wet.rampTo( g.tremoloLevel / 100, t );
   if( !modChorusState )
     chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
@@ -265,7 +266,7 @@ function playElemAudio( audioElem )
 
   setEffectLevels( curConfig.groups[ audioElem.group ], .5 );
 
-  if( arpeggiatorFlag && elemCanArpeggiate( audioElem ) )
+  if( curConfig.groups[ audioElem.group ].arpFlag && elemCanArpeggiate( audioElem ) )
   {
     if( activeElement )
       if( activeElement.arpTimer )
@@ -462,8 +463,7 @@ function arpTimerCB() // call once per beat. We queue all notes for the next bea
     var tmp = activeElement.nextElem;
     activeElement.nextElem = undefined;
     activeElement = undefined;
-    if( arpeggiatorFlag )
-      doArpeggio( tmp );
+    doArpeggio( tmp );
   }
   else
   {
@@ -484,10 +484,7 @@ function arpTimerCB() // call once per beat. We queue all notes for the next bea
         return;
       }
     
-    if( arpeggiatorFlag )
-      activeElement.arpTimer = setTimeout( arpTimerCB, currentTempo );
-    else
-      activeElement = undefined;
+    activeElement.arpTimer = setTimeout( arpTimerCB, currentTempo );
   }
 }
 
@@ -657,6 +654,7 @@ function doModAudio( modifier, state )
     case "filter":  filterBlock.wet.rampTo( state ? 1 : 0, .2 ); break;
     case "tremolo": tremoloBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
     case "chorus":  chorusBlock.wet.rampTo( state ? 1 : 0, .5 ); break;
+    case "distortion": distortionBlock.wet.rampTo( state ? 1 : 0, .5 ); break;
   }
 }
 

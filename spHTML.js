@@ -198,6 +198,10 @@ function genEditGroupHTML()
   }
   tmpHtml += "</select><br>";
 
+  var tempoBPM = Math.round( 60000 / editElement.tempoMs );
+
+  tmpHtml += "Tempo: <input type='number' id='editGroupTempoBPM' min='20' max='300' value='" + tempoBPM + "'><br>";
+
   tmpHtml += "Sequence Mode:";
 
   for( i = 0;i < seqModes.length;i++ )
@@ -345,6 +349,7 @@ function saveEdits()
         editElement.elementName = document.getElementById( "editGroupName" ).value;
         editElement.instrument  = document.getElementById( "editGroupInstrument" ).value;
         editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
+        editElement.tempoMs = 60000 / parseInt( document.getElementById( "editGroupTempoBPM" ).value );
 
         for( var i = 0;i < seqModes.length;i++ )
         {
