@@ -7,7 +7,6 @@ var serverURL = 'http://127.0.0.1:8080'; // this is where samples.json and all t
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 
 const configFile = 'sampleConfig.json';
-const chordConfigFile = 'chordConfig.json';
 
 function gotSamples( file, data )
 {
@@ -24,18 +23,6 @@ function gotConfig( file, data )
   }
   else
     console.log( "No config." );
-}
-
-function gotChordLib( file, data )
-{
-  if( data )
-  {
-    chordLibrary = JSON.parse( data );
-    genChordLibraryHTML();
-    genElementConfigHTML();
-  }
-  else
-    console.log( "No chord library." );
 }
 
 function getFileFromServer( filename, callback )

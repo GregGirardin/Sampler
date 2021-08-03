@@ -66,7 +66,7 @@ function genElementConfigHTML()
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
                   g.elements[ j ].elementName + "</button>\n";
     }
-    tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slElement' onclick='elemClick( " + i + ", " + j + " )'" +
+    tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slElement' onclick='addToGroup( " + i + " )'" +
                 "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
 
     if( g.elements.length )
@@ -141,20 +141,6 @@ A library can be specified by appending "?library=http://x.y.z/???.json" to this
   }
 
   return undefined;
-}
-
-function genChordLibraryHTML()
-{
-  var tempHtml = "<hr>";
-
-  for( var i = 0;i < chordLibrary.length;i++ )
-    tempHtml += "<button id='libChord." + i + "' class='css_chord' onclick='chordClick( " + i + " )'" +
-                " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
-                chordLibrary[ i ].elementName + "</button>\n";
-
-  tempHtml += "<button onclick='chordAdd()' class='css_chord'> + </button>\n<br>\n<br>";
-
-  document.getElementById( 'chordDiv' ).innerHTML = tempHtml;
 }
 
 function genEditGroupRefHTML()
@@ -270,20 +256,11 @@ function genEditSampleHTML()
 }
 
 //////////////////////////// ////////////////////////////
-function genEditChordRefHTML()
+function genEditChordHTML()
 {
-  var tmpHtml = "Instrument:<select id='editChordRefInstrument'>";
+  var tmpHtml = "<hr>Name: <input contenteditable='true' id='editChordName' value='" + editElement.elementName + "'><br>";
 
-  for( i = 0;i < synthTypes.length;i++ )
-  {
-    tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
-    if( editElement.instrument == synthTypes[ i ] )
-      tmpHtml += "selected='selected'";
-    tmpHtml += ">" + synthTypes[ i ] + "</option>";
-  }
-  tmpHtml += "</select><br>";
-
-  tmpHtml += "Play beats:<select id='editChordRefBeats'>";
+  tmpHtml += "Play beats:<select id='editChordBeats'>";
 
   for( i = 0;i < loopCount.length;i++ )
   {
@@ -293,14 +270,6 @@ function genEditChordRefHTML()
     tmpHtml += ">" + loopCount[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
-
-  document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
-}
-
-//////////////////////////// ////////////////////////////
-function genEditChordHTML()
-{
-  var tmpHtml = "<hr>Name: <input contenteditable='true' id='editChordName' value='" + editElement.elementName + "'><br>";
 
   tmpHtml += "Octave:<select id='editChordOctave'>";
   for( i = 3;i >= -3;i-- )
@@ -342,7 +311,6 @@ function saveEdits()
       case "CSample":
         editElement.elementName = document.getElementById( "editSampleName" ).value; 
         editElement.loopFlag    = document.getElementById( "editSampleLoopFlag" ).checked;
-        configEditedFlag = true;
         break;
     
       case "CGroup":
@@ -373,32 +341,24 @@ function saveEdits()
         editElement.dryLevel        = parseInt( document.getElementById( "editGroupDryLevel" ).value );
         editElement.delayLevel      = parseInt( document.getElementById( "editGroupDelayLevel" ).value );
         editElement.reverbLevel     = parseInt( document.getElementById( "editGroupReverbLevel" ).value );
-        configEditedFlag = true;
         break;
 
-      case "CChordRef":
-        editElement.instrument = document.getElementById( "editChordRefInstrument" ).value;
-        editElement.playBeats = parseInt( document.getElementById( "editChordRefBeats" ).value );
-
-        configEditedFlag = true;
-        break;
-
-      case "CLibChord":
+      case "CChord":
         editElement.elementName   = document.getElementById( "editChordName" ).value;
+        editElement.playBeats     = parseInt( document.getElementById( "editChordBeats" ).value );
         editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
-        chordEditedFlag = true;
         break;
-      
+
       case "CGroupRef":
         editElement.elementName = document.getElementById( "editGroupRefGroup" ).value;
         editElement.loopFlag    = document.getElementById( "editGroupRefLoopFlag" ).checked;
-        configEditedFlag = true;
         break;
     }
+
+  configEditedFlag = true;
 
   editElement = undefined;
   document.getElementById( 'multiuse' ).innerHTML = "";
 
   genElementConfigHTML();
-  genChordLibraryHTML();
 }

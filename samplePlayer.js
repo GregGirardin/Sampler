@@ -10,7 +10,7 @@ var editElement; // What we're editing if "Mode_Edit"
 var cursorGroup = 0, cursorElement = 0;
 
 const MAX_GROUPS = 32;
-const synthTypes = [  "None", "piano", "sine", "square", "sawtooth", "triangle",
+const synthTypes = [  "Piano", "sine", "square", "sawtooth", "triangle",
                       "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 const arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
 const loopCount = [ 1, 2, 4, 8, 16, 32 ];
@@ -85,32 +85,19 @@ class CSample // A Sample in the config.
   }
 }
 
-// Synth is handled opposite of samples in that most information about the synth
 // is in the library, not in the current config.
-class CChordRef // A Chord in the config. Just a name referring to the CLibChord
+class CChord // A Chord in the config.
 {
   constructor( name )
   {
-    this.objType = "CChordRef";
-    this.instrument = "None";
-    this.instrument = synthTypes[ 0 ]; // can provide a default instrument if not in Group
-    this.playBeats = 4; // How many beats to play 
-    //this.arpCount = 1; // How many times to arpeggiate
     this.elementName = name; // name of a CLibChord in the library
-
-    this.playing = false;
-  }
-}
-
-class CLibChord
-{
-  constructor( name )
-  {
-    this.objType = "CLibChord";
-    this.elementName = name;
+    this.objType = "CChord";
+    this.playBeats = 4; // How many beats to play 
 
     this.notes = 0x0; // bit field of pressed keys bit 0 is a C
     this.octave = 0;
+
+    this.playing = false;
   }
 }
 
@@ -136,15 +123,12 @@ function sampleListInit()
 
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
-  getFileFromServer( chordConfigFile, gotChordLib );
 
   document.addEventListener( 'keydown', keyPressedHandler );
   document.addEventListener( 'keyup',   keyRelHandler );
 
   footSwitchButtons[ 0 ] = new FootSwitchButton( "BUTTON1" );
   footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
-
-  genChordLibraryHTML();
 
   flashTempo();
   initWebAudio();

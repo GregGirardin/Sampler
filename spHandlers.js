@@ -93,36 +93,6 @@ function dropElem( ev )
       curConfig.groups.splice( fromGroup, 1 );
     }
   }
-  else if( ( dragElem.substring( 0, libChordID.length ) == libChordID ) &&
-           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Chord into config 
-  {
-    var sampIx = dragElem.substring( libChordID.length, );
-    var libChord = chordLibrary[ sampIx ];
-    var indexes = ev.target.id.substring( slElem.length, ).split( "." );
-    var toGroup = parseInt( indexes[ 0 ] );
-    var toElementIx = parseInt( indexes[ 1 ] );
-
-    curConfig.groups[ toGroup ].elements.splice( toElementIx, 0, new CChordRef( libChord.elementName ) );
-  }
-  else if( ( dragElem.substring( 0, libChordID.length ) == libChordID ) &&
-           ( ev.target.id.substring( 0, libChordID.length ) == libChordID ) ) // Re-arranging a Chord in the Library
-  {
-    var fromIx = parseInt( dragElem.substring( libChordID.length, ) );
-    var toIx = parseInt( ev.target.id.substring( libChordID.length, ) );
-
-    if( toIx < fromIx )
-    {
-      chordLibrary.splice( toIx, 0, chordLibrary[ fromIx ] );
-      chordLibrary.splice( fromIx + 1, 1 );
-    }
-    else
-    {
-      chordLibrary.splice( toIx + 1, 0, chordLibrary[ fromIx ] );
-      chordLibrary.splice( fromIx, 1 );
-    }
-
-    chordEditedFlag = true;
-  }
   else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
            ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Group into config
   {
@@ -165,7 +135,6 @@ function dropElem( ev )
   configEditedFlag = true;
 
   genElementConfigHTML();
-  genChordLibraryHTML();
 }
 
 var helpState = false;
@@ -227,8 +196,8 @@ function elemClick( groupIndex, sampleIndex )
     {
       if( editElement.objType == "CSample" )
         genEditSampleHTML();
-      else if( editElement.objType == "CChordRef" )
-        genEditChordRefHTML();
+      else if( editElement.objType == "CChord" )
+        genEditChordHTML();
       else if ( editElement.objType == "CGroupRef" )
         genEditGroupRefHTML();
     }
@@ -237,22 +206,18 @@ function elemClick( groupIndex, sampleIndex )
   genElementConfigHTML();
 }
 
-/////////////// /////////////// /////////////// ///////////////
-function chordClick( synthIndex )
+function addToGroup( groupIndex ) // clicked +. Add a Chord to the group.
 {
+  editElement = new CChord( "New" );
+  curConfig.groups[ groupIndex ].elements.push( editElement );
+
+  cursorGroup = groupIndex;
+  cursorElement = curConfig.groups[ groupIndex ].elements.length - 1;
+
   if( editMode )
-  {
-    saveEdits();
-    editElement = chordLibrary[ synthIndex ];
     genEditChordHTML();
-  }
-  else
-  {
-    // add to Clipboard
-    var synth = new CChordRef( chordLibrary[ synthIndex ].elementName );
-    curConfig.groups[ curConfig.groups.length - 1 ].elements.push( synth ); 
-    genElementConfigHTML();
-  }
+
+  genElementConfigHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -275,15 +240,6 @@ function groupAdd()
   }
   else
     alert( "Max Groups reached" );
-}
-
-function chordAdd()
-{
-  chordLibrary.push( new CLibChord( "New" ) );
-  chordEditedFlag = true;
-  document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
-
-  genChordLibraryHTML();
 }
 
 function playComplete( playElem )

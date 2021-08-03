@@ -91,7 +91,7 @@ function createSynths() // create all synths and connect them to masterLevel
 
     switch( sType )
     {
-      case "piano":
+      case "Piano":
         s = new Tone.Sampler( { urls : {  A0 : "A0.mp3",
                                           C1 : "C1.mp3", "D#1" : "Ds1.mp3", "F#1" : "Fs1.mp3", A1 : "A1.mp3",
                                           C2 : "C2.mp3", "D#2" : "Ds2.mp3", "F#2" : "Fs2.mp3", A2 : "A2.mp3",
@@ -294,7 +294,7 @@ function playElemAudio( audioElem )
   switch( audioElem.objType )
   {
     case "CSample":   playCSample( audioElem );   break;
-    case "CChordRef": playCChordRef( audioElem ); break;
+    case "CChord":    playCChord( audioElem ); break;
     case "CGroupRef": playCGroupRef( audioElem ); break;
   }
 }
@@ -345,28 +345,18 @@ function playCSample( audioElem )
   }
 }
 
-function playCChordRef( audioElem )
+function playCChord( audioElem )
 {
-  var chord = chordFromName( audioElem.elementName ); // from the chord Lib
-  if( !chord )
-  {
-    audioElem.playing = false;
-    activeElement = undefined;
-    console.log( "No chord: ", audioElem.elementName );
-    return;
-  }
-  var instrument = audioElem.instrument;
-  if( instrument == "None" ) 
-    instrument = curConfig.groups[ audioElem.group ].instrument; // Use Group instrument
+  instrument = curConfig.groups[ audioElem.group ].instrument;
 
   if( !instrument )
     return;
 
   var frequencies = [];
   for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-    if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
+    if( audioElem.notes & ( 1 << noteIx ) ) // notes are a bit field
     {
-      var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
+      var noteOffset = noteIx - 9 + audioElem.octave * 12; // semitone offset from A440
       var freq = 440 * Math.pow( 2, noteOffset / 12 );
       var voices = curConfig.groups[ cursorGroup ].thickenFlag ? [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // detuned voices for thickness
       frequencies = frequencies.concat( voices );
@@ -571,6 +561,8 @@ function doArpeggio( audioElem )
   genElementConfigHTML();
 
   var instrument = curConfig.groups[ audioElem.group ].instrument; // Group instrument
+  if( !instrument )
+    return;
 
   activeElement = {};
   activeElement.elem = audioElem;
@@ -581,8 +573,6 @@ function doArpeggio( audioElem )
   {
     var chord = chordFromName( audioElem.elementName ); // from the chord Lib
 
-    if( instrument == "None" )
-      instrument = chord.instrument; // chords can have a default instrument
     activeElement.synth = instruments[ instrument ];
     var seq = curConfig.groups[ audioElem.group ].arpSequence;
 
@@ -660,16 +650,16 @@ function doModAudio( modifier, state )
   }
 }
 
-function chordFromName( cName ) // get the CLibChord by name
-{
-  var s = undefined;
+// function chordFromName( cName ) // get the CLibChord by name
+// {
+//   var s = undefined;
 
-  for( var chordIx = 0;chordIx < chordLibrary.length;chordIx++ )
-    if( chordLibrary[ chordIx ].elementName == cName )
-    {
-      s = chordLibrary[ chordIx ];
-      break;
-    }
+//   for( var chordIx = 0;chordIx < chordLibrary.length;chordIx++ )
+//     if( chordLibrary[ chordIx ].elementName == cName )
+//     {
+//       s = chordLibrary[ chordIx ];
+//       break;
+//     }
 
-  return s;
-}
+//   return s;
+// }
