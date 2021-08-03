@@ -138,9 +138,6 @@ function sampleListInit()
   getFileFromServer( configFile, gotConfig );
   getFileFromServer( chordConfigFile, gotChordLib );
 
-  document.getElementById( 'serverURL' ).value = serverURL;
-  document.getElementById( 'serverURL' ).addEventListener( 'change', changeURL, false );
-
   document.addEventListener( 'keydown', keyPressedHandler );
   document.addEventListener( 'keyup',   keyRelHandler );
 

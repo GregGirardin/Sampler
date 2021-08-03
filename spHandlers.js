@@ -66,7 +66,7 @@ function dropElem( ev )
     }
   }
   else if( ( dragElem.substring( 0, libSamp.length ) == libSamp ) &&
-           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping library song into set list.
+           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping library sample into the config
   {
     var sampId = dragElem.substring( libSamp.length, );
     var libSample = sampleLibrary[ sampId ];
@@ -259,7 +259,7 @@ function chordClick( synthIndex )
 function libSampleClick( songId )
 {
   // add to Clipboard
-  var sample = new CSample( sampleLibrary[ songId ].filename );
+  var sample = new CSample( sampleLibrary[ songId ].displayName );
   curConfig.groups[ curConfig.groups.length - 1 ].elements.push( sample ); 
   genElementConfigHTML();
 }
@@ -330,11 +330,6 @@ function toggleEdit()
   editMode ? b.classList.add( 'css_highlight_red' ) : b.classList.remove( 'css_highlight_red' );
 
   document.getElementById( 'multiuse' ).innerHTML = "";
-}
-
-function changeURL()
-{
-  serverURL = document.getElementById( 'serverURL' ).value;
 }
 
 // A key on the generated keyboard was pressed.

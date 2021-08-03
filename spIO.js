@@ -3,7 +3,6 @@
 ///////////////////////// ///////////////////////// /////////////////////////
 
 var serverURL = 'http://127.0.0.1:8080'; // this is where samples.json and all the samples live.
-// var serverURL = 'http://192.168.0.2:8080';
 // var serverURL = 'https://greggirardin.github.io/samples/';
 // Can specify in URL. https://setlist.loc.com/?serverURL='https://your.samples.loc/path/to/stuff'
 

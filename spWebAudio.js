@@ -335,8 +335,10 @@ function playCSample( audioElem )
 
     // Do the envelop for samples using fadeIn / fadeOut.
     var env = curConfig.groups[ audioElem.group ].envelope; 
-    if( env == envelopeLabels[ 1 ] ) { player.fadeIn = 1; player.fadeOut = 1; }
-    else if( env == envelopeLabels[ 2 ] ) { player.fadeIn = 5; player.fadeOut = 5; }
+
+    if( env == envelopeLabels[ 1 ] ) { player.fadeIn = .5; player.fadeOut = .5; }
+    else if( env == envelopeLabels[ 2 ] ) { player.fadeIn = 2; player.fadeOut = 2; }
+    else if( env == envelopeLabels[ 3 ] ) { player.fadeIn = 5; player.fadeOut = 5; }
     else { player.fadeIn = 0; player.fadeOut = 0; }
 
     libSample.player.loop = audioElem.loopFlag;
