@@ -191,7 +191,7 @@ function releaseAudio()
         if( libSample.player )
           libSample.player.stop();
     }
-    else // "CChordRef" or CGroupRef
+    else // "CChord" or CGroupRef
       activeElement.synth.triggerRelease( activeElement.chordNotes );
 
     if( activeElement.grpTimer )
@@ -395,7 +395,7 @@ function playCGroupRef( audioElem )
 }
 
 // Play group placed in other groups.
-// Play each CChordRef for CChordRef.playBeats beats. Repeat if loopFlag.
+// Play each CChord for CChord.playBeats beats. Repeat if loopFlag.
 function grpPlayTimerCB()
 {
   if( !activeElement ) // This is our flag to stop playing the sequence.
@@ -417,7 +417,7 @@ function grpPlayTimerCB()
     return; // this was the last chord. We're done.
   }
   var playElem = activeElement.group.elements[ activeElement.grpChordIndex ];
-  if( playElem.objType == "CChordRef" ) // Group must be all CChordRefs. TBD, skip groups and samples.
+  if( playElem.objType == "CChord" ) // Group must be all CChord. TBD, skip groups and samples.
   {
     activeElement.chordNotes = [];
     var chord = chordFromName( playElem.elementName );
@@ -569,14 +569,12 @@ function doArpeggio( audioElem )
   activeElement.arpNoteIndex = 0;
   activeElement.group = curConfig.groups[ audioElem.group ];
 
-  if( audioElem.objType == "CChordRef" )
+  if( audioElem.objType == "CChord" )
   {
-    var chord = chordFromName( audioElem.elementName ); // from the chord Lib
-
     activeElement.synth = instruments[ instrument ];
     var seq = curConfig.groups[ audioElem.group ].arpSequence;
 
-    activeElement.arpNotes = arpChord( chord, seq );
+    activeElement.arpNotes = arpChord( audioElem, seq );
     activeElement.arpNotesPerBeat = curConfig.groups[ audioElem.group ].arpNPB;
     activeElement.beatsRemaining = audioElem.playBeats;
   }
@@ -599,7 +597,7 @@ function doArpeggio( audioElem )
       activeElement.beatsRemaining = 0;
 
       for( var seqIx = 0;seqIx < grp.elements.length;seqIx++ )
-        if( grp.elements[ seqIx ].objType == "CChordRef" ) // only add CChordRef, not samples or groups.
+        if( grp.elements[ seqIx ].objType == "CChord" ) // only add CChord, not samples or groups.
         {
           var chord = chordFromName( grp.elements[ seqIx ].elementName ); // from the chord Lib
           if( !chord )

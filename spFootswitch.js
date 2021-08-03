@@ -22,38 +22,34 @@ const clickHoldTO = 500;
 
 var footSwitchButtons = []; // array of buttons
 
-var tapMode = "NavLR";
+var tapMode = "Nav";
 
 var fsButtonMap = 
 {
   "EVENT_TAP" : { // Event type.
     "BUTTON1" : { // Event source
       id : 'fsB1Tap', // the DOM element to highlight
-      NavLR : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } }, // Nav Left right
-      NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
+      Nav : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
       Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
       Modifier : { html : "Filter", action : function() { setModMode( "filter" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
-      NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
-      NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
-      Tempo : { html :    "Set", action : function() { exitTempoMode(); changeMode( "NavLR" ); } },
+      Nav : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
+      Tempo : { html :    "Set", action : function() { exitTempoMode(); changeMode( "Nav" ); } },
       Modifier : { html : "Tremolo", action : function() { setModMode( "tremolo" ); } },
     },
 
     "BUTTON12" : { // tap 1 then 2
       id : 'fsB12Tap',
-      NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
-      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      Nav : { html : "&rarr;", action : function() { moveCursor( "RIGHT" ); } },
       Tempo : { html : "-", action : function() { } },
       Modifier : { html : "Chorus", action : function() { setModMode( "chorus" ); } },
     },
 
     "BUTTON21" : {
       id : 'fsB21Tap',
-      NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
-      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      Nav : { html : "&larr;", action : function() { moveCursor( "LEFT" ); } },
       Tempo : { html : "-", action : function() { } },
       Modifier : { html : "Distortion", action : function() { setModMode( "distortion" ); } },
     },
@@ -75,7 +71,7 @@ var fsButtonMap =
   "EVENT_HOLD" : {
     "BUTTON1" : {
       id : 'fsB1Hold',
-      Modifier : { html : "NavLR", action : function() { setModMode( "off" ); changeMode( "NavLR" ); } },
+      Modifier : { html : "Nav", action : function() { setModMode( "off" ); changeMode( "Nav" ); } },
       Tempo : { html : "-", action : function() { } },
       Default :  { html : "Mod", action : function() { changeMode( "Modifier" ); } },
     },
