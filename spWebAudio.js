@@ -1,6 +1,6 @@
 /* Using Tone.js for Web Audio API
 
-    S0 S1 S2.. : Audio / Synth sources.
+    S0 S1 S2. : Audio / Synth sources.
     |  |  | TBD pan/level per voice
     |/___/
     |
@@ -91,7 +91,23 @@ function createSynths() // create all synths and connect them to masterLevel
 
     switch( sType )
     {
-      case "Piano":
+      case "Sine":
+      case "Square":
+      case "Sawtooth":
+      case "Triangle":
+        var oType = sType.toLowerCase();
+        s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
+        s.set( { volume : -12, oscillator : { type : oType }, } );
+        break;
+
+      case "Bell":
+        var oType = sType.toLowerCase();
+        s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
+        s.set( { volume : -12, oscillator : { type : "sine" },
+                 envelope : { attack: 0, decay: 1, sustain: .2, release: 1 } } );
+        break;
+
+      case "Piano": // mellower sounding piano
         s = new Tone.Sampler( { urls : {  A0 : "A0.mp3",
                                           C1 : "C1.mp3", "D#1" : "Ds1.mp3", "F#1" : "Fs1.mp3", A1 : "A1.mp3",
                                           C2 : "C2.mp3", "D#2" : "Ds2.mp3", "F#2" : "Fs2.mp3", A2 : "A2.mp3",
@@ -101,16 +117,69 @@ function createSynths() // create all synths and connect them to masterLevel
                                           C6 : "C6.mp3", "D#6" : "Ds6.mp3", "F#6" : "Fs6.mp3", A6 : "A6.mp3",
                                           C7 : "C7.mp3", "D#7" : "Ds7.mp3", "F#7" : "Fs7.mp3", A7 : "A7.mp3",
                                           C8 : "C8.mp3" },
-                                release : 4,
-                                baseUrl : "https://tonejs.github.io/audio/salamander/" } );
+                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/piano/" } );
+      break;
+
+    case "Cello":
+        s = new Tone.Sampler( { urls :  { 'E2': 'E2.mp3', 'E3': 'E3.mp3', 'E4': 'E4.mp3', 'F2': 'F2.mp3', 'F3': 'F3.mp3', 'F4': 'F4.mp3',
+                                          'F#3': 'Fs3.mp3', 'F#4': 'Fs4.mp3', 'G2': 'G2.mp3', 'G3': 'G3.mp3', 'G4': 'G4.mp3',
+                                          'G#2': 'Gs2.mp3', 'G#3': 'Gs3.mp3', 'G#4': 'Gs4.mp3', 'A2': 'A2.mp3', 'A3': 'A3.mp3', 'A4': 'A4.mp3',
+                                          'A#2': 'As2.mp3', 'A#3': 'As3.mp3', 'A#4': 'As4.mp3', 'B2': 'B2.mp3', 'B3': 'B3.mp3', 'B4': 'B4.mp3',
+                                          'C2': 'C2.mp3', 'C3': 'C3.mp3', 'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C#3': 'Cs3.mp3', 'C#4': 'Cs4.mp3',
+                                          'D2': 'D2.mp3', 'D3': 'D3.mp3', 'D4': 'D4.mp3', 'D#2': 'Ds2.mp3', 'D#3': 'Ds3.mp3', 'D#4': 'Ds4.mp3' },
+                                release : 8, baseUrl : "http://127.0.0.1:8080/instruments/cello/" } );
         break;
 
-      case "sine":
-      case "square":
-      case "sawtooth":
-      case "triangle":
-        s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
-        s.set( {  volume : -12, oscillator : { type : sType }, } );
+    case "Flute":
+        s = new Tone.Sampler( { urls :  { 'A5': 'A5.mp3', 'C3': 'C3.mp3', 'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3',
+                                          'E3': 'E3.mp3', 'E4': 'E4.mp3', 'E5': 'E5.mp3', 'A3': 'A3.mp3', 'A4': 'A4.mp3' },
+                                release : 8, baseUrl : "http://127.0.0.1:8080/instruments/flute/" } );
+        break;
+
+
+    case "French":
+        s = new Tone.Sampler( { urls :  { 'D2': 'D2.mp3', 'D4': 'D4.mp3', 'D#1': 'Ds1.mp3', 'F2': 'F2.mp3',
+                                          'F4': 'F4.mp3', 'G1': 'G1.mp3', 'A0': 'A0.mp3', 'A2': 'A2.mp3', 'C1': 'C1.mp3', 'C3': 'C3.mp3' },
+                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/french-horn/" } );
+        break;
+
+    case "Trumpet":
+        s = new Tone.Sampler( { urls :  { 'C5': 'C5.mp3', 'D4': 'D4.mp3', 'D#3': 'Ds3.mp3', 'F2': 'F2.mp3', 'F3': 'F3.mp3',
+                                          'F4': 'F4.mp3', 'G3': 'G3.mp3', 'A2': 'A2.mp3', 'A4': 'A4.mp3', 'A#3': 'As3.mp3', 'C3': 'C3.mp3' },
+                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/trumpet/" } );
+        break;
+
+    case "Violin":
+        s = new Tone.Sampler( { urls :  { 'A3': 'A3.mp3', 'A4': 'A4.mp3', 'A5': 'A5.mp3', 'A6': 'A6.mp3',
+                                          'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3', 'C7': 'C7.mp3',
+                                          'E4': 'E4.mp3', 'E5': 'E5.mp3', 'E6': 'E6.mp3',
+                                          'G4': 'G4.mp3', 'G5': 'G5.mp3', 'G6': 'G6.mp3' },
+                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/violin/" } );
+        break;
+
+    case "Xylo":
+        s = new Tone.Sampler( { urls :  { 'G3': 'G3.mp3', 'G4': 'G4.mp3', 'G5': 'G5.mp3', 'G6': 'G6.mp3',
+                                          'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3','C7': 'C7.mp3' },
+                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/xylophone/" } );
+        break;
+
+    case "Harp":
+        s = new Tone.Sampler( { urls :  { 'C3': 'C3.mp3', 'C5': 'C5.mp3',
+                                          'D2': 'D2.mp3', 'D4': 'D4.mp3', 'D6': 'D6.mp3', 'D7': 'D7.mp3',
+                                          'E1': 'E1.mp3', 'E3': 'E3.mp3', 'E5': 'E5.mp3',
+                                          'F2': 'F2.mp3', 'F4': 'F4.mp3', 'F6': 'F6.mp3', 'F7': 'F7.mp3',
+                                          'G1': 'G1.mp3', 'G3': 'G3.mp3', 'G5': 'G5.mp3',
+                                          'A2': 'A2.mp3', 'A4': 'A4.mp3', 'A6': 'A6.mp3',
+                                          'B1': 'B1.mp3', 'B3': 'B3.mp3', 'B5': 'B5.mp3', 'B6': 'B6.mp3' },
+                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/harp/" } );
+        break;
+
+    case "Organ":
+        s = new Tone.Sampler( { urls : { 'C1': 'C1.mp3','C2': 'C2.mp3', 'C3': 'C3.mp3', 'C4' : 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3',
+                                          'D#1': 'Ds1.mp3', 'D#2': 'Ds2.mp3', 'D#3': 'Ds3.mp3', 'D#4' : 'Ds4.mp3', 'D#5' : 'Ds5.mp3',
+                                          'F#1': 'Fs1.mp3', 'F#2': 'Fs2.mp3', 'F#3': 'Fs3.mp3', 'F#4' : 'Fs4.mp3', 'F#5' : 'Fs5.mp3',
+                                          'A1': 'A1.mp3', 'A2': 'A2.mp3', 'A3': 'A3.mp3', 'A4': 'A4.mp3', 'A5': 'A5.mp3' },
+                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/organ/" } );
         break;
 
       case "SynthPipe":
@@ -156,7 +225,6 @@ function createSynths() // create all synths and connect them to masterLevel
                   modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
                   modulationEnvelope : { attack: 0.006, decay: 0.2, sustain: 0.2, release: 0.4 } } );
         break;
-      
   
       case "MiscE":
         s = new Tone.PolySynth( Tone.Synth );

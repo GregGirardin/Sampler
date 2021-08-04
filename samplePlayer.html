@@ -15,7 +15,6 @@
 
 <body align="left">
 <div class='css_sl_pane'>
-  <input contenteditable='true'  id='serverURL'         value='URL'>
   <button class='css_menuButton' id='saveConfigButton'  onclick='sampleConfigSave();'>Save</button>
   <button class='css_modeButton' id='Help'              onclick='toggleHelp();'>Help</button>
   <button class='css_modeButton' id='editButton'        onclick='toggleEdit();'>Edit</button>
@@ -23,10 +22,8 @@
   <hr>
   <div id='footSwitchButtons' align='left'>
     Tap
-    <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&larr;</button>
-    <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&rarr;</button>
-    <button class='css_FSButton' id='fsB12Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON12" );'>Nav</button>
-    <button class='css_FSButton' id='fsB21Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON21" );'>&uarr;&darr;</button>
+    <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&uarr;</button>
+    <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&darr;</button>
     Hold
     <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>Mod</button>
     <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>Tempo</button>
@@ -37,11 +34,9 @@
   </div>
   <div id='audioElements'></div>
   <hr>
-  <h3> Audio </h3>
+  <h3> Samples </h3>
   <div id='libraryDiv'></div>
   <hr>
-  <h3> Chords </h3>
-  <div id='chordDiv'></div>
   <div id='multiuse'></div>
 </div>
 </body>

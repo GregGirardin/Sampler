@@ -10,7 +10,10 @@ var editElement; // What we're editing if "Mode_Edit"
 var cursorGroup = 0, cursorElement = 0;
 
 const MAX_GROUPS = 32;
-const synthTypes = [  "Piano", "sine", "square", "sawtooth", "triangle",
+const synthTypes = [  "Piano",
+                      "Harp", "Flute", "Cello", "French", "Trumpet",
+                      "Violin", "Xylo", "Organ",
+                      "Sine", "Square", "Sawtooth", "Triangle", "Bell", 
                       "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 const arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
 const loopCount = [ 1, 2, 4, 8, 16, 32 ];
