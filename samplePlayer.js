@@ -135,6 +135,7 @@ function sampleListInit()
 
   flashTempo();
   initWebAudio();
+  changeMode( "NavUD" );
 
   setTempoMs( 500 );
 }

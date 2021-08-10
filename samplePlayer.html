@@ -16,20 +16,19 @@
 <body align="left">
 <div class='css_sl_pane'>
   <button class='css_menuButton' id='saveConfigButton'  onclick='sampleConfigSave();'>Save</button>
-  <button class='css_modeButton' id='Help'              onclick='toggleHelp();'>Help</button>
   <button class='css_modeButton' id='editButton'        onclick='toggleEdit();'>Edit</button>
   <button class='css_modeButton' id='tempoButton'       onclick='tapTempo();'>Tempo</button>
   <hr>
   <div id='footSwitchButtons' align='left'>
     Tap
-    <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'>&uarr;</button>
-    <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'>&darr;</button>
+    <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON1" );'></button>
+    <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", "BUTTON2" );'></button>
     Hold
-    <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'>Mod</button>
-    <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'>Tempo</button>
+    <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON1" );'></button>
+    <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", "BUTTON2" );'></button>
     Double Tap
-    <button class='css_FSButton' id='fsB1DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON1" );'>&#62;</button>
-    <button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON2" );'>&#8800;</button>
+    <button class='css_FSButton' id='fsB1DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON1" );'></button>
+    <button class='css_FSButton' id='fsB2DTap' onclick='buttonEvent( "EVENT_DTAP", "BUTTON2" );'></button>
     <hr>
   </div>
   <div id='audioElements'></div>

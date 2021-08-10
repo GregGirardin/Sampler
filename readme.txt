@@ -36,16 +36,8 @@ Play cont
 
 TBD:
 
-Fix Server
-
-How to deploy to iPad
-
-node.js on iPad
-
 Get BT-200 in momentary Mode
 
 Instruments: Bells / Organ
 
 Get audio interface (BT?)
-
-Server independent implementation. (pure HTML / JS )

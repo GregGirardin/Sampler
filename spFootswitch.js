@@ -18,68 +18,66 @@ B2  ___________/ <-- Button12
 
 In Tempo mode we bypass these features for accuracy.
 */
-const clickHoldTO = 500;
+
+const SLOW_CLICK = 500;
+const FAST_CLICK = 200;
+
+const SINGLE_CLICK = 0; // no double click. Use FAST_CLICK timeout to detect HOLD
+const DOUBLE_CLICK = 1; // allow double click. Use SLOW_CLICK timeout for HOLD / double clicks.
+
+var clickMode = SINGLE_CLICK;
+var clickHoldTO = SLOW_CLICK;
 
 var footSwitchButtons = []; // array of buttons
 
-var fsMode = "Nav";
+var fsMode;
 
 var fsButtonMap = 
 {
   "EVENT_TAP" : { // Event type.
     "BUTTON1" : { // Event source
       id : 'fsB1Tap', // the DOM element to highlight
-      Nav : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
-      NavL : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
-      NavR : { html : "Nav", action : function() { changeMode( "Nav" ); } },
+      NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
+      NavLR : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
+      Play : { html : "&#62;", action : function() { playElement( 'START' ); } },
       Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
       Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
-      Nav : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
-      NavL : { html : "Nav", action : function() { changeMode( "Nav" ); } },
-      NavR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
-      Tempo : { html : "Set", action : function() { exitTempoMode(); changeMode( "Nav" ); } },
+      NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
+      NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
+      Play : { html : "&#8800;", action : function() { playElement( 'STOP' ); } },
+      Tempo : { html : "Set", action : function() { exitTempoMode(); changeMode( "NavUD" ); } },
       Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
-    },
-  },
-
-  "EVENT_DTAP" : {
-    "BUTTON1" : {
-      id : 'fsB1DTap',
-      NavL : { html : "-", action : function() { } },
-      NavR : { html : "-", action : function() { } },
-      Tempo : { html : "-", action : function() { } },
-      Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
-      Default : { html : "&#62;", action : function() { playElement( 'START' ); } },
-
-    },
-    "BUTTON2" : {
-      id : 'fsB2DTap',
-      NavL : { html : "-", action : function() { } },
-      NavR : { html : "-", action : function() { } },
-      Tempo : { html : "-", action : function() { } },
-      Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
-      Default : { html : "&#8800;", action : function() { playElement( 'STOP' ) } },
     },
   },
 
   "EVENT_HOLD" : {
     "BUTTON1" : {
       id : 'fsB1Hold',
-      NavL : { html : "-", action : function() { } },
-      NavR : { html : "-", action : function() { } },
-      Modifier : { html : "Nav", action : function() { toggleModifier( "off" ); changeMode( "Nav" ); } },
-      Tempo : { html : "-", action : function() { } },
-      Default :  { html : "Mod", action : function() { changeMode( "Modifier" ); } },
+      NavUD : { html : ">", action : function() { changeMode( "Play" ); } },
+      NavLR : { html : ">", action : function() { changeMode( "Play" ); } },
+      Play : { html : "Mod", action : function() { changeMode( "Modifier" ); } },
+      Modifier : { html : ">", action : function() { toggleModifier( "off" ); changeMode( "Play" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Hold',
-      NavL : { html : "-", action : function() { } },
-      NavR : { html : "-", action : function() { } },
-      Tempo : { html : "-", action : function() { } },
-      Default : { html : "Tempo", action : function() { changeMode( "Tempo" ); } }
+      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
+      Play : { html : "&larr;&rarr;", action : function() { playElement( 'STOP' ); changeMode( "NavLR" ); } },
+      Modifier : { html : "Tempo", action : function() { changeMode( "Tempo" ); } },
+    },
+  },
+
+  "EVENT_DTAP" : {
+    "BUTTON1" : {
+      id : 'fsB1DTap',
+      Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
+    },
+    "BUTTON2" : {
+      id : 'fsB2DTap',
+      Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
     },
   }
 };
@@ -108,7 +106,8 @@ class FootSwitchButton
     {
       this.buttonState = newState;
 
-      if( fsMode == "Tempo" || fsMode == "NavL"  || fsMode == "NavR" )
+      // Some modes take action on down immediately.
+      if( fsMode == "Tempo" )
       {
         // button presses need to be accurate and deterministic when setting tempo, so no hold or double tap functions
         // in Button12 and 21 nav modes we take action immediately. The mode is exited by a button press.
@@ -121,43 +120,37 @@ class FootSwitchButton
       {
         if( newState ) // true = 'down'
         {
-          // Check for 1-2 or 2-1 tap
-          var otherButtonIx = ( this.buttonID == "BUTTON1" ) ? 1 : 0;
-
-          if( footSwitchButtons[ otherButtonIx ].pressedState )
-          {
-            // this was one button pressed after another. Enter nav mode.
+          if( !this.pressedState ) 
+          { // first click
+            this.heldFlag = true;
+            if( clickMode == DOUBLE_CLICK )
+              this.pressedState = true;
+            this.holdTimerExpired = false;
+            this.holdTimer = setTimeout( holdTimerCB, clickHoldTO, this.buttonID );
+          }
+          else 
+          { // this is the second click. Can only happen in DOUBLE_CLICK mode
             this.clearTimer();
             this.pressedState = false;
-            footSwitchButtons[ otherButtonIx ].clearTimer();
-            footSwitchButtons[ otherButtonIx ].pressedState = false;
-            changeMode( ( this.buttonID == "BUTTON1" ) ? "NavL" : "NavR" );
-            buttonEvent( "EVENT_TAP", this.buttonID );
-          }
-          else
-          {
-            if( !this.pressedState ) 
-            { // first click
-              this.heldFlag = true;
-              this.pressedState = true; 
-              this.holdTimer = setTimeout( holdTimerCB, clickHoldTO, this.buttonID );
-            }
-            else 
-            { // this is the second click.
-              this.clearTimer();
-              this.pressedState = false;
-              this.heldFlag = false;
-              buttonEvent( "EVENT_DTAP", this.buttonID );
-            }
+            this.heldFlag = false;
+            buttonEvent( "EVENT_DTAP", this.buttonID );
           }
         }
-        else // up
+        else // released. (up)
         {
-          if( this.heldFlag && this.holdTimerExpired ) // do here so you can hold and trigger on release
+          if( this.heldFlag && this.holdTimerExpired ) // Do HOLD on 'up' so you can control the time.
           {
             buttonEvent( "EVENT_HOLD", this.buttonID );
             this.holdTimerExpired = false;
           }
+          else if( clickMode == SINGLE_CLICK )
+          { // in this mode we can take action immediately on the 'up' since we don't have to 
+            // check for a double tap.
+            this.clearTimer();
+            buttonEvent( "EVENT_TAP", this.buttonID );
+            this.pressedState = false;
+          }
+
           this.heldFlag = false;
         }
       }
@@ -225,9 +218,21 @@ function holdTimerCB( ButtonID )
   footSwitchButtons[ ( ButtonID == "BUTTON1" ) ? 0 : 1 ].holdTimerCB();
 }
 
+function setClickMode( newClickMode )
+{
+  clickMode = newClickMode;
+
+  if( clickMode == SINGLE_CLICK )
+   clickHoldTO = FAST_CLICK; // Click and hold only. Faster response, less functionality.
+  else // DOUBLE_CLICK
+   clickHoldTO = SLOW_CLICK; // now eatch button can also provide double tap as a function.
+}
+
 function changeMode( newTapMode )
 {
   fsMode = newTapMode;
+
+  setClickMode( ( fsMode == "Modifier" ) ? DOUBLE_CLICK : SINGLE_CLICK );
 
   for( var e of [ "EVENT_TAP", "EVENT_DTAP", "EVENT_HOLD" ] )
     for( var b of [ "BUTTON1", "BUTTON2" ] )
@@ -235,22 +240,9 @@ function changeMode( newTapMode )
       if( fsButtonMap[ e ][ b ] )
         if( fsButtonMap[ e ][ b ][ fsMode ] )
           document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ fsMode ].html;
-        else if ( fsButtonMap[ e ][ b ][ "Default" ] )
-          document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ "Default" ].html;
+        else 
+          document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = '-';
     }
-}
-
-var arpeggiatorFlag = false;
-
-function arpeggiatorTog()
-{
-  arpeggiatorFlag = !arpeggiatorFlag;
-
-  var elem = document.getElementById( 'fsB2Hold' );
-  if( arpeggiatorFlag )
-    elem.classList.add( 'css_cursor' ); // TBD. this is to highlight that it's on.
-  else
-    elem.classList.remove( 'css_cursor' );
 }
 
 var modFilterState = false;
@@ -287,17 +279,17 @@ function toggleModifier( modifier )
       break;
   
     case "distortion":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_DTAP" ][ "BUTTON1" ].id );
+      domElem = document.getElementById( fsButtonMap[ "EVENT_DTAP" ][ "BUTTON2" ].id );
       modDistState = !modDistState;
       if( modDistState )
         state = true;
       break;
 
     case "off":
-      if( modFilterState ) setModMode( "filter" );
-      if( modTremoloState ) setModMode( "tremolo" );
-      if( modChorusState ) setModMode( "chorus" );
-      if( modDistState ) setModMode( "distortion" );
+      if( modFilterState ) toggleModifier( "filter" );
+      if( modTremoloState ) toggleModifier( "tremolo" );
+      if( modChorusState ) toggleModifier( "chorus" );
+      if( modDistState ) toggleModifier( "distortion" );
       break;
   }
   if( domElem )
@@ -313,8 +305,6 @@ function buttonEvent( event, buttonID )
 {
   if( fsButtonMap[ event ][ buttonID ][ fsMode ] )
     fsButtonMap[ event ][ buttonID ][ fsMode ].action();
-  else if( fsButtonMap[ event ][ buttonID ][ "Default" ] )
-    fsButtonMap[ event ][ buttonID ][ "Default" ].action(); 
 
   document.getElementById( fsButtonMap[ event ][ buttonID ].id ).classList.add( 'css_highlight_red' );
   setTimeout( buttonHLTimer, 100 );

@@ -137,23 +137,6 @@ function dropElem( ev )
   genElementConfigHTML();
 }
 
-var helpState = false;
-function toggleHelp()
-{
-  if( editElement )
-     saveEdits();
-
-  editElement = undefined; 
-  helpState = !helpState;
-  var helpHtml = "";
-
-  if( helpState )
-    helpHtml = htmlConstStrings( 0 );
-
-  var helpElem = document.getElementById( 'multiuse' );
-  helpElem.innerHTML = helpHtml;
-}
-
 /////////////// /////////////// /////////////// ///////////////
 function setSampleConfigName()
 {

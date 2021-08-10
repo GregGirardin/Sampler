@@ -118,31 +118,6 @@ function generateLibraryHTML()
   document.getElementById( 'libraryDiv' ).innerHTML = tmpHtml;
 }
 
-/////////////// /////////////// /////////////// ///////////////
-// This are just a couple big string literals for the generated output setlist html.
-// Put here to make the export function more readable
-/////////////// /////////////// /////////////// ///////////////
-function htmlConstStrings( index )
-{
-  switch( index )
-  {
-    case 0:
-      return( function(){/* 
-<h2> Sample Player Creator </h2>
-Create a new Sample List with 'New'. Add Groups with 'Add Group'. Click on names to rename.<br>
-<br>
-Drag samples from the Library in the right pane to the desired location. Samples and groups can be rearranged
-by dragging. Delete things by dragging to the Trash.<br>
-<br>
-A library can be specified by appending "?library=http://x.y.z/???.json" to this URL.
-    
-*/}.toString().slice( 14, -3 ) + "</" + "script> </" + "body> </html>" ); // little hack because certain tags confuse the browser.
-    break;
-  }
-
-  return undefined;
-}
-
 function genEditGroupRefHTML()
 {
   var groupNames = [];

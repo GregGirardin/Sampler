@@ -339,7 +339,7 @@
     },
     {
       "objType": "CGroup",
-      "instrument": "SynKeys",
+      "instrument": "MiscE",
       "thickenFlag": false,
       "playing": false,
       "elementName": "Do It Again",
@@ -359,43 +359,9 @@
           "group": 6
         },
         {
-          "elementName": "C",
-          "objType": "CChord",
-          "playBeats": 4,
-          "notes": 4241,
-          "octave": 0,
-          "group": 6
-        },
-        {
-          "elementName": "D",
-          "objType": "CChord",
-          "playBeats": 4,
-          "notes": 16964,
-          "octave": 0,
-          "group": 6
-        },
-        {
-          "elementName": "Em",
-          "objType": "CChord",
-          "playBeats": 4,
-          "notes": 67728,
-          "octave": 0,
-          "group": 6
-        },
-        {
-          "elementName": "D",
-          "objType": "CChord",
-          "playBeats": 4,
-          "notes": 16964,
-          "octave": 0,
-          "group": 6
-        },
-        {
-          "elementName": "Em9",
-          "objType": "CChord",
-          "playBeats": 4,
-          "notes": 268961808,
-          "octave": 0,
+          "objType": "CGroupRef",
+          "elementName": "DoIt CDEmC",
+          "loopFlag": false,
           "group": 6
         }
       ],
@@ -406,6 +372,224 @@
       "tremoloLevel": 21,
       "dryLevel": 100,
       "reverbLevel": 41,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "instrument": "Flute",
+      "thickenFlag": false,
+      "playing": false,
+      "elementName": "DoIt CDEmC",
+      "tempoMs": 400,
+      "seqMode": "Cont",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "envelope": "None",
+      "elements": [
+        {
+          "elementName": "C",
+          "objType": "CChord",
+          "playBeats": 2,
+          "notes": 4241,
+          "octave": 0,
+          "group": 6
+        },
+        {
+          "elementName": "D",
+          "objType": "CChord",
+          "playBeats": 2,
+          "notes": 16964,
+          "octave": 0,
+          "group": 6
+        },
+        {
+          "elementName": "Em9",
+          "objType": "CChord",
+          "playBeats": 2,
+          "notes": 268961808,
+          "octave": 0,
+          "group": 6
+        },
+        {
+          "elementName": "C",
+          "objType": "CChord",
+          "playBeats": 2,
+          "notes": 4241,
+          "octave": 0
+        }
+      ],
+      "masterLevel": 100,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 0,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "instrument": "Sawtooth",
+      "thickenFlag": true,
+      "playing": false,
+      "elementName": "MysteriousWays",
+      "tempoMs": 600,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "12324323",
+      "envelope": "None",
+      "elements": [
+        {
+          "elementName": "A",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 2105872,
+          "octave": 0,
+          "group": 7
+        },
+        {
+          "elementName": "D",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 16964,
+          "octave": 0,
+          "group": 7
+        },
+        {
+          "elementName": "C",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 4241,
+          "octave": 0,
+          "group": 7
+        },
+        {
+          "elementName": "G",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 542848,
+          "octave": -1,
+          "group": 7
+        }
+      ],
+      "masterLevel": 100,
+      "distortionLevel": 0,
+      "chorusLevel": 16,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 59,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "instrument": "Sawtooth",
+      "thickenFlag": true,
+      "playing": false,
+      "elementName": "MW-A",
+      "tempoMs": 500,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "envelope": "Slow",
+      "elements": [
+        {
+          "elementName": "A",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 2171392,
+          "octave": -1,
+          "group": 8
+        }
+      ],
+      "masterLevel": 57,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 35,
+      "delayLevel": 59
+    },
+    {
+      "objType": "CGroup",
+      "instrument": "SynKeys",
+      "thickenFlag": false,
+      "playing": false,
+      "elementName": "Killing Moon",
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "envelope": "Med",
+      "elements": [
+        {
+          "elementName": "Em9",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 329872,
+          "octave": 0,
+          "group": 9
+        },
+        {
+          "elementName": "C",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 16529,
+          "octave": 0,
+          "group": 9
+        }
+      ],
+      "masterLevel": 67,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 50,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "instrument": "SynKeys",
+      "thickenFlag": false,
+      "playing": false,
+      "elementName": "KM-B",
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "envelope": "Med",
+      "elements": [
+        {
+          "elementName": "G",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 542848,
+          "octave": -1,
+          "group": 10
+        },
+        {
+          "elementName": "Cm",
+          "objType": "CChord",
+          "playBeats": 4,
+          "notes": 4233,
+          "octave": 0,
+          "group": 10
+        }
+      ],
+      "masterLevel": 80,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 53,
       "delayLevel": 0
     },
     {

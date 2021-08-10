@@ -333,7 +333,7 @@ function playElemAudio( audioElem )
   }
 
   setEffectLevels( curConfig.groups[ audioElem.group ], .5 );
-
+  setTempoMs( curConfig.groups[ audioElem.group ].tempoMs );
   if( curConfig.groups[ audioElem.group ].arpFlag && elemCanArpeggiate( audioElem ) )
   {
     if( activeElement )
@@ -454,6 +454,7 @@ function playCGroupRef( audioElem )
   if( grp )
   {
     activeElement.synth = instruments[ grp.instrument ];
+    setTempoMs( grp.tempoMs );
     activeElement.loopFlag = audioElem.loopFlag;
     activeElement.grpChordIndex = 0;
     activeElement.beatsRemaining = 0;
@@ -488,25 +489,21 @@ function grpPlayTimerCB()
   if( playElem.objType == "CChord" ) // Group must be all CChord. TBD, skip groups and samples.
   {
     activeElement.chordNotes = [];
-    var chord = chordFromName( playElem.elementName );
-    if( chord )
-    {
-      for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-        if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
-        {
-          var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
-          activeElement.chordNotes.push( 440 * Math.pow( 2, noteOffset / 12 ) );
-        }
+    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+      if( playElem.notes & ( 1 << noteIx ) ) // notes are a bit field
+      {
+        var noteOffset = noteIx - 9 + playElem.octave * 12; // semitone offset from A440
+        activeElement.chordNotes.push( 440 * Math.pow( 2, noteOffset / 12 ) );
+      }
 
-      activeElement.beatsRemaining = playElem.playBeats;
-      activeElement.synth.triggerAttack( activeElement.chordNotes );
+    activeElement.beatsRemaining = playElem.playBeats;
+    activeElement.synth.triggerAttack( activeElement.chordNotes );
 
-      activeElement.grpChordIndex += 1;
-      if( ( activeElement.grpChordIndex >= activeElement.group.elements.length ) && activeElement.loopFlag )
-        activeElement.grpChordIndex = 0; // loop
+    activeElement.grpChordIndex += 1;
+    if( ( activeElement.grpChordIndex >= activeElement.group.elements.length ) && activeElement.loopFlag )
+      activeElement.grpChordIndex = 0; // loop
 
-      activeElement.grpTimer = setTimeout( grpPlayTimerCB, currentTempo );
-    }
+    activeElement.grpTimer = setTimeout( grpPlayTimerCB, currentTempo );
   }
 }
 
@@ -709,23 +706,9 @@ function doModAudio( modifier, state )
 {
   switch( modifier )
   {
-    case "filter":  filterBlock.wet.rampTo( state ? 1 : 0, .2 ); break;
+    case "filter":  filterBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
     case "tremolo": tremoloBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
-    case "chorus":  chorusBlock.wet.rampTo( state ? 1 : 0, .5 ); break;
-    case "distortion": distortionBlock.wet.rampTo( state ? 1 : 0, .5 ); break;
+    case "chorus":  chorusBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
+    case "distortion": distortionBlock.wet.rampTo( state ? .2 : 0, .5 ); break;
   }
 }
-
-// function chordFromName( cName ) // get the CLibChord by name
-// {
-//   var s = undefined;
-
-//   for( var chordIx = 0;chordIx < chordLibrary.length;chordIx++ )
-//     if( chordLibrary[ chordIx ].elementName == cName )
-//     {
-//       s = chordLibrary[ chordIx ];
-//       break;
-//     }
-
-//   return s;
-// }
