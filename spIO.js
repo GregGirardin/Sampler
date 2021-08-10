@@ -10,7 +10,7 @@ const configFile = 'sampleConfig.json';
 
 function gotSamples( file, data )
 {
-  sampleLibrary = JSON.parse( data );
+  globals.sampleLibrary = JSON.parse( data );
   generateLibraryHTML();
 }
 
@@ -18,7 +18,7 @@ function gotConfig( file, data )
 {
   if( data )
   {
-    curConfig = JSON.parse( data );
+    globals.cfg = JSON.parse( data );
     genElementConfigHTML();
   }
   else
@@ -57,17 +57,17 @@ function sampleConfigSave()
 {
   saveEdits();
 
-  if( configEditedFlag )
+  if( globals.configEditedFlag )
   {
     // clear any state that shouldn't be saved in the config json.
-    for( var i = 0;i < curConfig.groups.length;i++ )
+    for( var i = 0;i < globals.cfg.groups.length;i++ )
     {
-      var g = curConfig.groups[ i ];
+      var g = globals.cfg.groups[ i ];
       for( var j = 0;j < g.elements.length;j++ )
         g.elements[ j ].playing = undefined;
     }
 
-    var configData = JSON.stringify( curConfig, null, "  " );
+    var configData = JSON.stringify( globals.cfg, null, "  " );
 
     var formData = new FormData();
     formData.append( "data", configData );
@@ -76,19 +76,19 @@ function sampleConfigSave()
     xhr.open( 'post', serverURL + "/" + configFile );
     xhr.send( formData );
 
-    configEditedFlag = false;
+    globals.configEditedFlag = false;
   }
 
-  if( chordEditedFlag ) // Save the Synth Library.
+  if( globals.chordEditedFlag ) // Save the Synth Library.
   {
-    configData = JSON.stringify( chordLibrary, null, "  " );
+    configData = JSON.stringify( globals.chordLibrary, null, "  " );
     formData = new FormData();
     formData.append( "data", configData );
 
     var xhr = new XMLHttpRequest();
     xhr.open( 'post', serverURL + "/" + chordConfigFile );
     xhr.send( formData );
-    chordEditedFlag = false;
+    globals.chordEditedFlag = false;
   }
 
   document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );

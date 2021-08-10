@@ -1,28 +1,37 @@
 // Main js file.
 
-var configEditedFlag = false;
-var chordEditedFlag = false;
-var sampleLibrary = {}; // object of ClLibrarySample
-var chordLibrary = []; // array of CChord
-var curConfig;
-var editElement; // What we're editing if "Mode_Edit"
+class CGlobals // Global consts and stuff in here just to be cleaner.
+{
+  constructor()
+  {
+    this.cursor = new cursorPosition();
+    this.configEditedFlag = false;
+    this.chordEditedFlag = false;
+    this.sampleLibrary = {}; // object of ClLibrarySample
+    this.chordLibrary = []; // array of CChord
+    this.editElement = {}; // What we're editing if "Mode_Edit" Used a lot so keep as it's own var 
+    this.currentTempo = 500;
+    this.cfg = {}; // The CConfig
+    this.instruments = {};
+  }
+}
 
-var cursorGroup = 0, cursorElement = 0;
+CGlobals.MAX_GROUPS = 32;
+CGlobals.synthTypes = [ "Piano",
+                        "Harp", "Flute", "Cello", "French", "Trumpet", "Violin", "Xylo", "Organ",
+                        "Sine", "Square", "Sawtooth", "Triangle", "Bell", 
+                        "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 
-const MAX_GROUPS = 32;
-const synthTypes = [  "Piano",
-                      "Harp", "Flute", "Cello", "French", "Trumpet",
-                      "Violin", "Xylo", "Organ",
-                      "Sine", "Square", "Sawtooth", "Triangle", "Bell", 
-                      "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
-const arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
-const loopCount = [ 1, 2, 4, 8, 16, 32 ];
-const arpSequences = [ "1234", "4321", "1324", "4231", "12324323", "B-T", "T-B" ]; 
-const seqModes = [ "None", "Manual", "Cont" ];
-const envelopeLabels = [ "None", "Fast", "Med", "Slow" ];
-const envelopeParams = {  Fast : { attack : .1, decay :  0, sustain:   1, release: .1 },
-                          Med  : { attack : .5, decay :  1, sustain: 0.9, release:  1 },
-                          Slow : { attack :  5, decay : .9, sustain: 0.9, release:  3 } };
+CGlobals.arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
+CGlobals.loopCount = [ 1, 2, 4, 8, 16, 32 ];
+CGlobals.arpSequences = [ "1234", "4321", "1324", "4231", "12324323", "B-T", "T-B" ]; 
+CGlobals.seqModes = [ "None", "Manual", "Cont" ];
+CGlobals.envelopeLabels = [ "None", "Fast", "Med", "Slow" ];
+CGlobals.envelopeParams = { Fast : { attack : .5, decay :  0, sustain:   1, release: .5 },
+                            Med  : { attack :  2, decay :  1, sustain: 0.9, release:  1 },
+                            Slow : { attack :  5, decay : .9, sustain: 0.9, release:  3 } };
+
+var globals; // a CGlobals to contain everything
 
 class CConfig
 {
@@ -33,6 +42,17 @@ class CConfig
     this.groups = [];
     this.groups.push( new CGroup( "Group" ) );
     this.groups.push( new CGroup( "Clipboard" ) );
+  }
+}
+
+class cursorPosition
+{
+  constructor()
+  {
+    this.cg = 0; // current group, element
+    this.ce = 0;
+    this.sg = undefined; // subgroup.  If these are defined, we're playing a group (subGroup)
+    this.se = undefined; //            inside of another group (currentGroup)
   }
 }
 
@@ -47,11 +67,11 @@ class CGroup
 
     this.elementName = groupName;
     this.tempoMs = 500;
-    this.seqMode = seqModes[ 0 ];
+    this.seqMode = CGlobals.seqModes[ 0 ];
     this.arpFlag = false;
     this.arpNPB = 4;
-    this.arpSequence = arpSequences[ 0 ];
-    this.envelope = envelopeLabels[ 0 ];
+    this.arpSequence = CGlobals.arpSequences[ 0 ];
+    this.envelope = CGlobals.envelopeLabels[ 0 ];
     this.elements = []; // CSample, CChordRef, CGroupRef.
 
     this.masterLevel = 100;
@@ -62,7 +82,14 @@ class CGroup
     this.dryLevel = 100;
     this.reverbLevel = 0;
     this.delayLevel = 0;
-  }
+    this.flashTempoTimer = undefined;
+    this.clearTempoTimer = undefined;
+
+    this.modFilterState = false;
+    this.modTremoloState = false;
+    this.modChorusState = false;
+    this.modDistState = false;
+    }
 }
 
 class CGroupRef // a reference to a group that can be placed in a group.
@@ -104,11 +131,7 @@ class CChord // A Chord in the config.
   }
 }
 
-//////////////////////////// ////////////////////////////
-window.onload = sampleListInit; // set up main entry point
-
-var currentTempo;
-var flashTempoTimer, clearTempoTimer;
+window.onload = sampleListInit; // main entry point
 
 /////////////// /////////////// /////////////// ///////////////
 function sampleListInit()
@@ -121,8 +144,10 @@ function sampleListInit()
     console.log( "Server URL:" + serverURL );
   }
 
-  configEditedFlag = false;
-  curConfig = new CConfig( "Sample List" );
+  globals = new CGlobals();
+
+  globals.configEditedFlag = false;
+  globals.cfg = new CConfig( "Sample List" );
 
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
@@ -142,15 +167,15 @@ function sampleListInit()
 
 function flashTempo()
 {
-  if( clearTempoTimer )
-    clearTimeout( clearTempoTimer );
-  if( flashTempoTimer )
-    clearTimeout( flashTempoTimer );
+  if( globals.clearTempoTimer )
+    clearTimeout( globals.clearTempoTimer );
+  if( globals.flashTempoTimer )
+    clearTimeout( globals.flashTempoTimer );
 
   document.getElementById( 'tempoButton' ).classList.add( 'css_highlight_red' );
 
-  clearTempoTimer = setTimeout( clearTempoFlash, 100 );
-  flashTempoTimer = setTimeout( flashTempo, currentTempo );
+  globals.clearTempoTimer = setTimeout( clearTempoFlash, 100 );
+  globals.flashTempoTimer = setTimeout( flashTempo, globals.currentTempo );
 }
 
 function clearTempoFlash()

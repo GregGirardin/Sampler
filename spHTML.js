@@ -3,28 +3,28 @@
 /////////////// /////////////// /////////////// ///////////////
 function genElementConfigHTML()
 {
-  var l = curConfig.groups.length;
+  var l = globals.cfg.groups.length;
   if( l == 1 && !l )
-    cursorGroup = undefined;
+    globals.cursor.cg = undefined;
   else
   {
-    if( cursorGroup == undefined )
-      cursorGroup = 0;
-    if( cursorGroup >= l - 1 )
-      cursorGroup = l - 2;
+    if( globals.cursor.cg == undefined )
+      globals.cursor.cg = 0;
+    if( globals.cursor.cg >= l - 1 )
+      globals.cursor.cg = l - 2;
 
-    l = curConfig.groups[ cursorGroup ].elements.length;
-    if( cursorElement >= l )
-      cursorElement = l - 1;
-    else if( ( cursorElement < 0 ) && ( l > 0 ) )
-      cursorElement = 0;
+    l = globals.cfg.groups[ globals.cursor.cg ].elements.length;
+    if( globals.cursor.ce >= l )
+      globals.cursor.ce = l - 1;
+    else if( ( globals.cursor.ce < 0 ) && ( l > 0 ) )
+      globals.cursor.ce = 0;
   }
 
-  var tempHtml = ""; // "<div id='sampleListName' onClick='setSampleConfigName()'>" + curConfig.name + "</div><br>";
+  var tempHtml = ""; // "<div id='sampleListName' onClick='setSampleConfigName()'>" + globals.cfg.name + "</div><br>";
 
-  for( var i = 0;i < curConfig.groups.length;i++ )
+  for( var i = 0;i < globals.cfg.groups.length;i++ )
   {
-    var g = curConfig.groups[ i ];
+    var g = globals.cfg.groups[ i ];
     var classes = 'css_groupClass';
 
     switch( g.seqMode )
@@ -34,7 +34,7 @@ function genElementConfigHTML()
       case "Cont": classes += ' css_groupSeqCont'; break;
     }
 
-    if( i == curConfig.groups.length - 1 )
+    if( i == globals.cfg.groups.length - 1 )
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
     else
@@ -79,16 +79,16 @@ function genElementConfigHTML()
 
   document.getElementById( 'audioElements' ).innerHTML = tempHtml;
 
-  if( configEditedFlag || chordEditedFlag )
+  if( globals.configEditedFlag || globals.chordEditedFlag )
     document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
   else
     document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
 
   var elem;
-  if( cursorGroup >= 0 && cursorElement >= 0 )
-    elem = document.getElementById( 'slElement.' + cursorGroup + '.' + cursorElement );
-  else if( cursorGroup )
-    elem = document.getElementById( 'slGroup.' + cursorGroup );
+  if( globals.cursor.cg >= 0 && globals.cursor.ce >= 0 )
+    elem = document.getElementById( 'slElement.' + globals.cursor.cg + '.' + globals.cursor.ce );
+  else if( globals.cursor.cg )
+    elem = document.getElementById( 'slGroup.' + globals.cursor.cg );
   if( elem )
     elem.classList.add( 'css_cursor' );
 }
@@ -103,7 +103,7 @@ function generateLibraryHTML()
   var tmpHtml = "";
   var t = []; // Array for sorting.
 
-  for( const[ key, value ] of Object.entries( sampleLibrary ) )
+  for( const[ key, value ] of Object.entries( globals.sampleLibrary ) )
     t.push( value );
   t.sort( function( a, b ){ return ( a.displayName > b.displayName ) ? 1 : -1 } );
 
@@ -121,8 +121,8 @@ function generateLibraryHTML()
 function genEditGroupRefHTML()
 {
   var groupNames = [];
-  for( var i = 0;i < curConfig.groups.length - 1;i++ )
-    groupNames.push( curConfig.groups[ i ].elementName );
+  for( var i = 0;i < globals.cfg.groups.length - 1;i++ )
+    groupNames.push( globals.cfg.groups[ i ].elementName );
 
   var tmpHtml = "<hr>";
   tmpHtml += "Group:<select id='editGroupRefGroup'>";
@@ -130,13 +130,13 @@ function genEditGroupRefHTML()
   for( i = 0;i < groupNames.length;i++ )
   {
     tmpHtml += "<option value='" + groupNames[ i ] + "' ";
-    if( editElement.elementName == groupNames[ i ] )
+    if( globals.editElement.elementName == groupNames[ i ] )
       tmpHtml += "selected='selected'";
     tmpHtml += ">" + groupNames[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
-  var checked = editElement.loopFlag ? "checked" : "";
+  var checked = globals.editElement.loopFlag ? "checked" : "";
   tmpHtml += "Loop: <input type='checkbox' id='editGroupRefLoopFlag' " + checked + "><br>";
 
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
@@ -146,73 +146,73 @@ function genEditGroupRefHTML()
 function genEditGroupHTML()
 {
   var tmpHtml = "<hr>";
-  tmpHtml += "Name: <input contenteditable='true' id='editGroupName' value='" + editElement.elementName + "'><br>";
+  tmpHtml += "Name: <input contenteditable='true' id='editGroupName' value='" + globals.editElement.elementName + "'><br>";
 
   tmpHtml += "Instrument:<select id='editGroupInstrument'>";
 
-  for( i = 0;i < synthTypes.length;i++ )
+  for( i = 0;i < CGlobals.synthTypes.length;i++ )
   {
-    tmpHtml += "<option value='" + synthTypes[ i ] + "' ";
-    if( editElement.instrument == synthTypes[ i ] )
+    tmpHtml += "<option value='" + CGlobals.synthTypes[ i ] + "' ";
+    if( globals.editElement.instrument == CGlobals.synthTypes[ i ] )
       tmpHtml += "selected='selected'";
-    tmpHtml += ">" + synthTypes[ i ] + "</option>";
+    tmpHtml += ">" + CGlobals.synthTypes[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
-  var tempoBPM = Math.round( 60000 / editElement.tempoMs );
+  var tempoBPM = Math.round( 60000 / globals.editElement.tempoMs );
 
   tmpHtml += "Tempo: <input type='number' id='editGroupTempoBPM' min='20' max='300' value='" + tempoBPM + "'><br>";
 
   tmpHtml += "Sequence Mode:";
 
-  for( i = 0;i < seqModes.length;i++ )
+  for( i = 0;i < CGlobals.seqModes.length;i++ )
     tmpHtml += "<input type='radio' id='editGroupSequenceMode" + i + "' name='sequenceType'" +
-               ( editElement.seqMode == seqModes[ i ] ? "checked" : "") + ">" + seqModes[ i ];
+               ( globals.editElement.seqMode == CGlobals.seqModes[ i ] ? "checked" : "") + ">" + CGlobals.seqModes[ i ];
 
-  var checked = editElement.thickenFlag ? "checked" : "";
+  var checked = globals.editElement.thickenFlag ? "checked" : "";
   tmpHtml += "<br>Fat: <input type='checkbox' id='editGroupThickenFlag' " + checked + "><br>";
 
   tmpHtml += "Envelope:<select id='editGroupEnvelope'>";
-  for( i = 0;i < envelopeLabels.length;i++ )
+  for( i = 0;i < CGlobals.envelopeLabels.length;i++ )
   {
-    tmpHtml += "<option value='" + envelopeLabels[ i ] + "' ";
-    if( editElement.envelope == envelopeLabels[ i ] )
+    tmpHtml += "<option value='" + CGlobals.envelopeLabels[ i ] + "' ";
+    if( globals.editElement.envelope == CGlobals.envelopeLabels[ i ] )
       tmpHtml += "selected='selected'";
-    tmpHtml += ">" + envelopeLabels[ i ] + "</option>";
+    tmpHtml += ">" + CGlobals.envelopeLabels[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
   tmpHtml += "Arp Sequence:<select id='editGroupArpSequence'>";
-  for( i = 0;i < arpSequences.length;i++ )
+  for( i = 0;i < CGlobals.arpSequences.length;i++ )
   {
-    tmpHtml += "<option value='" + arpSequences[ i ] + "' ";
-    if( editElement.arpSequence == arpSequences[ i ] )
+    tmpHtml += "<option value='" + CGlobals.arpSequences[ i ] + "' ";
+    if( globals.editElement.arpSequence == CGlobals.arpSequences[ i ] )
       tmpHtml += "selected='selected'";
-    tmpHtml += ">" + arpSequences[ i ] + "</option>";
+    tmpHtml += ">" + CGlobals.arpSequences[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
-  var checked = editElement.arpFlag ? "checked" : "";
+  var checked = globals.editElement.arpFlag ? "checked" : "";
   tmpHtml += "<br>Arp: <input type='checkbox' id='editGroupArpFlag' " + checked + "><br>";
 
   tmpHtml += "Arp Notes/b:<select id='editGroupArpNPB'>";
-  for( i = 0;i < arpNPBs.length;i++ )
+  for( i = 0;i < CGlobals.arpNPBs.length;i++ )
   {
-    tmpHtml += "<option value='" + arpNPBs[ i ] + "' ";
-    if( editElement.arpNPB == arpNPBs[ i ] )
+    tmpHtml += "<option value='" + CGlobals.arpNPBs[ i ] + "' ";
+    if( globals.editElement.arpNPB == CGlobals.arpNPBs[ i ] )
       tmpHtml += "selected='selected'";
-    tmpHtml += ">" + arpNPBs[ i ] + "</option>";
+    tmpHtml += ">" + CGlobals.arpNPBs[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
-  tmpHtml += "Master: <input type='range' id='editGroupMasterLevel' min='0' max='100' value='" + editElement.masterLevel + "'><br>";
-  tmpHtml += "Chorus: <input type='range' id='editGroupChorusLevel' min='0' max='100' value='" + editElement.chorusLevel + "'><br>";
-  tmpHtml += "Phaser: <input type='range' id='editGroupPhaserLevel' min='0' max='100' value='" + editElement.phaserLevel + "'><br>";
-  tmpHtml += "Tremolo: <input type='range' id='editGroupTremoloLevel' min='0' max='100' value='" + editElement.tremoloLevel + "'><br>";
-  tmpHtml += "Dist: <input type='range' id='editGroupDistortionLevel' min='0' max='100' value='" + editElement.distortionLevel + "'><br>";
-  tmpHtml += "Dry: <input type='range' id='editGroupDryLevel' min='0' max='100' value='" + editElement.dryLevel + "'><br>";
-  tmpHtml += "Delay: <input type='range' id='editGroupDelayLevel' min='0' max='100' value='" + editElement.delayLevel + "'><br>";
-  tmpHtml += "Reverb: <input type='range' id='editGroupReverbLevel' min='0' max='100' value='" + editElement.reverbLevel + "'><br>";
+  tmpHtml += "Master: <input type='range' id='editGroupMasterLevel' min='0' max='100' value='" + globals.editElement.masterLevel + "'><br>";
+  tmpHtml += "Chorus: <input type='range' id='editGroupChorusLevel' min='0' max='100' value='" + globals.editElement.chorusLevel + "'><br>";
+  tmpHtml += "Phaser: <input type='range' id='editGroupPhaserLevel' min='0' max='100' value='" + globals.editElement.phaserLevel + "'><br>";
+  tmpHtml += "Tremolo: <input type='range' id='editGroupTremoloLevel' min='0' max='100' value='" + globals.editElement.tremoloLevel + "'><br>";
+  tmpHtml += "Dist: <input type='range' id='editGroupDistortionLevel' min='0' max='100' value='" + globals.editElement.distortionLevel + "'><br>";
+  tmpHtml += "Dry: <input type='range' id='editGroupDryLevel' min='0' max='100' value='" + globals.editElement.dryLevel + "'><br>";
+  tmpHtml += "Delay: <input type='range' id='editGroupDelayLevel' min='0' max='100' value='" + globals.editElement.delayLevel + "'><br>";
+  tmpHtml += "Reverb: <input type='range' id='editGroupReverbLevel' min='0' max='100' value='" + globals.editElement.reverbLevel + "'><br>";
 
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
 }
@@ -222,9 +222,9 @@ function genEditSampleHTML()
 {
   var tmpHtml = "<hr>";
 
-  tmpHtml += "Display Name: <input id='editSampleName' contenteditable='true' value='" + editElement.elementName + "'><br>";
-  tmpHtml += "File: " + editElement.filename + "<br>";
-  var checked = editElement.loopFlag ? "checked" : "";
+  tmpHtml += "Display Name: <input id='editSampleName' contenteditable='true' value='" + globals.editElement.elementName + "'><br>";
+  tmpHtml += "File: " + globals.editElement.filename + "<br>";
+  var checked = globals.editElement.loopFlag ? "checked" : "";
   tmpHtml += "Loop: <input type='checkbox' id='editSampleLoopFlag' " + checked + "><br>";
 
   document.getElementById( 'multiuse' ).innerHTML = tmpHtml;
@@ -233,16 +233,16 @@ function genEditSampleHTML()
 //////////////////////////// ////////////////////////////
 function genEditChordHTML()
 {
-  var tmpHtml = "<hr>Name: <input contenteditable='true' id='editChordName' value='" + editElement.elementName + "'><br>";
+  var tmpHtml = "<hr>Name: <input contenteditable='true' id='editChordName' value='" + globals.editElement.elementName + "'><br>";
 
   tmpHtml += "Play beats:<select id='editChordBeats'>";
 
-  for( i = 0;i < loopCount.length;i++ )
+  for( i = 0;i < CGlobals.loopCount.length;i++ )
   {
-    tmpHtml += "<option value='" + loopCount[ i ] + "' ";
-    if( editElement.playBeats == loopCount[ i ] )
+    tmpHtml += "<option value='" + CGlobals.loopCount[ i ] + "' ";
+    if( globals.editElement.playBeats == CGlobals.loopCount[ i ] )
       tmpHtml += "selected='selected'";
-    tmpHtml += ">" + loopCount[ i ] + "</option>";
+    tmpHtml += ">" + CGlobals.loopCount[ i ] + "</option>";
   }
   tmpHtml += "</select><br>";
 
@@ -250,7 +250,7 @@ function genEditChordHTML()
   for( i = 3;i >= -3;i-- )
   {
     tmpHtml += "<option value='" + i + "' ";
-    if( editElement.octave == i )
+    if( globals.editElement.octave == i )
       tmpHtml += "selected='selected'";
     tmpHtml += ">" + i + "</option>";
   }
@@ -266,7 +266,7 @@ function genEditChordHTML()
   {
     var css_class = ( blackKeys.includes( note % 12 ) ) ? 'css_blackKey' : 'css_whiteKey';
 
-    if( ( 1 << note ) & editElement.notes )
+    if( ( 1 << note ) & globals.editElement.notes )
       css_class += ' css_pressedKey';
 
     tmpHtml += "<button id='keyboardKey_" + note + "' class='" + css_class +
@@ -280,59 +280,59 @@ function genEditChordHTML()
 //////////////////////////// ////////////////////////////
 function saveEdits()
 {
-  if( editElement )
-    switch( editElement.objType )
+  if( globals.editElement )
+    switch( globals.editElement.objType )
     {
       case "CSample":
-        editElement.elementName = document.getElementById( "editSampleName" ).value; 
-        editElement.loopFlag    = document.getElementById( "editSampleLoopFlag" ).checked;
+        globals.editElement.elementName = document.getElementById( "editSampleName" ).value; 
+        globals.editElement.loopFlag    = document.getElementById( "editSampleLoopFlag" ).checked;
         break;
     
       case "CGroup":
-        editElement.elementName = document.getElementById( "editGroupName" ).value;
-        editElement.instrument  = document.getElementById( "editGroupInstrument" ).value;
-        editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
-        editElement.tempoMs = 60000 / parseInt( document.getElementById( "editGroupTempoBPM" ).value );
+        globals.editElement.elementName = document.getElementById( "editGroupName" ).value;
+        globals.editElement.instrument  = document.getElementById( "editGroupInstrument" ).value;
+        globals.editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
+        globals.editElement.tempoMs = 60000 / parseInt( document.getElementById( "editGroupTempoBPM" ).value );
 
-        for( var i = 0;i < seqModes.length;i++ )
+        for( var i = 0;i < CGlobals.seqModes.length;i++ )
         {
           var str = "editGroupSequenceMode" + i;
           if( document.getElementById( str ).checked )
           {
-            editElement.seqMode = seqModes[ i ];
+            globals.editElement.seqMode = CGlobals.seqModes[ i ];
             break;
           }
         }
 
-        editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
-        editElement.arpFlag         = document.getElementById( "editGroupArpFlag" ).checked;
-        editElement.arpNPB          = parseInt( document.getElementById( "editGroupArpNPB" ).value );
-        editElement.arpSequence     = document.getElementById( "editGroupArpSequence" ).value;
-        editElement.masterLevel     = parseInt( document.getElementById( "editGroupMasterLevel" ).value );
-        editElement.distortionLevel = parseInt( document.getElementById( "editGroupDistortionLevel" ).value );
-        editElement.chorusLevel     = parseInt( document.getElementById( "editGroupChorusLevel" ).value );
-        editElement.phaserLevel     = parseInt( document.getElementById( "editGroupPhaserLevel" ).value );
-        editElement.tremoloLevel    = parseInt( document.getElementById( "editGroupTremoloLevel" ).value );
-        editElement.dryLevel        = parseInt( document.getElementById( "editGroupDryLevel" ).value );
-        editElement.delayLevel      = parseInt( document.getElementById( "editGroupDelayLevel" ).value );
-        editElement.reverbLevel     = parseInt( document.getElementById( "editGroupReverbLevel" ).value );
+        globals.editElement.envelope        = document.getElementById( "editGroupEnvelope" ).value;
+        globals.editElement.arpFlag         = document.getElementById( "editGroupArpFlag" ).checked;
+        globals.editElement.arpNPB          = parseInt( document.getElementById( "editGroupArpNPB" ).value );
+        globals.editElement.arpSequence     = document.getElementById( "editGroupArpSequence" ).value;
+        globals.editElement.masterLevel     = parseInt( document.getElementById( "editGroupMasterLevel" ).value );
+        globals.editElement.distortionLevel = parseInt( document.getElementById( "editGroupDistortionLevel" ).value );
+        globals.editElement.chorusLevel     = parseInt( document.getElementById( "editGroupChorusLevel" ).value );
+        globals.editElement.phaserLevel     = parseInt( document.getElementById( "editGroupPhaserLevel" ).value );
+        globals.editElement.tremoloLevel    = parseInt( document.getElementById( "editGroupTremoloLevel" ).value );
+        globals.editElement.dryLevel        = parseInt( document.getElementById( "editGroupDryLevel" ).value );
+        globals.editElement.delayLevel      = parseInt( document.getElementById( "editGroupDelayLevel" ).value );
+        globals.editElement.reverbLevel     = parseInt( document.getElementById( "editGroupReverbLevel" ).value );
         break;
 
       case "CChord":
-        editElement.elementName   = document.getElementById( "editChordName" ).value;
-        editElement.playBeats     = parseInt( document.getElementById( "editChordBeats" ).value );
-        editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
+        globals.editElement.elementName   = document.getElementById( "editChordName" ).value;
+        globals.editElement.playBeats     = parseInt( document.getElementById( "editChordBeats" ).value );
+        globals.editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
         break;
 
       case "CGroupRef":
-        editElement.elementName = document.getElementById( "editGroupRefGroup" ).value;
-        editElement.loopFlag    = document.getElementById( "editGroupRefLoopFlag" ).checked;
+        globals.editElement.elementName = document.getElementById( "editGroupRefGroup" ).value;
+        globals.editElement.loopFlag    = document.getElementById( "editGroupRefLoopFlag" ).checked;
         break;
     }
 
-  configEditedFlag = true;
+  globals.configEditedFlag = true;
 
-  editElement = undefined;
+  globals.editElement = undefined;
   document.getElementById( 'multiuse' ).innerHTML = "";
 
   genElementConfigHTML();

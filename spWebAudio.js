@@ -29,65 +29,62 @@
 */
 
 var audioSource;
-var masterLevel, dryLevel, reverbLevel, delayLevel;
-var reverbBlock, delayBlock, tremoloBlock, phaserBlock, chorusBlock, distortionBlock, filterBlock;
-var instruments = {};
 
 function initWebAudio()
 {
   // build chain from bottom up
-  reverbBlock = new Tone.Reverb( { preDelay : .2, decay : 10, wet : 1 } ).toDestination();
-  delayBlock = new Tone.FeedbackDelay( { delayTime : .4, maxDelay : 2, feedback : 0.6, wet : 1 } ).toDestination();
+  globals.reverbBlock = new Tone.Reverb( { preDelay : .2, decay : 10, wet : 1 } ).toDestination();
+  globals.delayBlock = new Tone.FeedbackDelay( { delayTime : .4, maxDelay : 2, feedback : 0.6, wet : 1 } ).toDestination();
 
-  dryLevel = new Tone.Gain( 1 ).toDestination();
-  reverbLevel = new Tone.Gain( 0 ).connect( reverbBlock );
-  delayLevel = new Tone.Gain( 0 ).connect( delayBlock );
+  globals.dryLevelBlock = new Tone.Gain( 1 ).toDestination();
+  globals.reverbLevelBlock = new Tone.Gain( 0 ).connect( globals.reverbBlock );
+  globals.delayLevelBlock = new Tone.Gain( 0 ).connect( globals.delayBlock );
 
-  tremoloBlock = new Tone.Tremolo( { frequency : 4, depth : 1, wet : 0, spread : 0 } );
-  tremoloBlock.connect( dryLevel );
-  tremoloBlock.connect( delayLevel );
-  tremoloBlock.connect( reverbLevel );
+  globals.tremoloBlock = new Tone.Tremolo( { frequency : 4, depth : 1, wet : 0, spread : 0 } );
+  globals.tremoloBlock.connect( globals.dryLevelBlock );
+  globals.tremoloBlock.connect( globals.delayLevelBlock );
+  globals.tremoloBlock.connect( globals.reverbLevelBlock );
 
-  phaserBlock = new Tone.Phaser( { frequency : .4, octaves : 4, baseFrequency : 700, wet : 0 } );
-  phaserBlock.connect( tremoloBlock );
+  globals.phaserBlock = new Tone.Phaser( { frequency : .4, octaves : 4, baseFrequency : 700, wet : 0 } );
+  globals.phaserBlock.connect( globals.tremoloBlock );
 
-  chorusBlock = new Tone.Chorus( { frequency : .5, delayTime : 2.5, depth : 1, wet : 0 } );
-  chorusBlock.connect( phaserBlock );
+  globals.chorusBlock = new Tone.Chorus( { frequency : .5, delayTime : 2.5, depth : 1, wet : 0 } );
+  globals.chorusBlock.connect( globals.phaserBlock );
 
-  distortionBlock = new Tone.Chebyshev( 10 );
-  distortionBlock.connect( chorusBlock );
-  distortionBlock.wet.value = 0;
+  globals.distortionBlock = new Tone.Chebyshev( 10 );
+  globals.distortionBlock.connect( globals.chorusBlock );
+  globals.distortionBlock.wet.value = 0;
 
-  filterBlock = new Tone.AutoFilter();
-  filterBlock.set( {  frequency : .5,
-                      depth : 1,
-                      baseFrequency : 200,
-                      octaves : 5,
-                      filter : { rolloff : -24 , Q : 2 } } );
-  filterBlock.wet.value = 0;
-  filterBlock.connect( distortionBlock );
+  globals.filterBlock = new Tone.AutoFilter();
+  globals.filterBlock.set( {  frequency : .5,
+                              depth : 1,
+                              baseFrequency : 200,
+                              octaves : 5,
+                              filter : { rolloff : -24 , Q : 2 } } );
+  globals.filterBlock.wet.value = 0;
+  globals.filterBlock.connect( globals.distortionBlock );
 
-  masterLevel = new Tone.Gain( 0 );
-  masterLevel.connect( filterBlock );
+  globals.masterLevelBlock = new Tone.Gain( 0 );
+  globals.masterLevelBlock.connect( globals.filterBlock );
 
   createSynths();
 }
 
 function initWebAudio2()
 {
-  tremoloBlock.start();
-  chorusBlock.start();
-  filterBlock.start();
+  globals.tremoloBlock.start();
+  globals.chorusBlock.start();
+  globals.filterBlock.start();
   Tone.start();
 }
 
-function createSynths() // create all synths and connect them to masterLevel
+function createSynths() // create all synths and connect them to globals.masterLevel
 {
   // Oscillators are louder than samplers so we normalize volumes.
 
-  for( var ix = 0;ix < synthTypes.length;ix++ )
+  for( var ix = 0;ix < CGlobals.synthTypes.length;ix++ )
   {
-    var sType = synthTypes[ ix ];
+    var sType = CGlobals.synthTypes[ ix ];
 
     switch( sType )
     {
@@ -241,34 +238,34 @@ function createSynths() // create all synths and connect them to masterLevel
         continue;
     }
 
-    s.connect( masterLevel );
-    instruments[ sType ] = s;
+    s.connect( globals.masterLevelBlock );
+    globals.instruments[ sType ] = s;
   }
 }
 
 function releaseAudio()
 {
-  if( activeElement )
+  if( globals.activeElement )
   {
-    activeElement.elem.playing = false;
+    globals.activeElement.elem.playing = false;
 
-    if( activeElement.elem.objType == "CSample" )
+    if( globals.activeElement.elem.objType == "CSample" )
     {
-      var libSample = sampleLibrary[ activeElement.elem.elementName ]; // a CSample
+      var libSample = globals.sampleLibrary[ globals.activeElement.elem.elementName ]; // a CSample
       if( libSample )
         if( libSample.player )
           libSample.player.stop();
     }
     else // "CChord" or CGroupRef
-      activeElement.synth.triggerRelease( activeElement.chordNotes );
+       globals.activeElement.synth.triggerRelease( globals.activeElement.chordNotes );
 
-    if( activeElement.grpTimer )
-      clearTimeout( activeElement.grpTimer );
+    if( globals.activeElement.grpTimer )
+      clearTimeout( globals.activeElement.grpTimer );
 
-    if( activeElement.arpTimer );
-      clearTimeout( activeElement.arpTimer );
+    if( globals.activeElement.arpTimer );
+      clearTimeout( globals.activeElement.arpTimer );
 
-    playComplete( activeElement.elem );
+    playComplete( globals.activeElement.elem );
   }
 
   if( playNextTimer )
@@ -277,23 +274,23 @@ function releaseAudio()
     playNextTimer = undefined;
   }
 
-  activeElement = undefined;
+   globals.activeElement = undefined;
 }
 
 function setEffectLevels( g, t )
 {
-  masterLevel.gain.rampTo( g.masterLevel / 100, t );
-  dryLevel.gain.rampTo( g.dryLevel / 100, t );
-  delayLevel.gain.rampTo( g.delayLevel / 100, t );
-  reverbLevel.gain.rampTo( g.reverbLevel / 100, t );
-  phaserBlock.wet.rampTo( g.phaserLevel / 100, t );
+  globals.masterLevelBlock.gain.rampTo( g.masterLevel / 100, t );
+  globals.dryLevelBlock.gain.rampTo( g.dryLevel / 100, t );
+  globals.delayLevelBlock.gain.rampTo( g.delayLevel / 100, t );
+  globals.reverbLevelBlock.gain.rampTo( g.reverbLevel / 100, t );
+  globals.phaserBlock.wet.rampTo( g.phaserLevel / 100, t );
 
-  if( !modDistState ) // Modifier is on?
-    distortionBlock.wet.rampTo( g.distortionLevel / 100, t );
-  if( !modTremoloState )
-    tremoloBlock.wet.rampTo( g.tremoloLevel / 100, t );
-  if( !modChorusState )
-    chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
+  if( !globals.modDistState ) // Modifier is on?
+    globals.distortionBlock.wet.rampTo( g.distortionLevel / 100, t );
+  if( !globals.modTremoloState )
+    globals.tremoloBlock.wet.rampTo( g.tremoloLevel / 100, t );
+  if( !globals.modChorusState )
+    globals.chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
 }
 
 var firstTime = true;
@@ -309,7 +306,7 @@ function samplePlayCompleteCB()
     // activeElement = undefined;
   }
 
-  if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
+  if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )
     playElement( "START" );
 }
 
@@ -332,14 +329,14 @@ function playElemAudio( audioElem )
     firstTime = false;
   }
 
-  setEffectLevels( curConfig.groups[ audioElem.group ], .5 );
-  setTempoMs( curConfig.groups[ audioElem.group ].tempoMs );
-  if( curConfig.groups[ audioElem.group ].arpFlag && elemCanArpeggiate( audioElem ) )
+  setEffectLevels( globals.cfg.groups[ audioElem.group ], .5 );
+  setTempoMs( globals.cfg.groups[ audioElem.group ].tempoMs );
+  if( globals.cfg.groups[ audioElem.group ].arpFlag && elemCanArpeggiate( audioElem ) )
   {
-    if( activeElement )
-      if( activeElement.arpTimer )
+    if( globals.activeElement )
+      if( globals.activeElement.arpTimer )
       {
-        activeElement.nextElem = audioElem; // Queue the next arp. Want to complete the current arp of the current beat.
+        globals.activeElement.nextElem = audioElem; // Queue the next arp. Want to complete the current arp of the current beat.
         return;
       }
       else
@@ -349,20 +346,20 @@ function playElemAudio( audioElem )
     return;
   }
 
-  if( activeElement )
+  if( globals.activeElement )
     releaseAudio();
 
   audioElem.playing = true;
 
-  activeElement = {};
-  activeElement.elem = audioElem;
+  globals.activeElement = {};
+  globals.activeElement.elem = audioElem;
 
   flashTempo(); // sync flash to our playing
 
   switch( audioElem.objType )
   {
     case "CSample":   playCSample( audioElem );   break;
-    case "CChord":    playCChord( audioElem ); break;
+    case "CChord":    playCChord( audioElem );    break;
     case "CGroupRef": playCGroupRef( audioElem ); break;
   }
 }
@@ -377,7 +374,7 @@ function playNextElementCB()
 
 function playCSample( audioElem )
 {
-  var libSample = sampleLibrary[ audioElem.elementName ]; // the ClLibrarySample
+  var libSample = globals.sampleLibrary[ audioElem.elementName ]; // the ClLibrarySample
 
   if( libSample )
   {
@@ -392,7 +389,7 @@ function playCSample( audioElem )
       player.volume.level = 0;
       player.onstop = samplePlayCompleteCB;
       player.autostart = true;
-      player.connect( masterLevel );
+      player.connect( globals.masterLevelBlock );
       libSample.player = player;
     }
     else
@@ -402,11 +399,11 @@ function playCSample( audioElem )
     }
 
     // Do the envelop for samples using fadeIn / fadeOut.
-    var env = curConfig.groups[ audioElem.group ].envelope; 
+    var env = globals.cfg.groups[ audioElem.group ].envelope; 
 
-    if( env == envelopeLabels[ 1 ] ) { player.fadeIn = .5; player.fadeOut = .5; }
-    else if( env == envelopeLabels[ 2 ] ) { player.fadeIn = 2; player.fadeOut = 2; }
-    else if( env == envelopeLabels[ 3 ] ) { player.fadeIn = 5; player.fadeOut = 5; }
+    if( env == CGlobals.envelopeLabels[ 1 ] ) { player.fadeIn = .5; player.fadeOut = .5; }
+    else if( env == CGlobals.envelopeLabels[ 2 ] ) { player.fadeIn = 2; player.fadeOut = 2; }
+    else if( env == CGlobals.envelopeLabels[ 3 ] ) { player.fadeIn = 5; player.fadeOut = 5; }
     else { player.fadeIn = 0; player.fadeOut = 0; }
 
     libSample.player.loop = audioElem.loopFlag;
@@ -415,7 +412,7 @@ function playCSample( audioElem )
 
 function playCChord( audioElem )
 {
-  instrument = curConfig.groups[ audioElem.group ].instrument;
+  instrument = globals.cfg.groups[ audioElem.group ].instrument;
 
   if( !instrument )
     return;
@@ -426,39 +423,39 @@ function playCChord( audioElem )
     {
       var noteOffset = noteIx - 9 + audioElem.octave * 12; // semitone offset from A440
       var freq = 440 * Math.pow( 2, noteOffset / 12 );
-      var voices = curConfig.groups[ cursorGroup ].thickenFlag ? [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // detuned voices for thickness
+      var voices = globals.cfg.groups[ globals.cursor.cg ].thickenFlag ? [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // detuned voices for thickness
       frequencies = frequencies.concat( voices );
     }
 
-  if( curConfig.groups[ cursorGroup ].envelope != "None" ) // instrument may have a default envelope
-    instruments[ instrument ].set( { envelope : envelopeParams[ curConfig.groups[ cursorGroup ].envelope ] } );
-  activeElement.synth = instruments[ instrument ];
-  activeElement.chordNotes = frequencies;
-  activeElement.synth.triggerAttack( frequencies );
-  activeElement.group = curConfig.groups[ cursorGroup ];
+  if( globals.cfg.groups[ globals.cursor.cg ].envelope != "None" ) // instrument may have a default envelope
+    globals.instruments[ instrument ].set( { envelope : CGlobals.envelopeParams[ globals.cfg.groups[ globals.cursor.cg ].envelope ] } );
+  globals.activeElement.synth = globals.instruments[ instrument ];
+  globals.activeElement.chordNotes = frequencies;
+  globals.activeElement.synth.triggerAttack( frequencies );
+  globals.activeElement.group = globals.cfg.groups[ globals.cursor.cg ];
 
-  if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
-    playNextTimer = setTimeout( playNextElementCB, currentTempo * audioElem.playBeats );
+  if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )
+    playNextTimer = setTimeout( playNextElementCB, globals.currentTempo * audioElem.playBeats );
 }
 
 function playCGroupRef( audioElem )
 {
   var grp = undefined;
-  for( var ix = 0;ix < curConfig.groups.length;ix++ )
-    if( curConfig.groups[ ix ].elementName == audioElem.elementName )
+  for( var ix = 0;ix < globals.cfg.groups.length;ix++ )
+    if( globals.cfg.groups[ ix ].elementName == audioElem.elementName )
     {
-      grp = curConfig.groups[ ix ];
+      grp = globals.cfg.groups[ ix ];
       break;
     }
 
   if( grp )
   {
-    activeElement.synth = instruments[ grp.instrument ];
+    globals.activeElement.synth = globals.instruments[ grp.instrument ];
     setTempoMs( grp.tempoMs );
-    activeElement.loopFlag = audioElem.loopFlag;
-    activeElement.grpChordIndex = 0;
-    activeElement.beatsRemaining = 0;
-    activeElement.group = grp;
+    globals.activeElement.loopFlag = audioElem.loopFlag;
+    globals.activeElement.grpChordIndex = 0;
+    globals.activeElement.beatsRemaining = 0;
+    globals.activeElement.group = grp;
     grpPlayTimerCB();
   }
 }
@@ -467,81 +464,81 @@ function playCGroupRef( audioElem )
 // Play each CChord for CChord.playBeats beats. Repeat if loopFlag.
 function grpPlayTimerCB()
 {
-  if( !activeElement ) // This is our flag to stop playing the sequence.
+  if( !globals.activeElement ) // This is our flag to stop playing the sequence.
     return;
 
-  if( activeElement.beatsRemaining-- > 0 )
+  if( globals.activeElement.beatsRemaining-- > 0 )
   {
     // Are we done playing this Chord? If not return.
-    activeElement.grpTimer = setTimeout( grpPlayTimerCB, currentTempo );
+    globals.activeElement.grpTimer = setTimeout( grpPlayTimerCB, globals.currentTempo );
     return;
   }
-  if( activeElement.chordNotes )
-    activeElement.synth.triggerRelease( activeElement.chordNotes );
+  if( globals.activeElement.chordNotes )
+    globals.activeElement.synth.triggerRelease( globals.activeElement.chordNotes );
 
-  if( ( activeElement.grpChordIndex == activeElement.group.elements.length ) && !activeElement.loopFlag )
+  if( ( globals.activeElement.grpChordIndex == globals.activeElement.group.elements.length ) && !globals.activeElement.loopFlag )
   {
-    if( curConfig.groups[ cursorGroup ].seqMode == seqModes[ 2 ] )
+    if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )
       playNextTimer = setTimeout( playNextElementCB, 0 ); // just to loosly couple. Maybe could call directly.
     return; // this was the last chord. We're done.
   }
-  var playElem = activeElement.group.elements[ activeElement.grpChordIndex ];
+  var playElem = globals.activeElement.group.elements[ globals.activeElement.grpChordIndex ];
   if( playElem.objType == "CChord" ) // Group must be all CChord. TBD, skip groups and samples.
   {
-    activeElement.chordNotes = [];
+    globals.activeElement.chordNotes = [];
     for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
       if( playElem.notes & ( 1 << noteIx ) ) // notes are a bit field
       {
         var noteOffset = noteIx - 9 + playElem.octave * 12; // semitone offset from A440
-        activeElement.chordNotes.push( 440 * Math.pow( 2, noteOffset / 12 ) );
+        globals.activeElement.chordNotes.push( 440 * Math.pow( 2, noteOffset / 12 ) );
       }
 
-    activeElement.beatsRemaining = playElem.playBeats;
-    activeElement.synth.triggerAttack( activeElement.chordNotes );
+    globals.activeElement.beatsRemaining = playElem.playBeats;
+    globals.activeElement.synth.triggerAttack( globals.activeElement.chordNotes );
 
-    activeElement.grpChordIndex += 1;
-    if( ( activeElement.grpChordIndex >= activeElement.group.elements.length ) && activeElement.loopFlag )
-      activeElement.grpChordIndex = 0; // loop
+    globals.activeElement.grpChordIndex += 1;
+    if( ( globals.activeElement.grpChordIndex >= globals.activeElement.group.elements.length ) && globals.activeElement.loopFlag )
+      globals.activeElement.grpChordIndex = 0; // loop
 
-    activeElement.grpTimer = setTimeout( grpPlayTimerCB, currentTempo );
+    globals.activeElement.grpTimer = setTimeout( grpPlayTimerCB, globals.currentTempo );
   }
 }
 
 function arpTimerCB() // call once per beat. We queue all notes for the next beat.
 {
-  if( !activeElement )
+  if( !globals.activeElement )
     return;
 
-  activeElement.arpTimer = undefined;
+  globals.activeElement.arpTimer = undefined;
 
-  if( activeElement.nextElem ) // Go to the next arpeggio
+  if( globals.activeElement.nextElem ) // Go to the next arpeggio
   {
-    activeElement.elem.playing = false;
-    var tmp = activeElement.nextElem;
-    activeElement.nextElem = undefined;
-    activeElement = undefined;
+    globals.activeElement.elem.playing = false;
+    var tmp = globals.activeElement.nextElem;
+    globals.activeElement.nextElem = undefined;
+    globals.activeElement = undefined;
     doArpeggio( tmp );
   }
   else
   {
     var noteTime = Tone.now();
-    var noteLength = currentTempo / activeElement.arpNotesPerBeat / 1000; // tempo is Ms.
+    var noteLength = globals.currentTempo / globals.activeElement.arpNotesPerBeat / 1000; // tempo is Ms.
 
-    for( var beatIx = 0;beatIx < activeElement.arpNotesPerBeat;beatIx++ )
+    for( var beatIx = 0;beatIx < globals.activeElement.arpNotesPerBeat;beatIx++ )
     {
-      activeElement.synth.triggerAttackRelease( activeElement.arpNotes[ activeElement.arpNoteIndex ], noteLength, noteTime );
-      if( ++activeElement.arpNoteIndex == activeElement.arpNotes.length )
-        activeElement.arpNoteIndex = 0;
+      globals.activeElement.synth.triggerAttackRelease( globals.activeElement.arpNotes[ globals.activeElement.arpNoteIndex ], noteLength, noteTime );
+      if( ++globals.activeElement.arpNoteIndex == globals.activeElement.arpNotes.length )
+        globals.activeElement.arpNoteIndex = 0;
       noteTime += noteLength;
     }
-    if( activeElement.group.seqMode == seqModes[ 2 ] )
-      if( --activeElement.beatsRemaining == 0 )
+    if( globals.activeElement.group.seqMode == CGlobals.seqModes[ 2 ] )
+      if( --globals.activeElement.beatsRemaining == 0 )
       {
-        playNextTimer = setTimeout( playNextElementCB, currentTempo ); 
+        playNextTimer = setTimeout( playNextElementCB, globals.currentTempo ); 
         return;
       }
     
-    activeElement.arpTimer = setTimeout( arpTimerCB, currentTempo );
+    globals.activeElement.arpTimer = setTimeout( arpTimerCB, globals.currentTempo );
   }
 }
 
@@ -555,6 +552,7 @@ function arpChord( chord, seq )
     var trebNotes = [];
 
     for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
+    {
       if( chord.notes & ( 1 << noteIx ) ) // notes are a bit field
       {
         var noteOffset = noteIx - 9 + chord.octave * 12; // semitone offset from A440
@@ -566,6 +564,7 @@ function arpChord( chord, seq )
 
         firstNote = false;
       }
+    }
     if( seq == "B-T" )
     {
       arpNotes.push( bassNote );
@@ -625,41 +624,41 @@ function doArpeggio( audioElem )
   audioElem.playing = true;
   genElementConfigHTML();
 
-  var instrument = curConfig.groups[ audioElem.group ].instrument; // Group instrument
+  var instrument = globals.cfg.groups[ audioElem.group ].instrument; // Group instrument
   if( !instrument )
     return;
 
-  activeElement = {};
-  activeElement.elem = audioElem;
-  activeElement.arpNoteIndex = 0;
-  activeElement.group = curConfig.groups[ audioElem.group ];
+  globals.activeElement = {};
+  globals.activeElement.elem = audioElem;
+  globals.activeElement.arpNoteIndex = 0;
+  globals.activeElement.group = globals.cfg.groups[ audioElem.group ];
 
   if( audioElem.objType == "CChord" )
   {
-    activeElement.synth = instruments[ instrument ];
-    var seq = curConfig.groups[ audioElem.group ].arpSequence;
+    globals.activeElement.synth = globals.instruments[ instrument ];
+    var seq = globals.cfg.groups[ audioElem.group ].arpSequence;
 
-    activeElement.arpNotes = arpChord( audioElem, seq );
-    activeElement.arpNotesPerBeat = curConfig.groups[ audioElem.group ].arpNPB;
-    activeElement.beatsRemaining = audioElem.playBeats;
+    globals.activeElement.arpNotes = arpChord( audioElem, seq );
+    globals.activeElement.arpNotesPerBeat = globals.cfg.groups[ audioElem.group ].arpNPB;
+    globals.activeElement.beatsRemaining = audioElem.playBeats;
   }
   else if( audioElem.objType == "CGroupRef" && ( instrument != "None" ) ) // Arp a group that's in another group.
   {
     // Arp this entire sequence.
     var grp = undefined; // Find group
-    for( var i = 0;i < curConfig.groups.length;i++ )
-      if( curConfig.groups[ i ].elementName == audioElem.elementName )
+    for( var i = 0;i < globals.cfg.groups.length;i++ )
+      if( globals.cfg.groups[ i ].elementName == audioElem.elementName )
       {
-        grp = curConfig.groups[ i ];
+        grp = globals.cfg.groups[ i ];
         break;
       }
 
     if( grp )
     {
-      activeElement.arpNotes = [];
+      globals.activeElement.arpNotes = [];
 
-      activeElement.synth = instruments[ instrument ];
-      activeElement.beatsRemaining = 0;
+      globals.activeElement.synth = globals.instruments[ instrument ];
+      globals.activeElement.beatsRemaining = 0;
 
       for( var seqIx = 0;seqIx < grp.elements.length;seqIx++ )
         if( grp.elements[ seqIx ].objType == "CChord" ) // only add CChord, not samples or groups.
@@ -672,13 +671,13 @@ function doArpeggio( audioElem )
           //  So we need playBeats * arpNPB notes of this chord. May need to add / prune to get the right number.
           var nextNote = 0;
           const arpNotes = grp.elements[ seqIx ].playBeats * grp.arpNPB;
-          activeElement.beatsRemaining += grp.elements[ seqIx ].playBeats; // Arping the whole sequence.
+          globals.activeElement.beatsRemaining += grp.elements[ seqIx ].playBeats; // Arping the whole sequence.
           while( notes.length < arpNotes ) // Add more if too short
             notes.push( notes[ nextNote++ ] ); // notes[] grows so we don't have to loop nextNote.
           while( notes.length > arpNotes ) // Prune if too long
             notes.pop();
-          activeElement.arpNotes = activeElement.arpNotes.concat( notes );
-          activeElement.arpNotesPerBeat = grp.arpNPB;
+          globals.activeElement.arpNotes = activeElement.arpNotes.concat( notes );
+          globals.activeElement.arpNotesPerBeat = grp.arpNPB;
         }
     }
   }
@@ -690,25 +689,25 @@ function doArpeggio( audioElem )
 
 function stopArpeggio()
 {
-  if( activeElement )
+  if( globals.activeElement )
   {
-    activeElement.playing = false;
-    if( activeElement.arpTimer )
+    globals.activeElement.playing = false;
+    if( globals.activeElement.arpTimer )
     {
-      clearTimeout( activeElement.arpTimer );
-      activeElement.arpTimer = undefined;
+      clearTimeout( globals.activeElement.arpTimer );
+      globals.activeElement.arpTimer = undefined;
     } 
   }
-  activeElement = undefined;
+  globals.activeElement = undefined;
 }
 
 function doModAudio( modifier, state )
 {
   switch( modifier )
   {
-    case "filter":  filterBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
-    case "tremolo": tremoloBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
-    case "chorus":  chorusBlock.wet.rampTo( state ? 1 : 0, 1 ); break;
-    case "distortion": distortionBlock.wet.rampTo( state ? .2 : 0, .5 ); break;
+    case "filter":      globals.filterBlock.wet.rampTo( state ? 1 : 0, 1 );       break;
+    case "tremolo":     globals.tremoloBlock.wet.rampTo( state ? 1 : 0, 1 );      break;
+    case "chorus":      globals.chorusBlock.wet.rampTo( state ? 1 : 0, 1 );       break;
+    case "distortion":  globals.distortionBlock.wet.rampTo( state ? .2 : 0, .5 ); break;
   }
 }

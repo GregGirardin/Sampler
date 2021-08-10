@@ -21,7 +21,8 @@ In Tempo mode we bypass these features for accuracy.
 
 const SLOW_CLICK = 500;
 const FAST_CLICK = 200;
-
+const MIN_TEMPO_MS = 20; 
+const MAX_TEMPO_MS = 2000;
 const SINGLE_CLICK = 0; // no double click. Use FAST_CLICK timeout to detect HOLD
 const DOUBLE_CLICK = 1; // allow double click. Use SLOW_CLICK timeout for HOLD / double clicks.
 
@@ -40,6 +41,7 @@ var fsButtonMap =
       NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
       NavLR : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
       Play : { html : "&#62;", action : function() { playElement( 'START' ); } },
+      PlayB : { html : "&#62;", action : function() { playElement( 'START' ); changeMode( "Play" ); } }, // PlayB is like Play but stop moves you to NavUD.
       Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
       Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
     },
@@ -47,7 +49,16 @@ var fsButtonMap =
       id : 'fsB2Tap',
       NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
       NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
-      Play : { html : "&#8800;", action : function() { playElement( 'STOP' ); } },
+      Play : { html : "&#8800;", action : function() { playElement( 'STOP' ); changeMode( "PlayB" ); } },
+      PlayB : { html : "&#8800;", action : function()
+        { 
+          /* If this group is sequencing, go to NavUD, else go to NavLR
+             sequenced groups tend to want to start from the beginning and we play all of it before leaving the group. */
+          if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 0 ] )
+            changeMode( "NavLR" );
+          else
+            changeMode( "NavUD" );
+        } },
       Tempo : { html : "Set", action : function() { exitTempoMode(); changeMode( "NavUD" ); } },
       Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
     },
@@ -56,16 +67,18 @@ var fsButtonMap =
   "EVENT_HOLD" : {
     "BUTTON1" : {
       id : 'fsB1Hold',
-      NavUD : { html : ">", action : function() { changeMode( "Play" ); } },
-      NavLR : { html : ">", action : function() { changeMode( "Play" ); } },
+      NavUD : { html : ">", action : function() { playElement( 'START' ); changeMode( "Play" ); } },
+      NavLR : { html : ">", action : function() { playElement( 'START' ); changeMode( "Play" ); } },
       Play : { html : "Mod", action : function() { changeMode( "Modifier" ); } },
+      PlayB : { html : "Mod", action : function() { changeMode( "Modifier" ); } },
       Modifier : { html : ">", action : function() { toggleModifier( "off" ); changeMode( "Play" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Hold',
       NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
-      Play : { html : "&larr;&rarr;", action : function() { playElement( 'STOP' ); changeMode( "NavLR" ); } },
+      Play : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
+      PlayB : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
       Modifier : { html : "Tempo", action : function() { changeMode( "Tempo" ); } },
     },
   },
@@ -175,8 +188,7 @@ class FootSwitchButton
 }
 
 var lastTapTime = undefined;
-const MIN_TEMPO_MS = 20; 
-const MAX_TEMPO_MS = 2000;
+
 function tapTempo()
 {
   var currentTime = Date.now();
@@ -194,18 +206,18 @@ function tapTempo()
 
 function setTempoMs( newTempoMs )
 {
-  currentTempo = newTempoMs;
+  globals.currentTempo = newTempoMs;
 
-  if( curConfig.groups[ cursorGroup ].tempoMs != newTempoMs )
+  if( globals.cfg.groups[ globals.cursor.cg ].tempoMs != newTempoMs )
   {
-    curConfig.groups[ cursorGroup ].tempoMs = newTempoMs;
-    configEditedFlag = true;
+    globals.cfg.groups[ globals.cursor.cg ].tempoMs = newTempoMs;
+    globals.configEditedFlag = true;
   }
 
-  delayBlock.set( { delayTime : currentTempo / 1000 } );
-  tremoloBlock.set( { frequency : 1000 / currentTempo } ) ;
+  globals.delayBlock.set( { delayTime : globals.currentTempo / 1000 } );
+  globals.tremoloBlock.set( { frequency : 1000 / globals.currentTempo } ) ;
 
-  document.getElementById( "tempoButton" ).innerHTML = Math.round( 60000 / currentTempo ) + " bpm";
+  document.getElementById( "tempoButton" ).innerHTML = Math.round( 60000 / globals.currentTempo ) + " bpm";
 }
 
 function exitTempoMode()
@@ -245,11 +257,6 @@ function changeMode( newTapMode )
     }
 }
 
-var modFilterState = false;
-var modTremoloState = false;
-var modChorusState = false;
-var modDistState = false;
-
 function toggleModifier( modifier )
 {
   var domElem;
@@ -259,37 +266,37 @@ function toggleModifier( modifier )
   {
     case "filter":
       domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTON1" ].id );
-      modFilterState = !modFilterState;
-      if( modFilterState )
+      globals.modFilterState = !globals.modFilterState;
+      if( globals.modFilterState )
         state = true;
       break;
 
     case "tremolo":
       domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ "BUTTON2" ].id );
-      modTremoloState = !modTremoloState;
-      if( modTremoloState )
+      globals.modTremoloState = !globals.modTremoloState;
+      if( globals.modTremoloState )
         state = true;
       break;
 
     case "chorus":
       domElem = document.getElementById( fsButtonMap[ "EVENT_DTAP" ][ "BUTTON1" ].id );
-      modChorusState = !modChorusState;
-      if( modChorusState )
+      globals.modChorusState = !globals.modChorusState;
+      if( globals.modChorusState )
         state = true;
       break;
   
     case "distortion":
       domElem = document.getElementById( fsButtonMap[ "EVENT_DTAP" ][ "BUTTON2" ].id );
-      modDistState = !modDistState;
-      if( modDistState )
+      globals.modDistState = !globals.modDistState;
+      if( globals.modDistState )
         state = true;
       break;
 
     case "off":
-      if( modFilterState ) toggleModifier( "filter" );
-      if( modTremoloState ) toggleModifier( "tremolo" );
-      if( modChorusState ) toggleModifier( "chorus" );
-      if( modDistState ) toggleModifier( "distortion" );
+      if( globals.modFilterState ) toggleModifier( "filter" );
+      if( globals.modTremoloState ) toggleModifier( "tremolo" );
+      if( globals.modChorusState ) toggleModifier( "chorus" );
+      if( globals.modDistState ) toggleModifier( "distortion" );
       break;
   }
   if( domElem )
@@ -345,44 +352,44 @@ function moveCursor( dir )
   switch( dir )
   {
     case 'TOP':
-      cursorGroup = 0;
+      globals.cursor.cg = 0;
       break;
   
     case 'UP':
-      if( cursorGroup > 0 )
+      if( globals.cursor.cg > 0 )
       {
-        cursorGroup -= 1;
-        if( curConfig.groups[ cursorGroup ].seqMode != seqModes[ 0 ] )
-          cursorElement = 0; // amost certain want to start from the beginning
+        globals.cursor.cg -= 1;
+        if( globals.cfg.groups[ globals.cursor.cg ].seqMode != CGlobals.seqModes[ 0 ] )
+          globals.cursor.ce = 0; // almost certain want to start from the beginning
 
-        setTempoMs( curConfig.groups[ cursorGroup ].tempoMs );
+        setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs );
       }
       break;
 
     case 'DOWN':
-      if( cursorGroup < curConfig.groups.length - 2 )
+      if( globals.cursor.cg < globals.cfg.groups.length - 2 )
       {
-        cursorGroup += 1;
-        if( curConfig.groups[ cursorGroup ].seqMode != seqModes[ 0 ] )
-          cursorElement = 0;
+        globals.cursor.cg += 1;
+        if( globals.cfg.groups[ globals.cursor.cg ].seqMode != CGlobals.seqModes[ 0 ] )
+          globals.cursor.ce = 0;
 
-        setTempoMs( curConfig.groups[ cursorGroup ].tempoMs );
+        setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs );
       }
       break;
 
     case 'START':
-      cursorElement = 0;
+      globals.cursor.ce = 0;
       break;
 
     case 'LEFT':
-      if( cursorElement > 0 )
-        cursorElement -= 1;
+      if( globals.cursor.ce > 0 )
+        globals.cursor.ce -= 1;
       break;
 
     case 'RIGHT':
-      cursorElement += 1;
-      if( cursorElement > curConfig.groups[ cursorGroup ].elements.length - 1 )
-        cursorElement = 0;
+      globals.cursor.ce += 1;
+      if( globals.cursor.ce > globals.cfg.groups[ globals.cursor.cg ].elements.length - 1 )
+        globals.cursor.ce = 0;
       break;
   }
   genElementConfigHTML();
