@@ -1,6 +1,6 @@
 // Main js file.
 
-class CGlobals // Global consts and stuff in here just to be cleaner.
+class CGlobals // Global consts and stuff in here just to be cleaner. Not saved.
 {
   constructor()
   {
@@ -11,10 +11,16 @@ class CGlobals // Global consts and stuff in here just to be cleaner.
     this.chordLibrary = []; // array of CChord
     this.editElement = {}; // What we're editing if "Mode_Edit" Used a lot so keep as it's own var 
     this.currentTempo = 500;
-    this.cfg = {}; // The CConfig
+    this.cfg = {}; // The CConfig. This is saved.
     this.instruments = {};
-    this.fsMode == "";
+    this.fsMode == "NavLR";
     this.editMode = false;
+    this.ae = undefined; // The active element being played.
+
+    this.modFilterState = false;
+    this.modTremoloState = false;
+    this.modChorusState = false;
+    this.modDistState = false;
   }
 }
 
@@ -38,10 +44,8 @@ var globals; // a CGlobals to contain everything
 
 class CConfig
 {
-  constructor( sampListName )
+  constructor( )
   {
-    this.name = sampListName;
-    this.sampleBaseURL = undefined; // The prefix of the path to all the samples
     this.groups = [];
     this.groups.push( new CGroup( "Group" ) );
     this.groups.push( new CGroup( "Clipboard" ) );
@@ -54,8 +58,6 @@ class cursorPosition
   {
     this.cg = 0; // current group, element
     this.ce = 0;
-    this.sg = undefined; // subgroup.  If these are defined, we're playing a group (subGroup)
-    this.se = undefined; //            inside of another group (currentGroup)
   }
 }
 
@@ -64,11 +66,11 @@ class CGroup
   constructor( groupName )
   {
     this.objType = "CGroup";
-    this.instrument = "None";
-    this.thickenFlag = false;
-    this.playing = false;
-
     this.elementName = groupName;
+
+    this.instrument = CGlobals.synthTypes[ 0 ];
+    this.thickenFlag = false;
+
     this.tempoMs = 500;
     this.seqMode = CGlobals.seqModes[ 0 ];
     this.arpFlag = false;
@@ -76,7 +78,7 @@ class CGroup
     this.arpSequence = CGlobals.arpSequences[ 0 ];
     this.tremRate = CGlobals.tremRates[ 0 ];
     this.envelope = CGlobals.envelopeLabels[ 0 ];
-    this.elements = []; // CSample, CChordRef
+    this.elements = []; // CSample, CChord
 
     this.masterLevel = 100;
     this.distortionLevel = 0;
@@ -88,11 +90,6 @@ class CGroup
     this.delayLevel = 0;
     this.flashTempoTimer = undefined;
     this.clearTempoTimer = undefined;
-
-    this.modFilterState = false;
-    this.modTremoloState = false;
-    this.modChorusState = false;
-    this.modDistState = false;
     }
 }
 
@@ -102,26 +99,26 @@ class CSample // A Sample in the config.
   {
     this.objType = "CSample";
     this.elementName = filename;
+    this.playing = false;
+    this.subGroupStart = false; // Is this the beginning of a new song part?
+
     this.filename = filename; // filename on the server.
     this.loopFlag = false;
-
-    this.playing = false;
   }
 }
 
-// is in the library, not in the current config.
-class CChord // A Chord in the config.
+class CChord
 {
   constructor( name )
   {
-    this.elementName = name; // name of a CLibChord in the library
     this.objType = "CChord";
-    this.playBeats = 4; // How many beats to play 
+    this.elementName = name;
+    this.playing = false;
+    this.subGroupStart = false;
 
+    this.playBeats = 4; // How many beats to play 
     this.notes = 0x0; // bit field of pressed keys bit 0 is a C
     this.octave = 0;
-
-    this.playing = false;
   }
 }
 
@@ -141,7 +138,7 @@ function sampleListInit()
   globals = new CGlobals();
 
   globals.configEditedFlag = false;
-  globals.cfg = new CConfig( "Sample List" );
+  globals.cfg = new CConfig();
 
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
@@ -154,7 +151,7 @@ function sampleListInit()
 
   flashTempo();
   initWebAudio();
-  changeMode( "NavUD" );
+  changeMode( "NavLR" );
 
   setTempoMs( 500 );
 }
@@ -175,4 +172,18 @@ function flashTempo()
 function clearTempoFlash()
 {
   document.getElementById( 'tempoButton' ).classList.remove( 'css_highlight_red' );
+}
+
+function subGS()
+{
+  return globals.cfg.groups[ globals.cursor.cg ].elements[ globals.cursor.ce ].subGroupStart;
+}
+
+function anySubGS()
+{
+  for( var i = 0;i < globals.cfg.groups[ globals.cursor.cg ].elements.length; i++ )
+    if( globals.cfg.groups[ globals.cursor.cg ].elements[ i ].subGroupStart )
+      return true;
+  
+  return false;
 }

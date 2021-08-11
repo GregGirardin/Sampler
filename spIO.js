@@ -15,12 +15,11 @@ function gotSamples( file, data )
 function gotConfig( file, data )
 {
   if( data )
-  {
     globals.cfg = JSON.parse( data );
-    genElementConfigHTML();
-  }
   else
     console.log( "No config." );
+
+  genElementConfigHTML();
 }
 
 function getFileFromServer( filename, callback )
@@ -60,7 +59,6 @@ function sampleConfigSave()
     }
 
     var configData = JSON.stringify( globals.cfg, null, "  " );
-
     var formData = new FormData();
     formData.append( "data", configData );
 
@@ -71,7 +69,7 @@ function sampleConfigSave()
     globals.configEditedFlag = false;
   }
 
-  if( globals.chordEditedFlag ) // Save the Synth Library.
+  if( globals.chordEditedFlag )
   {
     configData = JSON.stringify( globals.chordLibrary, null, "  " );
     formData = new FormData();

@@ -48,17 +48,13 @@ function genElementConfigHTML()
 
       if( g.elements[ j ].playing )
         classes += ' css_playing';
-      
-      if( g.elements[ j ].objType == "CChordRef" ) // make sure there's an instrument
-      {
-        if( g.elements[ j ].instrument == "None" && g.instrument == "None" )
-          classes += ' css_noInstrument';
-        
+      if( g.elements[ j ].objType == "CChordRef" )
         classes += " css_Chord";
-      }
-
-      if( g.elements[ j ].objType == "CSample" )
+      else if( g.elements[ j ].objType == "CSample" )
         classes += " css_Sample";
+
+      if( g.elements[ j ].subGroupStart && j ) // start of group
+        tempHtml += "<button class='css_slElement'>:|:</button>\n";
       
       tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
@@ -92,19 +88,18 @@ function genElementConfigHTML()
 }
 
 /////////////// /////////////// /////////////// ///////////////
-// generate the "Sample Library".
-// 1) list of samples from the library that can be dragged into the set list 
-// 2) A library song we're editing.
+// Generate the "Sample Library".
+// The list of samples from the library that can be dragged into the set list 
 /////////////// /////////////// /////////////// ///////////////
 function generateLibraryHTML()
 {
-  var tempHtml = "";
   var t = []; // Array for sorting.
 
   for( const[ key, value ] of Object.entries( globals.sampleLibrary ) )
     t.push( value );
   t.sort( function( a, b ){ return ( a.displayName > b.displayName ) ? 1 : -1 } );
 
+  var tempHtml = "";
   if( !t.length )
     tempHtml += "<h2>No Sample Library.</h2>";
   else
@@ -131,7 +126,10 @@ function genEditGroupHTML()
       tempHtml += "selected='selected'";
     tempHtml += ">" + CGlobals.synthTypes[ i ] + "</option>";
   }
-  tempHtml += "</select><br>";
+  tempHtml += "</select>";
+
+  var c = globals.editElement.thickenFlag ? "checked" : "";
+  tempHtml += "<br>Thicken: <input type='checkbox' id='editGroupThickenFlag' " + c + "><br>";
 
   var tempoBPM = Math.round( 60000 / globals.editElement.tempoMs );
 
@@ -143,10 +141,7 @@ function genEditGroupHTML()
     tempHtml += "<input type='radio' id='editGroupSequenceMode" + i + "' name='sequenceType'" +
                ( globals.editElement.seqMode == CGlobals.seqModes[ i ] ? "checked" : "") + ">" + CGlobals.seqModes[ i ];
 
-  var c = globals.editElement.thickenFlag ? "checked" : "";
-  tempHtml += "<br>Fat: <input type='checkbox' id='editGroupThickenFlag' " + c + "><br>";
-
-  tempHtml += "Envelope:<select id='editGroupEnvelope'>";
+  tempHtml += "<br>Envelope:<select id='editGroupEnvelope'>";
   for( i = 0;i < CGlobals.envelopeLabels.length;i++ )
   {
     tempHtml += "<option value='" + CGlobals.envelopeLabels[ i ] + "' ";
@@ -164,7 +159,7 @@ function genEditGroupHTML()
       tempHtml += "selected='selected'";
     tempHtml += ">" + CGlobals.arpSequences[ i ] + "</option>";
   }
-  tempHtml += "</select><br>";
+  tempHtml += "</select>";
 
   c = globals.editElement.arpFlag ? "checked" : "";
   tempHtml += "<br>Arp: <input type='checkbox' id='editGroupArpFlag' " + c + "><br>";
@@ -209,7 +204,9 @@ function genEditSampleHTML()
   tempHtml += "Display Name: <input id='editSampleName' contenteditable='true' value='" + globals.editElement.elementName + "'><br>";
   tempHtml += "File: " + globals.editElement.filename + "<br>";
   var checked = globals.editElement.loopFlag ? "checked" : "";
-  tempHtml += "Loop: <input type='checkbox' id='editSampleLoopFlag' " + checked + "><br>";
+  tempHtml += "Loop: <input type='checkbox' id='editSampleLoopFlag' " + checked + ">";
+  var c = globals.editElement.subGroupStart ? "checked" : "";
+  tempHtml += "<br>New Part: <input type='checkbox' id='editSampleSubgroupStart' " + c + "><br>";
 
   document.getElementById( 'multiuse' ).innerHTML = tempHtml;
 }
@@ -238,7 +235,10 @@ function genEditChordHTML()
       tempHtml += "selected='selected'";
     tempHtml += ">" + i + "</option>";
   }
-  tempHtml += "</select><br>";
+  tempHtml += "</select>";
+
+  var c = globals.editElement.subGroupStart ? "checked" : "";
+  tempHtml += "<br>New Part: <input type='checkbox' id='editChordSubgroupStart' " + c + "><br>";
 
   tempHtml += "<div class='css_keyboard'><br>";
 
@@ -269,14 +269,16 @@ function saveEdits()
     switch( globals.editElement.objType )
     {
       case "CSample":
-        globals.editElement.elementName = document.getElementById( "editSampleName" ).value; 
-        globals.editElement.loopFlag    = document.getElementById( "editSampleLoopFlag" ).checked;
+        globals.editElement.elementName   = document.getElementById( "editSampleName" ).value; 
+        globals.editElement.loopFlag      = document.getElementById( "editSampleLoopFlag" ).checked;
+        globals.editElement.subGroupStart = document.getElementById( "editSampleSubgroupStart" ).checked;
         break;
     
       case "CGroup":
         globals.editElement.elementName = document.getElementById( "editGroupName" ).value;
         globals.editElement.instrument  = document.getElementById( "editGroupInstrument" ).value;
         globals.editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
+
         globals.editElement.tempoMs = 60000 / parseInt( document.getElementById( "editGroupTempoBPM" ).value );
 
         for( var i = 0;i < CGlobals.seqModes.length;i++ )
@@ -308,6 +310,8 @@ function saveEdits()
         globals.editElement.elementName   = document.getElementById( "editChordName" ).value;
         globals.editElement.playBeats     = parseInt( document.getElementById( "editChordBeats" ).value );
         globals.editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
+        globals.editElement.subGroupStart = document.getElementById( "editChordSubgroupStart" ).checked;
+
         break;
     }
 

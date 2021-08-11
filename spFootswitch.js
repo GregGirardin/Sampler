@@ -30,33 +30,25 @@ var clickMode = SINGLE_CLICK;
 var clickHoldTO = SLOW_CLICK;
 
 var footSwitchButtons = []; // array of buttons
-
 var fsButtonMap = 
 {
   "EVENT_TAP" : { // Event type.
     "BUTTON1" : { // Event source
       id : 'fsB1Tap', // the DOM element to highlight
-      NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
       NavLR : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
+      NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } },   // Nav Up down
       Play : { html : "&#62;", action : function() { playElement( 'START' ); } },
-      PlayB : { html : "&#62;", action : function() { playElement( 'START' ); changeMode( "Play" ); } }, // PlayB is like Play but stop moves you to NavUD.
       Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
       Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Tap',
-      NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
       NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
-      Play : { html : "&#8800;", action : function() { playElement( 'STOP' ); changeMode( "PlayB" ); } },
-      PlayB : { html : "&#8800;", action : function()
-        { 
-          /* If this group is sequencing, go to NavUD, else go to NavLR
-             sequenced groups tend to want to start from the beginning and we play all of it before leaving the group. */
-          if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 0 ] )
-            changeMode( "NavLR" );
-          else
-            changeMode( "NavUD" );
-        } },
+      NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
+      Play : { html : "&#8800;", action : function() { if( !globals.ae )
+                                                         changeMode( "NavLR" );
+                                                       playElement( 'STOP' );
+                                                       } },
       Tempo : { html : "Set", action : function() { exitTempoMode(); changeMode( "NavUD" ); } },
       Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
     },
@@ -65,18 +57,16 @@ var fsButtonMap =
   "EVENT_HOLD" : {
     "BUTTON1" : {
       id : 'fsB1Hold',
-      NavUD : { html : ">", action : function() { playElement( 'START' ); changeMode( "Play" ); } },
       NavLR : { html : ">", action : function() { playElement( 'START' ); changeMode( "Play" ); } },
+      NavUD : { html : ">", action : function() { playElement( 'START' ); changeMode( "Play" ); } },
       Play : { html : "Mod", action : function() { changeMode( "Modifier" ); } },
-      PlayB : { html : "Mod", action : function() { changeMode( "Modifier" ); } },
       Modifier : { html : ">", action : function() { toggleModifier( "off" ); changeMode( "Play" ); } },
     },
     "BUTTON2" : {
       id : 'fsB2Hold',
-      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
-      Play : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
-      PlayB : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
+      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      Play : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       Modifier : { html : "Tempo", action : function() { changeMode( "Tempo" ); } },
     },
   },
@@ -85,10 +75,12 @@ var fsButtonMap =
     "BUTTON1" : {
       id : 'fsB1DTap',
       Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
+      NavLR : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
     },
     "BUTTON2" : {
       id : 'fsB2DTap',
       Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
+      NavLR : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
     },
   }
 };
@@ -243,8 +235,12 @@ function changeMode( newTapMode )
 {
   globals.fsMode = newTapMode;
 
-  setClickMode( ( globals.fsMode == "Modifier" ) ? DOUBLE_CLICK : SINGLE_CLICK );
-
+  if( ( globals.fsMode == "Modifier" ) ||
+      ( globals.fsMode == "NavLR" && anySubGS() ) )
+    setClickMode( DOUBLE_CLICK );
+  else
+    setClickMode( SINGLE_CLICK );
+  
   for( var e of [ "EVENT_TAP", "EVENT_DTAP", "EVENT_HOLD" ] )
     for( var b of [ "BUTTON1", "BUTTON2" ] )
     {
@@ -348,48 +344,71 @@ function keyRelHandler( e ) { keyHandler( e, false ); } // up / released
 
 function moveCursor( dir )
 {
+  var c = globals.cursor; // c is cursor, just for readability.
+  var gLen = globals.cfg.groups[ c.cg ].elements.length;
+
   switch( dir )
   {
-    case 'TOP':
-      globals.cursor.cg = 0;
-      break;
-  
     case 'UP':
-      if( globals.cursor.cg > 0 )
+      if( c.cg > 0 )
       {
-        globals.cursor.cg -= 1;
-        if( globals.cfg.groups[ globals.cursor.cg ].seqMode != CGlobals.seqModes[ 0 ] )
-          globals.cursor.ce = 0; // almost certain want to start from the beginning
+        c.cg -= 1;
+        globals.cursor.ce = 0; // almost certain want to start from the beginning
 
-        setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs );
+        setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
       }
       break;
 
     case 'DOWN':
-      if( globals.cursor.cg < globals.cfg.groups.length - 2 )
+      if( c.cg < globals.cfg.groups.length - 2 )
       {
-        globals.cursor.cg += 1;
-        if( globals.cfg.groups[ globals.cursor.cg ].seqMode != CGlobals.seqModes[ 0 ] )
-          globals.cursor.ce = 0;
+        c.cg += 1;
+        globals.cursor.ce = 0;
 
-        setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs );
+        setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
       }
       break;
 
-    case 'START':
-      globals.cursor.ce = 0;
-      break;
-
     case 'LEFT':
-      if( globals.cursor.ce > 0 )
-        globals.cursor.ce -= 1;
+      if( c.ce && !subGS() ) // We don't wrap going back.
+        c.ce -= 1;
       break;
 
     case 'RIGHT':
-      globals.cursor.ce += 1;
-      if( globals.cursor.ce > globals.cfg.groups[ globals.cursor.cg ].elements.length - 1 )
-        globals.cursor.ce = 0;
+      c.ce += 1;
+      if( ( c.ce == gLen ) || subGS() )
+      {
+        // go to start of subgroup or begininning of group.
+        while( c.ce )
+        {
+          c.ce -= 1;
+          if( subGS() )
+            break;
+        }
+      }
+      break;
+
+    case 'NEXT': // next group
+      c.ce += 1;
+      while( c.ce < gLen )
+      {
+        if( subGS() )
+          break;
+        c.ce += 1;
+      }
+      if( c.ce == gLen )
+        c.ce = 0;
+      break;
+
+    case 'PREV': // prev group
+      while( c.ce )
+      {
+        c.ce -= 1;
+        if( subGS() )
+          break;
+      }
       break;
   }
+
   genElementConfigHTML();
 }
