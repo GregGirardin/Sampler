@@ -31,8 +31,6 @@ var clickHoldTO = SLOW_CLICK;
 
 var footSwitchButtons = []; // array of buttons
 
-var fsMode;
-
 var fsButtonMap = 
 {
   "EVENT_TAP" : { // Event type.
@@ -120,9 +118,9 @@ class FootSwitchButton
       this.buttonState = newState;
 
       // Some modes take action on down immediately.
-      if( fsMode == "Tempo" )
+      if( globals.fsMode == "Tempo" )
       {
-        // button presses need to be accurate and deterministic when setting tempo, so no hold or double tap functions
+        // Button presses need to be accurate and deterministic when setting tempo, so no hold or double tap functions
         // in Button12 and 21 nav modes we take action immediately. The mode is exited by a button press.
         // 1-2 puts you in 12 mode. 2 keeps moving you right until you press 1. Opposite for 21
 
@@ -157,8 +155,7 @@ class FootSwitchButton
             this.holdTimerExpired = false;
           }
           else if( clickMode == SINGLE_CLICK )
-          { // in this mode we can take action immediately on the 'up' since we don't have to 
-            // check for a double tap.
+          { // In this mode we can take action immediately on the 'up' since we don't have to  for a double tap.
             this.clearTimer();
             buttonEvent( "EVENT_TAP", this.buttonID );
             this.pressedState = false;
@@ -215,7 +212,9 @@ function setTempoMs( newTempoMs )
   }
 
   globals.delayBlock.set( { delayTime : globals.currentTempo / 1000 } );
-  globals.tremoloBlock.set( { frequency : 1000 / globals.currentTempo } ) ;
+  if( !globals.cfg.groups[ globals.cursor.cg ].tremRate ) // TBD.
+    globals.cfg.groups[ globals.cursor.cg ].tremRate = 1;
+  globals.tremoloBlock.set( { frequency : 1000 * globals.cfg.groups[ globals.cursor.cg ].tremRate / globals.currentTempo } ) ;
 
   document.getElementById( "tempoButton" ).innerHTML = Math.round( 60000 / globals.currentTempo ) + " bpm";
 }
@@ -242,16 +241,16 @@ function setClickMode( newClickMode )
 
 function changeMode( newTapMode )
 {
-  fsMode = newTapMode;
+  globals.fsMode = newTapMode;
 
-  setClickMode( ( fsMode == "Modifier" ) ? DOUBLE_CLICK : SINGLE_CLICK );
+  setClickMode( ( globals.fsMode == "Modifier" ) ? DOUBLE_CLICK : SINGLE_CLICK );
 
   for( var e of [ "EVENT_TAP", "EVENT_DTAP", "EVENT_HOLD" ] )
     for( var b of [ "BUTTON1", "BUTTON2" ] )
     {
       if( fsButtonMap[ e ][ b ] )
-        if( fsButtonMap[ e ][ b ][ fsMode ] )
-          document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ fsMode ].html;
+        if( fsButtonMap[ e ][ b ][ globals.fsMode ] )
+          document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = fsButtonMap[ e ][ b ][ globals.fsMode ].html;
         else 
           document.getElementById( fsButtonMap[ e ][ b ].id ).innerHTML = '-';
     }
@@ -310,8 +309,8 @@ function toggleModifier( modifier )
 
 function buttonEvent( event, buttonID )
 {
-  if( fsButtonMap[ event ][ buttonID ][ fsMode ] )
-    fsButtonMap[ event ][ buttonID ][ fsMode ].action();
+  if( fsButtonMap[ event ][ buttonID ][ globals.fsMode ] )
+    fsButtonMap[ event ][ buttonID ][ globals.fsMode ].action();
 
   document.getElementById( fsButtonMap[ event ][ buttonID ].id ).classList.add( 'css_highlight_red' );
   setTimeout( buttonHLTimer, 100 );

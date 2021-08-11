@@ -93,20 +93,20 @@ function dropElem( ev )
       globals.cfg.groups.splice( fromGroup, 1 );
     }
   }
-  else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
-           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Group into config
-  {
-    var groupId = parseInt( dragElem.substring( slGroup.length, ) );
-    // make sure no loops. don't drop self into self or allow groups that contain groups.
-    // otherwise loop reference detection will be difficult.
-    var groupRef = new CGroupRef( globals.cfg.groups[ groupId ].elementName );
+  // else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
+  //          ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Group into config
+  // {
+  //   var groupId = parseInt( dragElem.substring( slGroup.length, ) );
+  //   // make sure no loops. don't drop self into self or allow groups that contain groups.
+  //   // otherwise loop reference detection will be difficult.
+  //   var groupRef = new CGroupRef( globals.cfg.groups[ groupId ].elementName );
 
-    var indexes = ev.target.id.substring( slElem.length, ).split( "." );
-    var toGroup = parseInt( indexes[ 0 ] );
-    var toElementIx = parseInt( indexes[ 1 ] );
+  //   var indexes = ev.target.id.substring( slElem.length, ).split( "." );
+  //   var toGroup = parseInt( indexes[ 0 ] );
+  //   var toElementIx = parseInt( indexes[ 1 ] );
 
-    globals.cfg.groups[ toGroup ].elements.splice( toElementIx, 0, groupRef );
-  }
+  //   globals.cfg.groups[ toGroup ].elements.splice( toElementIx, 0, groupRef );
+  // }
   else if( ev.target.id == "trashCan" )
   {
     if( dragElem.substring( 0, slElem.length ) == slElem )
@@ -140,7 +140,7 @@ function dropElem( ev )
 /////////////// /////////////// /////////////// ///////////////
 function setSampleConfigName()
 {
-  if( editMode )
+  if( globals.editMode )
   {
     var name = prompt( "Enter Config Name:", globals.cfg.name );
     if( name )
@@ -154,7 +154,7 @@ function setSampleConfigName()
 
 function groupClick( groupIndex )
 {
-  if( editMode )
+  if( globals.editMode )
   {
     saveEdits();
     globals.editElement = globals.cfg.groups[ groupIndex ];
@@ -170,7 +170,7 @@ function elemClick( groupIndex, sampleIndex )
 
   setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs );
 
-  if( editMode )
+  if( globals.editMode )
   {
     saveEdits();
     globals.editElement = globals.cfg.groups[ groupIndex ].elements[ sampleIndex ];
@@ -197,7 +197,7 @@ function addToGroup( groupIndex ) // clicked +. Add a Chord to the group.
   globals.cursor.cg = groupIndex;
   globals.cursor.ce = globals.cfg.groups[ groupIndex ].elements.length - 1;
 
-  if( editMode )
+  if( globals.editMode )
     genEditChordHTML();
 
   genElementConfigHTML();
@@ -255,20 +255,29 @@ function playElement( action )
   }
 }
 
-var editMode = false;
-
 function toggleEdit()
 {
-  if( editMode )
+  if( globals.editMode )
     saveEdits();
 
   globals.editElement = undefined; 
-  editMode = !editMode;
+  globals.editMode = !globals.editMode;
 
   var b = document.getElementById( 'editButton' );
-  editMode ? b.classList.add( 'css_highlight_red' ) : b.classList.remove( 'css_highlight_red' );
+  globals.editMode ? b.classList.add( 'css_highlight_red' ) : b.classList.remove( 'css_highlight_red' );
 
   document.getElementById( 'multiuse' ).innerHTML = "";
+}
+
+function cloneChord() // TBD. Move to handlers.
+{
+  var newChord = new CChord( "" );
+  newChord.elementName = globals.editElement.elementName;
+  newChord.playBeats = globals.editElement.playBeats;
+  newChord.notes = globals.editElement.notes;
+  newChord.octave = globals.editElement.octave;
+  globals.cfg.groups[ globals.cursor.cg ].elements.push( newChord );
+  genElementConfigHTML();
 }
 
 // A key on the generated keyboard was pressed.

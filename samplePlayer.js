@@ -13,6 +13,8 @@ class CGlobals // Global consts and stuff in here just to be cleaner.
     this.currentTempo = 500;
     this.cfg = {}; // The CConfig
     this.instruments = {};
+    this.fsMode == "";
+    this.editMode = false;
   }
 }
 
@@ -23,13 +25,14 @@ CGlobals.synthTypes = [ "Piano",
                         "SynReed", "SynKeys", "Pluck", "SynthPipe", "MiscE", "Noise" ];
 
 CGlobals.arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
-CGlobals.loopCount = [ 1, 2, 4, 8, 16, 32 ];
+CGlobals.tremRates = [ 1, 2, 4, 8 ]; // trems per beat.
+CGlobals.playBeats = [ 1, 2, 4, 8, 16, 32 ];
 CGlobals.arpSequences = [ "1234", "4321", "1324", "4231", "12324323", "B-T", "T-B" ]; 
 CGlobals.seqModes = [ "None", "Manual", "Cont" ];
-CGlobals.envelopeLabels = [ "None", "Fast", "Med", "Slow" ];
-CGlobals.envelopeParams = { Fast : { attack : .5, decay :  0, sustain:   1, release: .5 },
-                            Med  : { attack :  2, decay :  1, sustain: 0.9, release:  1 },
-                            Slow : { attack :  5, decay : .9, sustain: 0.9, release:  3 } };
+CGlobals.envelopeLabels = [ "Fast", "Med", "Slow" ];
+CGlobals.envelopeParams = { Fast : { attack : .1, decay :  0, sustain:    1, release: .1 },
+                            Med  : { attack :  2, decay :  1, sustain: 0.95, release:  2 },
+                            Slow : { attack :  5, decay : .9, sustain: 0.95, release:  4 } };
 
 var globals; // a CGlobals to contain everything
 
@@ -71,6 +74,7 @@ class CGroup
     this.arpFlag = false;
     this.arpNPB = 4;
     this.arpSequence = CGlobals.arpSequences[ 0 ];
+    this.tremRate = CGlobals.tremRates[ 0 ];
     this.envelope = CGlobals.envelopeLabels[ 0 ];
     this.elements = []; // CSample, CChordRef, CGroupRef.
 
@@ -136,13 +140,13 @@ window.onload = sampleListInit; // main entry point
 /////////////// /////////////// /////////////// ///////////////
 function sampleListInit()
 {
-  const urlParams = new URLSearchParams( window.location.search );
-  var server = urlParams.get( 'serverURL' );
-  if( server ) // Server URL provided by user
-  {
-    serverURL = server;
-    console.log( "Server URL:" + serverURL );
-  }
+  // const urlParams = new URLSearchParams( window.location.search );
+  // var server = urlParams.get( 'serverURL' );
+  // if( server ) // Server URL provided by user
+  // {
+  //   serverURL = server;
+  //   console.log( "Server URL:" + serverURL );
+  // }
 
   globals = new CGlobals();
 
