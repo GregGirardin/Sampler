@@ -255,7 +255,7 @@ function releaseAudio()
         if( libSample.player )
           libSample.player.stop();
     }
-    else // "CChord" or CGroupRef
+    else // "CChord"
        globals.activeElement.synth.triggerRelease( globals.activeElement.chordNotes );
 
     if( globals.activeElement.grpTimer )
@@ -360,7 +360,6 @@ function playElemAudio( audioElem )
   {
     case "CSample":   playCSample( audioElem );   break;
     case "CChord":    playCChord( audioElem );    break;
-    case "CGroupRef": playCGroupRef( audioElem ); break;
   }
 }
 
@@ -435,28 +434,6 @@ function playCChord( audioElem )
 
   if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )
     playNextTimer = setTimeout( playNextElementCB, globals.currentTempo * audioElem.playBeats );
-}
-
-function playCGroupRef( audioElem )
-{
-  var grp = undefined;
-  for( var ix = 0;ix < globals.cfg.groups.length;ix++ )
-    if( globals.cfg.groups[ ix ].elementName == audioElem.elementName )
-    {
-      grp = globals.cfg.groups[ ix ];
-      break;
-    }
-
-  if( grp )
-  {
-    globals.activeElement.synth = globals.instruments[ grp.instrument ];
-    setTempoMs( grp.tempoMs );
-    globals.activeElement.loopFlag = audioElem.loopFlag;
-    globals.activeElement.grpChordIndex = 0;
-    globals.activeElement.beatsRemaining = 0;
-    globals.activeElement.group = grp;
-    grpPlayTimerCB();
-  }
 }
 
 // Play group placed in other groups.
@@ -640,45 +617,6 @@ function doArpeggio( audioElem )
     globals.activeElement.arpNotes = arpChord( audioElem, seq );
     globals.activeElement.arpNotesPerBeat = globals.cfg.groups[ audioElem.group ].arpNPB;
     globals.activeElement.beatsRemaining = audioElem.playBeats;
-  }
-  else if( audioElem.objType == "CGroupRef" && ( instrument != "None" ) ) // Arp a group that's in another group.
-  {
-    // Arp this entire sequence.
-    var grp = undefined; // Find group
-    for( var i = 0;i < globals.cfg.groups.length;i++ )
-      if( globals.cfg.groups[ i ].elementName == audioElem.elementName )
-      {
-        grp = globals.cfg.groups[ i ];
-        break;
-      }
-
-    if( grp )
-    {
-      globals.activeElement.arpNotes = [];
-
-      globals.activeElement.synth = globals.instruments[ instrument ];
-      globals.activeElement.beatsRemaining = 0;
-
-      for( var seqIx = 0;seqIx < grp.elements.length;seqIx++ )
-        if( grp.elements[ seqIx ].objType == "CChord" ) // only add CChord, not samples or groups.
-        {
-          var chord = chordFromName( grp.elements[ seqIx ].elementName ); // from the chord Lib
-          if( !chord )
-            continue;
-          var notes = arpChord( chord, grp.arpSequence );
-          //  want to arp this chord for playBeats given we're playing arpNPB notes per beat
-          //  So we need playBeats * arpNPB notes of this chord. May need to add / prune to get the right number.
-          var nextNote = 0;
-          const arpNotes = grp.elements[ seqIx ].playBeats * grp.arpNPB;
-          globals.activeElement.beatsRemaining += grp.elements[ seqIx ].playBeats; // Arping the whole sequence.
-          while( notes.length < arpNotes ) // Add more if too short
-            notes.push( notes[ nextNote++ ] ); // notes[] grows so we don't have to loop nextNote.
-          while( notes.length > arpNotes ) // Prune if too long
-            notes.pop();
-          globals.activeElement.arpNotes = activeElement.arpNotes.concat( notes );
-          globals.activeElement.arpNotesPerBeat = grp.arpNPB;
-        }
-    }
   }
   else
     return;

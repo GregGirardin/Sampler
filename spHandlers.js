@@ -93,20 +93,6 @@ function dropElem( ev )
       globals.cfg.groups.splice( fromGroup, 1 );
     }
   }
-  // else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
-  //          ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping Group into config
-  // {
-  //   var groupId = parseInt( dragElem.substring( slGroup.length, ) );
-  //   // make sure no loops. don't drop self into self or allow groups that contain groups.
-  //   // otherwise loop reference detection will be difficult.
-  //   var groupRef = new CGroupRef( globals.cfg.groups[ groupId ].elementName );
-
-  //   var indexes = ev.target.id.substring( slElem.length, ).split( "." );
-  //   var toGroup = parseInt( indexes[ 0 ] );
-  //   var toElementIx = parseInt( indexes[ 1 ] );
-
-  //   globals.cfg.groups[ toGroup ].elements.splice( toElementIx, 0, groupRef );
-  // }
   else if( ev.target.id == "trashCan" )
   {
     if( dragElem.substring( 0, slElem.length ) == slElem )
@@ -181,8 +167,6 @@ function elemClick( groupIndex, sampleIndex )
         genEditSampleHTML();
       else if( globals.editElement.objType == "CChord" )
         genEditChordHTML();
-      else if ( globals.editElement.objType == "CGroupRef" )
-        genEditGroupRefHTML();
     }
   }
 

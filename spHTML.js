@@ -60,9 +60,6 @@ function genElementConfigHTML()
       if( g.elements[ j ].objType == "CSample" )
         classes += " css_Sample";
       
-      if( g.elements[ j ].objType == "CGroupRef" )
-        classes += " css_Group";
-      
       tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
                   g.elements[ j ].elementName + "</button>\n";
@@ -119,28 +116,6 @@ function generateLibraryHTML()
   document.getElementById( 'libraryDiv' ).innerHTML = tempHtml;
 }
 
-function genEditGroupRefHTML()
-{
-  var groupNames = [];
-  for( var i = 0;i < globals.cfg.groups.length - 1;i++ )
-    groupNames.push( globals.cfg.groups[ i ].elementName );
-
-  var tempHtml = "Group:<select id='editGroupRefGroup'>";
-
-  for( i = 0;i < groupNames.length;i++ )
-  {
-    tempHtml += "<option value='" + groupNames[ i ] + "' ";
-    if( globals.editElement.elementName == groupNames[ i ] )
-      tempHtml += "selected='selected'";
-    tempHtml += ">" + groupNames[ i ] + "</option>";
-  }
-  tempHtml += "</select><br>";
-
-  var checked = globals.editElement.loopFlag ? "checked" : "";
-  tempHtml += "Loop: <input type='checkbox' id='editGroupRefLoopFlag' " + checked + "><br>";
-
-  document.getElementById( 'multiuse' ).innerHTML = tempHtml;
-}
 /////////////// /////////////// ///////////////
 /////////////// /////////////// ///////////////
 function genEditGroupHTML()
@@ -333,11 +308,6 @@ function saveEdits()
         globals.editElement.elementName   = document.getElementById( "editChordName" ).value;
         globals.editElement.playBeats     = parseInt( document.getElementById( "editChordBeats" ).value );
         globals.editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
-        break;
-
-      case "CGroupRef":
-        globals.editElement.elementName = document.getElementById( "editGroupRefGroup" ).value;
-        globals.editElement.loopFlag    = document.getElementById( "editGroupRefLoopFlag" ).checked;
         break;
     }
 

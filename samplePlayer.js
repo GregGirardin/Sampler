@@ -76,7 +76,7 @@ class CGroup
     this.arpSequence = CGlobals.arpSequences[ 0 ];
     this.tremRate = CGlobals.tremRates[ 0 ];
     this.envelope = CGlobals.envelopeLabels[ 0 ];
-    this.elements = []; // CSample, CChordRef, CGroupRef.
+    this.elements = []; // CSample, CChordRef
 
     this.masterLevel = 100;
     this.distortionLevel = 0;
@@ -94,16 +94,6 @@ class CGroup
     this.modChorusState = false;
     this.modDistState = false;
     }
-}
-
-class CGroupRef // a reference to a group that can be placed in a group.
-{
-  constructor( groupName )
-  {
-    this.objType = "CGroupRef";
-    this.elementName = groupName;
-    this.loopFlag = false;
-  }
 }
 
 class CSample // A Sample in the config.
