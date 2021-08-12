@@ -20,6 +20,7 @@ function gotConfig( file, data )
     console.log( "No config." );
 
   genElementConfigHTML();
+  changeMode( "NavLR" ); // FS mode has a behavioral dependency on the config so must be done here.
 }
 
 function getFileFromServer( filename, callback )

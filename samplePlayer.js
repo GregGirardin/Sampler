@@ -151,7 +151,6 @@ function sampleListInit()
 
   flashTempo();
   initWebAudio();
-  changeMode( "NavLR" );
 
   setTempoMs( 500 );
 }
