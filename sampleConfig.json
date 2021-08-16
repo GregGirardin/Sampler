@@ -2,32 +2,23 @@
   "groups": [
     {
       "objType": "CGroup",
-      "elementName": "Group",
-      "instrument": "Piano",
-      "thickenFlag": false,
-      "tempoMs": 500,
+      "elementName": "SummerOf69",
+      "instrument": "Sawtooth",
+      "thickenFlag": true,
+      "tempoMs": 461.53846153846155,
       "seqMode": "Manual",
       "arpFlag": false,
       "arpNPB": 4,
       "arpSequence": "1234",
-      "tremRate": 1,
-      "envelope": "Fast",
+      "tremRate": 2,
+      "envelope": "Med",
       "elements": [
         {
           "objType": "CChord",
-          "elementName": "F",
+          "elementName": "D",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 32,
-          "octave": 0,
-          "group": 0
-        },
-        {
-          "objType": "CChord",
-          "elementName": "G",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 128,
+          "notes": 16964,
           "octave": 0,
           "group": 0
         },
@@ -36,17 +27,26 @@
           "elementName": "A",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 512,
-          "octave": 0,
+          "notes": 2171392,
+          "octave": -1,
           "group": 0
         },
         {
           "objType": "CChord",
-          "elementName": "B",
+          "elementName": "F",
           "subGroupStart": true,
           "playBeats": 4,
-          "notes": 2048,
-          "octave": 0,
+          "notes": 135712,
+          "octave": -1,
+          "group": 0
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Bb",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 4342784,
+          "octave": -1,
           "group": 0
         },
         {
@@ -54,39 +54,73 @@
           "elementName": "C",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 4096,
-          "octave": 0,
+          "notes": 16846976,
+          "octave": -1,
           "group": 0
         },
         {
           "objType": "CChord",
-          "elementName": "New",
-          "subGroupStart": true,
-          "playBeats": 4,
-          "notes": 0,
-          "octave": 0
-        },
-        {
-          "objType": "CChord",
-          "elementName": "New",
+          "elementName": "Bb",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 0,
-          "octave": 0
+          "notes": 4211744,
+          "octave": 0,
+          "group": 0
         }
       ],
-      "masterLevel": 100,
+      "masterLevel": 39,
       "distortionLevel": 0,
       "chorusLevel": 0,
       "phaserLevel": 0,
       "tremoloLevel": 0,
       "dryLevel": 100,
-      "reverbLevel": 0,
+      "reverbLevel": 23,
       "delayLevel": 0
     },
     {
       "objType": "CGroup",
-      "elementName": "Group",
+      "elementName": "Hard To Handle",
+      "instrument": "SynKeys",
+      "thickenFlag": true,
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Med",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "B",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 8685568,
+          "octave": -1,
+          "group": 1
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F#",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 271424,
+          "octave": 0,
+          "group": 1
+        }
+      ],
+      "masterLevel": 48,
+      "distortionLevel": 0,
+      "chorusLevel": 30,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 10,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Just What I",
       "instrument": "Piano",
       "thickenFlag": false,
       "tempoMs": 500,
@@ -102,7 +136,134 @@
           "elementName": "New",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 512,
+          "notes": 0,
+          "octave": 0,
+          "group": 2
+        }
+      ],
+      "masterLevel": 100,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 0,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Dont Stop",
+      "instrument": "Piano",
+      "thickenFlag": false,
+      "tempoMs": 500,
+      "seqMode": "Cont",
+      "arpFlag": true,
+      "arpNPB": 2,
+      "arpSequence": "T-B",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 67856,
+          "octave": 0,
+          "group": 3
+        },
+        {
+          "objType": "CChord",
+          "elementName": "B",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 8423488,
+          "octave": 0,
+          "group": 3
+        },
+        {
+          "objType": "CChord",
+          "elementName": "C#m",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 34676736,
+          "octave": 0,
+          "group": 3
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 2171392,
+          "octave": 0,
+          "group": 3
+        },
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 67856,
+          "octave": 0,
+          "group": 3
+        },
+        {
+          "objType": "CChord",
+          "elementName": "B",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 8423488,
+          "octave": 0,
+          "group": 3
+        },
+        {
+          "objType": "CChord",
+          "elementName": "G#m",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 1083648,
+          "octave": 0,
+          "group": 3
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 2171392,
+          "octave": 0,
+          "group": 3
+        }
+      ],
+      "masterLevel": 100,
+      "distortionLevel": 0,
+      "chorusLevel": 24,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 38,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Hungry Like",
+      "instrument": "Sine",
+      "thickenFlag": false,
+      "tempoMs": 500,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 0,
           "octave": 0
         },
         {
@@ -110,7 +271,7 @@
           "elementName": "New",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 2048,
+          "notes": 0,
           "octave": 0
         },
         {
@@ -118,7 +279,31 @@
           "elementName": "New",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 4096,
+          "notes": 0,
+          "octave": 0
+        },
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 0,
+          "octave": 0
+        },
+        {
+          "objType": "CChord",
+          "elementName": "G",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 0,
+          "octave": 0
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 0,
           "octave": 0
         }
       ],

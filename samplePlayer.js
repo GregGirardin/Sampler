@@ -143,12 +143,7 @@ function sampleListInit()
   getFileFromServer( "samples.json", gotSamples );
   getFileFromServer( configFile, gotConfig );
 
-  document.addEventListener( 'keydown', keyPressedHandler );
-  document.addEventListener( 'keyup',   keyRelHandler );
-
-  footSwitchButtons[ 0 ] = new FootSwitchButton( "BUTTON1" );
-  footSwitchButtons[ 1 ] = new FootSwitchButton( "BUTTON2" );
-
+  initFootswitch();
   flashTempo();
   initWebAudio();
 

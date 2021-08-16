@@ -154,6 +154,7 @@ function elemClick( groupIndex, sampleIndex )
   globals.cursor.cg = groupIndex;
   globals.cursor.ce = sampleIndex;
 
+  setArpState( globals.cfg.groups[ globals.cursor.cg ].arpFlag );
   setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs );
 
   if( globals.editMode )
@@ -175,6 +176,7 @@ function elemClick( groupIndex, sampleIndex )
 
 function addToGroup( groupIndex ) // clicked +. Add a Chord to the group.
 {
+  saveEdits();
   globals.editElement = new CChord( "New" );
   globals.cfg.groups[ groupIndex ].elements.push( globals.editElement );
 
