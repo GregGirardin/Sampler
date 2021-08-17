@@ -278,6 +278,8 @@ function releaseAudio()
 
 function setEffectLevels( g, t )
 {
+  globals.instruments[ g.instrument ].set( { envelope : CGlobals.envelopeParams[ g.envelope ] } );
+
   globals.masterLevelBlock.gain.rampTo( g.masterLevel / 100, t );
   globals.dryLevelBlock.gain.rampTo( g.dryLevel / 100, t );
   globals.delayLevelBlock.gain.rampTo( g.delayLevel / 100, t );
@@ -423,7 +425,6 @@ function playCChord( audioElem )
       frequencies = frequencies.concat( voices );
     }
 
-  globals.instruments[ instrument ].set( { envelope : CGlobals.envelopeParams[ globals.cfg.groups[ globals.cursor.cg ].envelope ] } );
   globals.ae.synth = globals.instruments[ instrument ];
   globals.ae.chordNotes = frequencies;
   globals.ae.synth.triggerAttack( frequencies );

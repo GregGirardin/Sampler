@@ -61,7 +61,7 @@ class cursorPosition
   }
 }
 
-class CGroup
+class CGroup 
 {
   constructor( groupName )
   {
@@ -69,6 +69,7 @@ class CGroup
     this.elementName = groupName;
 
     this.instrument = CGlobals.synthTypes[ 0 ];
+    this.chained = false; // is this group a part of a previous group?
     this.thickenFlag = false;
 
     this.tempoMs = 500;
@@ -78,7 +79,7 @@ class CGroup
     this.arpSequence = CGlobals.arpSequences[ 0 ];
     this.tremRate = CGlobals.tremRates[ 0 ];
     this.envelope = CGlobals.envelopeLabels[ 0 ];
-    this.elements = []; // CSample, CChord
+    this.elements = [];
 
     this.masterLevel = 100;
     this.distortionLevel = 0;
@@ -100,7 +101,6 @@ class CSample // A Sample in the config.
     this.objType = "CSample";
     this.elementName = filename;
     this.playing = false;
-    this.subGroupStart = false; // Is this the beginning of a new song part?
 
     this.filename = filename; // filename on the server.
     this.loopFlag = false;
@@ -114,7 +114,6 @@ class CChord
     this.objType = "CChord";
     this.elementName = name;
     this.playing = false;
-    this.subGroupStart = false;
 
     this.playBeats = 4; // How many beats to play 
     this.notes = 0x0; // bit field of pressed keys bit 0 is a C
@@ -166,18 +165,4 @@ function flashTempo()
 function clearTempoFlash()
 {
   document.getElementById( 'tempoButton' ).classList.remove( 'css_highlight_red' );
-}
-
-function subGS()
-{
-  return globals.cfg.groups[ globals.cursor.cg ].elements[ globals.cursor.ce ].subGroupStart;
-}
-
-function anySubGS()
-{
-  for( var i = 0;i < globals.cfg.groups[ globals.cursor.cg ].elements.length; i++ )
-    if( globals.cfg.groups[ globals.cursor.cg ].elements[ i ].subGroupStart )
-      return true;
-  
-  return false;
 }

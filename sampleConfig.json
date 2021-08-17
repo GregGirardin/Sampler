@@ -75,7 +75,9 @@
       "tremoloLevel": 0,
       "dryLevel": 100,
       "reverbLevel": 23,
-      "delayLevel": 0
+      "delayLevel": 0,
+      "partFlag": false,
+      "chained": false
     },
     {
       "objType": "CGroup",
@@ -116,7 +118,9 @@
       "tremoloLevel": 0,
       "dryLevel": 100,
       "reverbLevel": 10,
-      "delayLevel": 0
+      "delayLevel": 0,
+      "partFlag": true,
+      "chained": false
     },
     {
       "objType": "CGroup",
@@ -139,6 +143,13 @@
           "notes": 0,
           "octave": 0,
           "group": 2
+        },
+        {
+          "objType": "CChord",
+          "elementName": "New",
+          "playBeats": 4,
+          "notes": 0,
+          "octave": 0
         }
       ],
       "masterLevel": 100,
@@ -148,7 +159,9 @@
       "tremoloLevel": 0,
       "dryLevel": 100,
       "reverbLevel": 0,
-      "delayLevel": 0
+      "delayLevel": 0,
+      "partFlag": true,
+      "chained": false
     },
     {
       "objType": "CGroup",
@@ -248,10 +261,52 @@
     {
       "objType": "CGroup",
       "elementName": "Hungry Like",
-      "instrument": "Sine",
-      "thickenFlag": false,
+      "instrument": "Sawtooth",
+      "thickenFlag": true,
+      "tempoMs": 444.44444444444446,
+      "seqMode": "Manual",
+      "arpFlag": true,
+      "arpNPB": 4,
+      "arpSequence": "12324323",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": 4,
+          "notes": 67856,
+          "octave": 0,
+          "group": 4
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 16964,
+          "octave": 0,
+          "group": 4
+        }
+      ],
+      "masterLevel": 46,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 60,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 23,
+      "delayLevel": 43,
+      "chained": false
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "B",
+      "instrument": "Sawtooth",
+      "chained": true,
+      "thickenFlag": true,
       "tempoMs": 500,
-      "seqMode": "None",
+      "seqMode": "Manual",
       "arpFlag": false,
       "arpNPB": 4,
       "arpSequence": "1234",
@@ -260,61 +315,111 @@
       "elements": [
         {
           "objType": "CChord",
-          "elementName": "E",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 0,
-          "octave": 0
-        },
-        {
-          "objType": "CChord",
-          "elementName": "New",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 0,
-          "octave": 0
-        },
-        {
-          "objType": "CChord",
-          "elementName": "New",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 0,
-          "octave": 0
-        },
-        {
-          "objType": "CChord",
           "elementName": "C",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 0,
-          "octave": 0
+          "notes": 4241,
+          "octave": 0,
+          "group": 5
         },
         {
           "objType": "CChord",
           "elementName": "G",
           "subGroupStart": false,
           "playBeats": 4,
-          "notes": 0,
-          "octave": 0
+          "notes": 542848,
+          "octave": 0,
+          "group": 5
         },
         {
           "objType": "CChord",
           "elementName": "F",
-          "subGroupStart": false,
           "playBeats": 4,
-          "notes": 0,
-          "octave": 0
+          "notes": 135712,
+          "octave": 0,
+          "group": 5
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F",
+          "playBeats": 4,
+          "notes": 16908832,
+          "octave": 0,
+          "group": 5
+        },
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "playBeats": 4,
+          "notes": 4241,
+          "octave": 0,
+          "group": 5
+        },
+        {
+          "objType": "CChord",
+          "elementName": "G",
+          "playBeats": 4,
+          "notes": 542848,
+          "octave": 0,
+          "group": 5
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F",
+          "playBeats": 4,
+          "notes": 135712,
+          "octave": 0,
+          "group": 5
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": 4,
+          "notes": 16964,
+          "octave": 0,
+          "group": 5
         }
       ],
-      "masterLevel": 100,
+      "masterLevel": 39,
       "distortionLevel": 0,
       "chorusLevel": 0,
       "phaserLevel": 0,
       "tremoloLevel": 0,
       "dryLevel": 100,
-      "reverbLevel": 0,
-      "delayLevel": 0
+      "reverbLevel": 45,
+      "delayLevel": 44
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "E",
+      "instrument": "Sawtooth",
+      "chained": true,
+      "thickenFlag": false,
+      "tempoMs": 500,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 4,
+      "envelope": "Med",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "Em",
+          "playBeats": 4,
+          "notes": 8652944,
+          "octave": 0,
+          "group": 6
+        }
+      ],
+      "masterLevel": 46,
+      "distortionLevel": 20,
+      "chorusLevel": 44,
+      "phaserLevel": 43,
+      "tremoloLevel": 47,
+      "dryLevel": 100,
+      "reverbLevel": 63,
+      "delayLevel": 53
     },
     {
       "objType": "CGroup",

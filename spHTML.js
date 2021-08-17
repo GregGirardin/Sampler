@@ -26,8 +26,10 @@ function genElementConfigHTML()
   for( var i = 0;i < globals.cfg.groups.length;i++ )
   {
     var g = globals.cfg.groups[ i ];
-    var classes = 'css_groupClass';
+    var classes = "css_groupClass";
 
+    if( i && !g.chained )
+      tempHtml += "<br>\n";
     switch( g.seqMode )
     {
       case "None": break;
@@ -35,7 +37,10 @@ function genElementConfigHTML()
       case "Cont": classes += ' css_groupSeqCont'; break;
     }
 
-    if( i == globals.cfg.groups.length - 1 )
+    if( g.chained )
+      tempHtml += "<button id='slGroup." + i + "' class='css_groupClass' onclick='groupClick( " + i + " )' draggable='true' " +
+                  "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>:</button>\n";
+    else if( i == globals.cfg.groups.length - 1 )
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
     else
@@ -53,19 +58,12 @@ function genElementConfigHTML()
       else if( g.elements[ j ].objType == "CSample" )
         classes += " css_Sample";
 
-      if( g.elements[ j ].subGroupStart && j ) // start of group
-        tempHtml += "<button class='css_slElement'>:|:</button>\n";
-      
       tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
                   g.elements[ j ].elementName + "</button>\n";
     }
     tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slElement' onclick='addToGroup( " + i + " )'" +
                 "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
-
-    if( g.elements.length )
-      tempHtml += "<font size='1'>" + g.elements.length + "</font>";
-    tempHtml += "<br>\n";
   }
 
   tempHtml += "<br><button onclick='groupAdd()'> Add Group </button>\n<br>\n<br>";
@@ -115,7 +113,10 @@ function generateLibraryHTML()
 /////////////// /////////////// ///////////////
 function genEditGroupHTML()
 {
-  var tempHtml = "Name: <input contenteditable='true' id='editGroupName' value='" + globals.editElement.elementName + "'><br>";
+  var tempHtml = "Name: <input contenteditable='true' id='editGroupName' value='" + globals.editElement.elementName + "'>";
+
+  c = globals.editElement.chained ? "checked" : "";
+  tempHtml += "<br>Chain: <input type='checkbox' id='editGroupChain' " + c + "><br>";
 
   tempHtml += "Instrument:<select id='editGroupInstrument'>";
 
@@ -205,8 +206,6 @@ function genEditSampleHTML()
   tempHtml += "File: " + globals.editElement.filename + "<br>";
   var checked = globals.editElement.loopFlag ? "checked" : "";
   tempHtml += "Loop: <input type='checkbox' id='editSampleLoopFlag' " + checked + ">";
-  var c = globals.editElement.subGroupStart ? "checked" : "";
-  tempHtml += "<br>New Part: <input type='checkbox' id='editSampleSubgroupStart' " + c + "><br>";
 
   document.getElementById( 'multiuse' ).innerHTML = tempHtml;
 }
@@ -236,9 +235,6 @@ function genEditChordHTML()
     tempHtml += ">" + i + "</option>";
   }
   tempHtml += "</select>";
-
-  var c = globals.editElement.subGroupStart ? "checked" : "";
-  tempHtml += "<br>New Part: <input type='checkbox' id='editChordSubgroupStart' " + c + "><br>";
 
   tempHtml += "<div class='css_keyboard'><br>";
 
@@ -271,10 +267,10 @@ function saveEdits()
       case "CSample":
         globals.editElement.elementName   = document.getElementById( "editSampleName" ).value; 
         globals.editElement.loopFlag      = document.getElementById( "editSampleLoopFlag" ).checked;
-        globals.editElement.subGroupStart = document.getElementById( "editSampleSubgroupStart" ).checked;
         break;
     
       case "CGroup":
+        globals.editElement.chained = document.getElementById( "editGroupChain" ).checked;
         globals.editElement.elementName = document.getElementById( "editGroupName" ).value;
         globals.editElement.instrument  = document.getElementById( "editGroupInstrument" ).value;
         globals.editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;
@@ -310,7 +306,6 @@ function saveEdits()
         globals.editElement.elementName   = document.getElementById( "editChordName" ).value;
         globals.editElement.playBeats     = parseInt( document.getElementById( "editChordBeats" ).value );
         globals.editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
-        globals.editElement.subGroupStart = document.getElementById( "editChordSubgroupStart" ).checked;
 
         break;
     }

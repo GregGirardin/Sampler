@@ -372,65 +372,63 @@ function moveCursor( dir )
 
   switch( dir )
   {
-    case 'UP':
+    case 'UP': // prv group.
       if( c.cg > 0 )
       {
         c.cg -= 1;
-        globals.cursor.ce = 0; // almost certain want to start from the beginning
+        while( globals.cfg.groups[ c.cg ].chained && c.cg )
+          c.cg -= 1;
+
+        c.ce = 0; // almost certain want to start from the beginning
 
         setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
         setArpState( globals.cfg.groups[ c.cg ].arpFlag );
       }
       break;
 
-    case 'DOWN':
+    case 'DOWN': // Next group (skip chain )
       if( c.cg < globals.cfg.groups.length - 2 )
       {
-        c.cg += 1;
-        globals.cursor.ce = 0;
+        var found = false;
+        var tmpGrp = c.cg += 1;
+        while( globals.cfg.groups[ tmpGrp ].chained && c.cg < globals.cfg.groups.length )
+          tmpGrp += 1;
 
-        setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
-        setArpState( globals.cfg.groups[ c.cg ].arpFlag );
+        if( tmpGrp < globals.cfg.groups.length )
+        {
+          c.cg = tmpGrp;
+          c.ce = 0;
+
+          setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
+          setArpState( globals.cfg.groups[ c.cg ].arpFlag );
+        }
       }
       break;
 
     case 'LEFT':
-      if( c.ce && !subGS() ) // We don't wrap going back.
+      if( c.ce ) // We don't wrap going back.
         c.ce -= 1;
       break;
 
     case 'RIGHT':
       c.ce += 1;
-      if( ( c.ce == gLen ) || subGS() )
-      {
-        // go to start of subgroup or begininning of group.
-        while( c.ce )
-        {
-          c.ce -= 1;
-          if( subGS() )
-            break;
-        }
-      }
-      break;
-
-    case 'NEXT': // next group
-      c.ce += 1;
-      while( c.ce < gLen )
-      {
-        if( subGS() )
-          break;
-        c.ce += 1;
-      }
       if( c.ce == gLen )
-        c.ce = 0;
+        c.ce = 0; // go to start
       break;
 
-    case 'PREV': // prev group
-      while( c.ce )
+    case 'NEXT': // next part. (Group chained to a song)
+      if( ( globals.cfg.groups[ c.cg + 1 ].chained ) && ( c.cg < globals.cfg.groups.length - 1 ) )
       {
-        c.ce -= 1;
-        if( subGS() )
-          break;
+         c.cg += 1;
+         c.ce = 0;
+      }
+      break;
+
+    case 'PREV': // prev part
+      if( globals.cfg.groups[ c.cg ].chained && c.cg > 0 )
+      {
+        c.cg -= 1;
+        c.ce = 0;
       }
       break;
   }
