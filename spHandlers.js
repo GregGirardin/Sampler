@@ -138,24 +138,33 @@ function setSampleConfigName()
   }
 }
 
+function setCursor( g, e )
+{
+  globals.cursor.cg = g;
+  globals.cursor.ce = e;
+
+  setArpState( globals.cfg.groups[ globals.cursor.cg ].arpFlag ); // need to update the highlight status
+  setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs ); // set the tempo to this group
+}
+
 function groupClick( groupIndex )
 {
+  setCursor( groupIndex, undefined );
+
   if( globals.editMode )
   {
     saveEdits();
     globals.editElement = globals.cfg.groups[ groupIndex ];
     genEditGroupHTML();
   }
+
+  genElementConfigHTML();
 }
 
 /////////////// /////////////// /////////////// ///////////////
 function elemClick( groupIndex, sampleIndex )
 {
-  globals.cursor.cg = groupIndex;
-  globals.cursor.ce = sampleIndex;
-
-  setArpState( globals.cfg.groups[ globals.cursor.cg ].arpFlag );
-  setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs );
+  setCursor( groupIndex, sampleIndex );
 
   if( globals.editMode )
   {
@@ -255,14 +264,45 @@ function toggleEdit()
   document.getElementById( 'multiuse' ).innerHTML = "";
 }
 
-function cloneChord() // TBD. Move to handlers.
+function cloneChord()
 {
   var newChord = new CChord( "" );
   newChord.elementName = globals.editElement.elementName;
   newChord.playBeats = globals.editElement.playBeats;
   newChord.notes = globals.editElement.notes;
   newChord.octave = globals.editElement.octave;
-  globals.cfg.groups[ globals.cursor.cg ].elements.push( newChord );
+  globals.cfg.groups[ globals.cfg.groups.length - 1 ].elements.push( newChord );
+  genElementConfigHTML();
+}
+
+function cloneGroup()
+{
+  var newGroup = new CGroup( "Part" );
+  var copyGroup = globals.cfg.groups[ globals.cursor.cg ];
+
+  newGroup.instrument = copyGroup.instrument;
+  newGroup.chained = true; 
+  newGroup.thickenFlag = copyGroup.thickenFlag;
+
+  newGroup.tempoMs = copyGroup.tempoMs;
+  newGroup.seqMode = copyGroup.seqMode;
+  newGroup.arpFlag = copyGroup.arpFlag;
+  newGroup.arpNPB = copyGroup.arpNPB;
+  newGroup.arpSequence = copyGroup.arpSequence;
+  newGroup.tremRate = copyGroup.tremRate;
+  newGroup.envelope = copyGroup.envelope;
+
+  newGroup.masterLevel = copyGroup.masterLevel;
+  newGroup.distortionLevel = copyGroup.distortionLevel;
+  newGroup.chorusLevel = copyGroup.chorusLevel;
+  newGroup.phaserLevel = copyGroup.phaserLevel;
+  newGroup.tremoloLevel = copyGroup.tremoloLevel;
+  newGroup.dryLevel = copyGroup.dryLevel;
+  newGroup.reverbLevel = copyGroup.reverbLevel;
+  newGroup.delayLevel = copyGroup.delayLevel;
+
+  // chain after current group.
+  globals.cfg.groups.splice( globals.cursor.cg + 1, 0, newGroup );
   genElementConfigHTML();
 }
 

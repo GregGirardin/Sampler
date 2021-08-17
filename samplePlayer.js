@@ -89,8 +89,6 @@ class CGroup
     this.dryLevel = 100;
     this.reverbLevel = 0;
     this.delayLevel = 0;
-    this.flashTempoTimer = undefined;
-    this.clearTempoTimer = undefined;
     }
 }
 

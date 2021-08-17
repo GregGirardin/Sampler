@@ -5,7 +5,7 @@ function genElementConfigHTML()
 {
   var l = globals.cfg.groups.length;
 
-  if( l == 1 && !l )
+  if( l == 1 || !l )
     globals.cursor.cg = undefined;
   else
   {
@@ -39,7 +39,7 @@ function genElementConfigHTML()
 
     if( g.chained )
       tempHtml += "<button id='slGroup." + i + "' class='css_groupClass' onclick='groupClick( " + i + " )' draggable='true' " +
-                  "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>:</button>\n";
+                  "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>:|:</button>\n";
     else if( i == globals.cfg.groups.length - 1 )
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
@@ -79,7 +79,7 @@ function genElementConfigHTML()
   var elem;
   if( globals.cursor.cg >= 0 && globals.cursor.ce >= 0 )
     elem = document.getElementById( 'slElement.' + globals.cursor.cg + '.' + globals.cursor.ce );
-  else if( globals.cursor.cg )
+  else if( globals.cursor.cg != undefined )
     elem = document.getElementById( 'slGroup.' + globals.cursor.cg );
   if( elem )
     elem.classList.add( 'css_cursor' );
@@ -193,6 +193,8 @@ function genEditGroupHTML()
   tempHtml += "Dry: <input type='range' id='editGroupDryLevel' min='0' max='100' value='" + globals.editElement.dryLevel + "'><br>";
   tempHtml += "Delay: <input type='range' id='editGroupDelayLevel' min='0' max='100' value='" + globals.editElement.delayLevel + "'><br>";
   tempHtml += "Reverb: <input type='range' id='editGroupReverbLevel' min='0' max='100' value='" + globals.editElement.reverbLevel + "'><br>";
+
+  tempHtml += "<br><button onclick='cloneGroup()'> Clone </button>\n<br>\n<br>";
 
   document.getElementById( 'multiuse' ).innerHTML = tempHtml;
 }
