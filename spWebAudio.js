@@ -280,7 +280,8 @@ function setEffectLevels( g, t )
 {
   globals.instruments[ g.instrument ].set( { envelope : CGlobals.envelopeParams[ g.envelope ] } );
 
-  globals.masterLevelBlock.gain.rampTo( g.masterLevel / 100, t );
+  // volume to be immediate or may cause high volume after a switch.
+  globals.masterLevelBlock.gain.rampTo( g.masterLevel / 100, 0 ); 
   globals.dryLevelBlock.gain.rampTo( g.dryLevel / 100, t );
   globals.delayLevelBlock.gain.rampTo( g.delayLevel / 100, t );
   globals.reverbLevelBlock.gain.rampTo( g.reverbLevel / 100, t );
@@ -298,7 +299,7 @@ var firstTime = true;
 
 function samplePlayCompleteCB()
 {
-  if( globals.ae  )
+  if( globals.ae )
   {
     globals.ae.playing = false;
     playComplete( globals.ae );
@@ -357,8 +358,8 @@ function playElemAudio( audioElem )
 
   switch( audioElem.objType )
   {
-    case "CSample":   playCSample( audioElem );   break;
-    case "CChord":    playCChord( audioElem );    break;
+    case "CSample": playCSample( audioElem ); break;
+    case "CChord":  playCChord( audioElem );  break;
   }
 }
 
