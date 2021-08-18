@@ -264,6 +264,7 @@ function genEditChordHTML()
 function saveEdits()
 {
   if( globals.editElement )
+  {
     switch( globals.editElement.objType )
     {
       case "CSample":
@@ -312,10 +313,11 @@ function saveEdits()
         break;
     }
 
-  globals.configEditedFlag = true;
+    globals.configEditedFlag = true;
 
-  globals.editElement = undefined;
-  document.getElementById( 'multiuse' ).innerHTML = "";
+    globals.editElement = undefined;
+    document.getElementById( 'multiuse' ).innerHTML = "";
 
-  genElementConfigHTML();
+    genElementConfigHTML();
+  }
 }

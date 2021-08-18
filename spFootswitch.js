@@ -35,6 +35,17 @@ function initFootswitch()
     footSwitchButtons[ id ] = new FootSwitchButton( id );
 }
 
+/*
+  Button Modes: (affect the function of buttons)
+    NavUD
+    NavLR
+    Modifier
+    Tempo
+    Chord
+
+  Arp is a flag. Doesn't change mode.
+ */
+
 var fsButtonMap =
 {
   "EVENT_TAP" : { // Event type.
@@ -44,6 +55,7 @@ var fsButtonMap =
       NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } }, // Nav Up down
       Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
       Tempo : { html : "-1", action : function() { adjustTempoBPM( -1 ); } },
+      Chord : { html : "1", action : function() { playElemIx( 0 ); } },
     },
     2 : {
       id : 'fsB2Tap',
@@ -51,30 +63,35 @@ var fsButtonMap =
       NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
       Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
       Tempo : { html : "+1", action : function() { adjustTempoBPM( 1 ); } },
+      Chord : { html : "2", action : function() { playElemIx( 1 ); } },
     },
     3 : {
       id : 'fsB3Tap',
       Default : { html : ">", action : function() { playElement( 'START' ); } },
       Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
       Tempo : { html : "-5", action : function() { adjustTempoBPM( -5 ); } },
+      Chord : { html : "3", action : function() { playElemIx( 2 ); } },
     },
     4 : {
       id : 'fsB4Tap',
       Default : { html : "&#8800;", action : function() { playElement( 'STOP' ); } },
       Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
       Tempo : { html : "+5", action : function() { adjustTempoBPM( 5 ); } },
+      Chord : { html : "4", action : function() { playElemIx( 3 ); } },
     },
     5 : {
       id : 'fsB5Tap',
       Default : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
-      Tempo : { html : "Done", action : function() { exitTempoMode(); changeMode( "NavLR" ); } },
+      Tempo : { html : "Done", action : function() { exitTempoMode();changeMode( "NavLR" ); } },
       Modifier : { html : "-", action : function() { } },
+      Chord : { html : "5", action : function() { playElemIx( 4 ); } },
     },
     6 : {
       id : 'fsB6Tap',
       Default : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
       Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
       Modifier : { html : "FX", action : function() { toggleModifier( "off" );changeMode( "NavLR" ); } },
+      Chord : { html : "6", action : function() { playElemIx( 5 ); } },
     },
   },
 
@@ -96,15 +113,20 @@ var fsButtonMap =
     },
     4 : {
       id : 'fsB4Hold',
+      Default : { html : "Crd", action : function() { changeMode( "Chord" ); } },
+      Chord : { html : "Crd", action : function() { changeMode( "NavLR" ); } },
     },
     5 : {
       id : 'fsB5Hold',
       Default : { html : "Arp", action : function() { setArpState( -1 ); } },
+      Chord : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
       Tempo : { html : "-", action : function() { } }, // tap tempo
     },
     6 : {
       id : 'fsB6Hold',
       Default : { html : "Tempo", action : function() { changeMode( "Tempo" ); } },
+      Chord : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
+
       Tempo : { html : "-", action : function() { } }, // tap tempo
     },
   },
@@ -240,6 +262,8 @@ function changeMode( newTapMode )
       }
   if( newTapMode != "Tempo" )
     setArpState( -2 );
+  if( newTapMode == "Chord" )
+    setChordLabels();
 }
 
 function setArpState( arpState )
@@ -256,6 +280,36 @@ function setArpState( arpState )
     elem.classList.add( "css_cursor" );
   else
     elem.classList.remove( "css_cursor" );
+}
+
+function setChordLabels()
+{
+  if( globals.fsMode != "Chord" )
+    return;
+
+  // tbd, fix. Side effect
+  for( var e of [ "EVENT_TAP", "EVENT_HOLD" ] )
+    for( b = 1;b <= 6;b++ )
+      if( fsButtonMap[ e ][ b ] )
+      {
+        var elem = document.getElementById( fsButtonMap[ e ][ b ].id );
+        elem.classList.remove( "css_cursor" );
+      }
+
+  var elem = document.getElementById( fsButtonMap[ "EVENT_HOLD" ][ 4 ].id );
+  elem.classList.add( "css_cursor" );
+
+  var g = globals.cfg.groups[ globals.cursor.cg ];
+
+  for( var crdIx = 1;crdIx <= 6;crdIx++ )
+  {
+    elem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ crdIx ].id );
+    var str = "-";
+    if( g.elements[ crdIx - 1 ] )
+      str = g.elements[ crdIx - 1 ].elementName;
+    
+    elem.innerHTML = str;
+  }
 }
 
 function toggleModifier( modifier )
@@ -370,6 +424,8 @@ function moveCursor( dir )
   var c = globals.cursor; // c is cursor, just for readability.
   var gLen = globals.cfg.groups[ c.cg ].elements.length;
 
+  var prevGrp = c.cg;
+
   switch( dir )
   {
     case 'UP': // prv group.
@@ -419,8 +475,8 @@ function moveCursor( dir )
     case 'NEXT': // next part. (Group chained to a song)
       if( ( globals.cfg.groups[ c.cg + 1 ].chained ) && ( c.cg < globals.cfg.groups.length - 1 ) )
       {
-         c.cg += 1;
-         c.ce = 0;
+        c.cg += 1;
+        c.ce = 0;
       }
       break;
 
@@ -433,5 +489,9 @@ function moveCursor( dir )
       break;
   }
 
+  if( prevGrp != c.cg )
+    crdPlaying = undefined; // in Chord mode, moving groups means tapping any chord plays it
+                            // normally tapping the playing chord stops it.
+  changeMode( globals.fsMode ); // no change, setting HTML
   genElementConfigHTML();
 }

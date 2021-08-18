@@ -296,15 +296,12 @@ function setEffectLevels( g, t )
 
 var firstTime = true;
 
-var activeElement;
-
 function samplePlayCompleteCB()
 {
-  if( activeElement )
+  if( globals.ae  )
   {
-    activeElement.elem.playing = false;
-    playComplete( activeElement.elem );
-    // activeElement = undefined;
+    globals.ae.playing = false;
+    playComplete( globals.ae );
   }
 
   if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )

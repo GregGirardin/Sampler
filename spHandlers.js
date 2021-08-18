@@ -143,8 +143,11 @@ function setCursor( g, e )
   globals.cursor.cg = g;
   globals.cursor.ce = e;
 
-  setArpState( globals.cfg.groups[ globals.cursor.cg ].arpFlag ); // need to update the highlight status
-  setTempoMs( globals.cfg.groups[ globals.cursor.cg ].tempoMs ); // set the tempo to this group
+  var g = globals.cfg.groups[ globals.cursor.cg ];
+
+  setArpState( g.arpFlag ); // need to update the highlight status
+  setTempoMs( g.tempoMs ); // set the tempo to this group
+  setChordLabels();
 }
 
 function groupClick( groupIndex )
@@ -228,10 +231,41 @@ function playComplete( playElem )
   genElementConfigHTML();
 }
 
-function playElement( action )
+var crdPlaying = undefined;
+function playElemIx( elemIx ) // play a specific element of the current group.
+{
+  var elem;
+
+  for( b = 1;b <= 6;b++ )
+  {
+    elem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ b ].id );
+    elem.classList.remove( "css_cursor" );
+  }
+
+  if( crdPlaying == elemIx )
+  {
+    crdPlaying = undefined;
+    playElement( 'STOP' );
+  }
+  else
+  {
+    crdPlaying = elemIx;
+    playElement( 'START', elemIx );
+    elem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ elemIx + 1 ].id );
+    elem.classList.add( "css_cursor" );
+  }
+}
+
+function playElement( action, elemIx )
 {
   saveEdits();
 
+  if( elemIx != undefined )
+  {
+    if( elemIx > globals.cfg.groups[ globals.cursor.cg ].elements.length )
+      elemIx = globals.cfg.groups[ globals.cursor.cg ].elements.length - 1;
+    globals.cursor.ce = elemIx;
+  }
   if( ( globals.cursor.cg != undefined ) && ( globals.cursor.ce != undefined ) )
   {
     if( action == "START" )
