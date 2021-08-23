@@ -16,27 +16,11 @@
 <body align="left">
 <div class='css_sl_pane'>
   <button class='css_menuButton' id='saveConfigButton'  onclick='sampleConfigSave();'>Save</button>
-  <button class='css_modeButton' id='editButton'        onclick='toggleEdit();'>Edit</button>
-  <button class='css_modeButton' id='tempoButton'       onclick='tapTempo();'>Tempo</button>
+  <button class='css_menuButton' id='editButton'        onclick='toggleEdit();'>Edit</button>
+  <button class='css_menuButton' id='tempoButton'       onclick='tapTempo();'>Tempo</button>
+  <button class='css_menuButton' id='configDropdown'    onchange='selectConfig();'>Config</button>
   <hr>
-  <div id='footSwitchButtons' align='left'>
-    Tap
-    <button class='css_FSButton' id='fsB1Tap' onclick='buttonEvent( "EVENT_TAP", 1 );'></button>
-    <button class='css_FSButton' id='fsB2Tap' onclick='buttonEvent( "EVENT_TAP", 2 );'></button>
-    <button class='css_FSButton' id='fsB3Tap' onclick='buttonEvent( "EVENT_TAP", 3 );'></button>
-    <button class='css_FSButton' id='fsB4Tap' onclick='buttonEvent( "EVENT_TAP", 4 );'></button>
-    <button class='css_FSButton' id='fsB5Tap' onclick='buttonEvent( "EVENT_TAP", 5 );'></button>
-    <button class='css_FSButton' id='fsB6Tap' onclick='buttonEvent( "EVENT_TAP", 6 );'></button>
-    <br>
-    Hold
-    <button class='css_FSButton' id='fsB1Hold' onclick='buttonEvent( "EVENT_HOLD", 1 );'></button>
-    <button class='css_FSButton' id='fsB2Hold' onclick='buttonEvent( "EVENT_HOLD", 2 );'></button>
-    <button class='css_FSButton' id='fsB3Hold' onclick='buttonEvent( "EVENT_HOLD", 3 );'></button>
-    <button class='css_FSButton' id='fsB4Hold' onclick='buttonEvent( "EVENT_HOLD", 4 );'></button>
-    <button class='css_FSButton' id='fsB5Hold' onclick='buttonEvent( "EVENT_HOLD", 5 );'></button>
-    <button class='css_FSButton' id='fsB6Hold' onclick='buttonEvent( "EVENT_HOLD", 6 );'></button>
-    <hr>
-  </div>
+  <div id='footSwitchButtons' align='left'></div>
   <div id='audioElements'></div>
   <hr>
   <h3> Samples </h3>

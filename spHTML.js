@@ -1,5 +1,37 @@
 // Functions that generation HTML content.
 
+function genButtonHTML()
+{
+  var tempHtml = "";
+  var buttonIx;
+
+  for( buttonIx = 1;buttonIx <= 6;buttonIx++ )
+    tempHtml += "<button class='css_FSButton' id='fsB" + buttonIx + "Tap' onclick='buttonEvent( \"EVENT_TAP\", " + buttonIx + " );'></button>";
+  tempHtml += "<br>";
+  for( buttonIx = 1;buttonIx <= 6;buttonIx++ )
+    tempHtml += "<button class='css_FSButton2'>" + buttonIx + "</button>";
+  tempHtml += "<br>";
+  for( buttonIx = 1;buttonIx <= 6;buttonIx++ )
+    tempHtml += "<button class='css_FSButton' id='fsB" + buttonIx + "Hold' onclick='buttonEvent( \"EVENT_HOLD\", " + buttonIx + " );'></button>";
+  tempHtml += "<hr>";
+
+  document.getElementById( 'footSwitchButtons' ).innerHTML = tempHtml;
+
+  tempHtml = "";
+  tempHtml += "Config:<select id='configDropdownSelection'>";
+
+  for( i = 1;i <= 5;i++ )
+  {
+    tempHtml += "<option value='" + i + "' ";
+    if( globals.currentConfigIx == i )
+      tempHtml += "selected='selected'";
+    tempHtml += ">" + i + "</option>";
+  }
+  tempHtml += "</select>";
+
+   document.getElementById( 'configDropdown' ).innerHTML = tempHtml;
+}
+
 /////////////// /////////////// /////////////// ///////////////
 function genElementConfigHTML()
 {
@@ -62,8 +94,9 @@ function genElementConfigHTML()
                   " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
                   g.elements[ j ].elementName + "</button>\n";
     }
-    tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slElement' onclick='addToGroup( " + i + " )'" +
-                "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
+    if( globals.editMode )
+      tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slElement' onclick='addToGroup( " + i + " )'" +
+                  "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
   }
 
   tempHtml += "<br><button onclick='groupAdd()'> Add Group </button>\n<br>\n<br>";
@@ -71,7 +104,7 @@ function genElementConfigHTML()
 
   document.getElementById( 'audioElements' ).innerHTML = tempHtml;
 
-  if( globals.configEditedFlag || globals.chordEditedFlag )
+  if( globals.configEditedFlag )
     document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
   else
     document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );

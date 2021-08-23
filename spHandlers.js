@@ -1,5 +1,13 @@
 // Button / click handlers
 
+
+function selectConfig()
+{
+  var presetIx = document.getElementById( "configDropdownSelection" ).value;
+  globals.currentConfigIx = presetIx;
+  getFileFromServer( configFileName(), gotConfig );
+}
+
 function sl_allowDrop( ev ) { ev.preventDefault(); }
 function dragElem( ev ) { ev.dataTransfer.setData( "dragElem", ev.target.id ); }
 
@@ -66,7 +74,7 @@ function dropElem( ev )
     }
   }
   else if( ( dragElem.substring( 0, libSamp.length ) == libSamp ) &&
-           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping library sample into the config
+           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Dropping sample into the config
   {
     var sampId = dragElem.substring( libSamp.length, );
     var libSample = globals.sampleLibrary[ sampId ];
@@ -82,16 +90,37 @@ function dropElem( ev )
     var fromGroup = parseInt( dragElem.substring( slGroup.length, ) );
     var toGroup = parseInt( ev.target.id.substring( slGroup.length, ) );
 
-    if( toGroup < fromGroup ) // moved group up
+    if( globals.cfg.groups[ fromGroup ].chained )
+      return; // tbd. For now don't move chained groups.
+    if( globals.cfg.groups[ toGroup ].chained )
+      return; // tbd. Don't allow dropping onto a chain. 
+
+    var cutList = []; // Move the whole chain.
+    do
     {
-      globals.cfg.groups.splice( toGroup, 0, globals.cfg.groups[ fromGroup ] );
-      globals.cfg.groups.splice( fromGroup + 1, 1 );
-    }
-    else
-    {
-      globals.cfg.groups.splice( toGroup + 1, 0, globals.cfg.groups[ fromGroup ] );
-      globals.cfg.groups.splice( fromGroup, 1 );
-    }
+      cutList = cutList.concat( globals.cfg.groups.splice( fromGroup, 1 ) );
+    } while( ( globals.cfg.groups[ fromGroup ].chained ) && ( fromGroup < globals.cfg.groups.length ) )
+
+    if( toGroup > fromGroup )
+      toGroup -= cutList.length;
+
+    globals.cfg.groups = [].concat( globals.cfg.groups.slice( 0, toGroup ), cutList, globals.cfg.groups.splice( toGroup ) );
+  }
+  else if( ( dragElem.substring( 0, slGroup.length ) == slGroup ) &&
+           ( ev.target.id.substring( 0, slElem.length ) == slElem ) ) // Moving a group onto an element.
+  {
+    var fromGroup = parseInt( dragElem.substring( slGroup.length, ) );
+    var indexes = ev.target.id.substring( slElem.length, ).split( "." );
+    var toGroup = parseInt( indexes[ 0 ] ) + 1;
+
+    globals.cfg.groups[ fromGroup ].chained = true;
+
+    var cutElem = globals.cfg.groups.splice( fromGroup, 1 );
+
+    if( toGroup > fromGroup )
+      toGroup -= 1;
+
+    globals.cfg.groups = [].concat( globals.cfg.groups.slice( 0, toGroup ), cutElem, globals.cfg.groups.splice( toGroup ) );
   }
   else if( ev.target.id == "trashCan" )
   {
@@ -107,12 +136,6 @@ function dropElem( ev )
     {
       var delGroup = parseInt( dragElem.substring( slGroup.length, ) );
       globals.cfg.groups.splice( delGroup, 1 );
-    }
-    else if( dragElem.substring( 0, libChordID.length ) == libChordID )
-    {
-      var delChord = parseInt( dragElem.substring( libChordID.length, ) );
-      globals.chordLibrary.splice( delChord, 1 );
-      CGlobals.chordEditedFlag = true;
     }
     else if( dragElem.substring( 0, cbStr.length ) == cbStr )
       globals.cfg.groups[ globals.cfg.groups.length - 1 ].elements = [];
@@ -260,10 +283,16 @@ function playElement( action, elemIx )
 {
   saveEdits();
 
+  if( globals.cursor.ce == undefined )
+  {
+    if( globals.cfg.groups[ globals.cursor.cg ].elements.length )
+      globals.cursor.ce = 0;
+  }
+
   if( elemIx != undefined )
   {
-    if( elemIx > globals.cfg.groups[ globals.cursor.cg ].elements.length )
-      elemIx = globals.cfg.groups[ globals.cursor.cg ].elements.length - 1;
+    if( elemIx >= globals.cfg.groups[ globals.cursor.cg ].elements.length )
+      return;
     globals.cursor.ce = elemIx;
   }
   if( ( globals.cursor.cg != undefined ) && ( globals.cursor.ce != undefined ) )
@@ -296,6 +325,7 @@ function toggleEdit()
   globals.editMode ? b.classList.add( 'css_highlight_red' ) : b.classList.remove( 'css_highlight_red' );
 
   document.getElementById( 'multiuse' ).innerHTML = "";
+  genElementConfigHTML();
 }
 
 function cloneChord()

@@ -10,11 +10,17 @@
     |
   Distortion
     |
+  Cab ?
+    |
   Chorus
     |
   Phaser
     |
   Tremolo
+    |
+  Panner ?
+    |
+  Limiter
     |
     |\
     | \
@@ -40,10 +46,13 @@ function initWebAudio()
   globals.reverbLevelBlock = new Tone.Gain( 0 ).connect( globals.reverbBlock );
   globals.delayLevelBlock = new Tone.Gain( 0 ).connect( globals.delayBlock );
 
+  globals.limiterBlock = new Tone.Compressor( -40, 10 ); // just for sanity
+  globals.limiterBlock.connect( globals.dryLevelBlock );
+  globals.limiterBlock.connect( globals.delayLevelBlock );
+  globals.limiterBlock.connect( globals.reverbLevelBlock );
+
   globals.tremoloBlock = new Tone.Tremolo( { frequency : 4, depth : 1, wet : 0, spread : 0 } );
-  globals.tremoloBlock.connect( globals.dryLevelBlock );
-  globals.tremoloBlock.connect( globals.delayLevelBlock );
-  globals.tremoloBlock.connect( globals.reverbLevelBlock );
+  globals.tremoloBlock.connect( globals.limiterBlock );
 
   globals.phaserBlock = new Tone.Phaser( { frequency : .4, octaves : 4, baseFrequency : 700, wet : 0 } );
   globals.phaserBlock.connect( globals.tremoloBlock );
@@ -51,8 +60,14 @@ function initWebAudio()
   globals.chorusBlock = new Tone.Chorus( { frequency : .5, delayTime : 2.5, depth : 1, wet : 0 } );
   globals.chorusBlock.connect( globals.phaserBlock );
 
-  globals.distortionBlock = new Tone.Chebyshev( 10 );
+  // globals.cabBlock = new Tone.Convolver( serverURL + "irs/CabIR02.wav" );
+  // globals.cabBlock.set( { wet : 1,
+  //                         volume : 0 } );
+  // globals.cabBlock.connect( globals.chorusBlock );
+
+  globals.distortionBlock = new Tone.Chebyshev( 50 );
   globals.distortionBlock.connect( globals.chorusBlock );
+  //globals.distortionBlock.connect( globals.cabBlock );
   globals.distortionBlock.wet.value = 0;
 
   globals.filterBlock = new Tone.AutoFilter();
@@ -81,6 +96,7 @@ function initWebAudio2()
 function createSynths() // create all synths and connect them to globals.masterLevel
 {
   // Oscillators are louder than samplers so we normalize volumes.
+  const instURL = serverURL + "instruments/";
 
   for( var ix = 0;ix < CGlobals.synthTypes.length;ix++ )
   {
@@ -94,13 +110,13 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "Triangle":
         var oType = sType.toLowerCase();
         s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
-        s.set( { volume : -12, oscillator : { type : oType }, } );
+        s.set( { volume : -16, oscillator : { type : oType }, } );
         break;
 
       case "Bell":
         var oType = sType.toLowerCase();
         s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
-        s.set( { volume : -12, oscillator : { type : "sine" },
+        s.set( { volume : -16, oscillator : { type : "sine" },
                  envelope : { attack: 0, decay: 1, sustain: .2, release: 1 } } );
         break;
 
@@ -114,7 +130,7 @@ function createSynths() // create all synths and connect them to globals.masterL
                                           C6 : "C6.mp3", "D#6" : "Ds6.mp3", "F#6" : "Fs6.mp3", A6 : "A6.mp3",
                                           C7 : "C7.mp3", "D#7" : "Ds7.mp3", "F#7" : "Fs7.mp3", A7 : "A7.mp3",
                                           C8 : "C8.mp3" },
-                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/piano/" } );
+                                release : 4, baseUrl : instURL + "piano/" } );
         break;
 
       case "Cello":
@@ -124,25 +140,25 @@ function createSynths() // create all synths and connect them to globals.masterL
                                           'A#2': 'As2.mp3', 'A#3': 'As3.mp3', 'A#4': 'As4.mp3', 'B2': 'B2.mp3', 'B3': 'B3.mp3', 'B4': 'B4.mp3',
                                           'C2': 'C2.mp3', 'C3': 'C3.mp3', 'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C#3': 'Cs3.mp3', 'C#4': 'Cs4.mp3',
                                           'D2': 'D2.mp3', 'D3': 'D3.mp3', 'D4': 'D4.mp3', 'D#2': 'Ds2.mp3', 'D#3': 'Ds3.mp3', 'D#4': 'Ds4.mp3' },
-                                release : 8, baseUrl : "http://127.0.0.1:8080/instruments/cello/" } );
+                                release : 8, baseUrl : instURL + "cello/" } );
           break;
 
       case "Flute":
         s = new Tone.Sampler( { urls :  { 'A5': 'A5.mp3', 'C3': 'C3.mp3', 'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3',
                                           'E3': 'E3.mp3', 'E4': 'E4.mp3', 'E5': 'E5.mp3', 'A3': 'A3.mp3', 'A4': 'A4.mp3' },
-                                release : 8, baseUrl : "http://127.0.0.1:8080/instruments/flute/" } );
+                                release : 8, baseUrl : instURL + "flute/" } );
         break;
 
       case "French":
         s = new Tone.Sampler( { urls :  { 'D2': 'D2.mp3', 'D4': 'D4.mp3', 'D#1': 'Ds1.mp3', 'F2': 'F2.mp3',
                                           'F4': 'F4.mp3', 'G1': 'G1.mp3', 'A0': 'A0.mp3', 'A2': 'A2.mp3', 'C1': 'C1.mp3', 'C3': 'C3.mp3' },
-                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/french-horn/" } );
+                                release : 4, baseUrl : instURL + "french-horn/" } );
         break;
 
       case "Trumpet":
         s = new Tone.Sampler( { urls :  { 'C5': 'C5.mp3', 'D4': 'D4.mp3', 'D#3': 'Ds3.mp3', 'F2': 'F2.mp3', 'F3': 'F3.mp3',
                                           'F4': 'F4.mp3', 'G3': 'G3.mp3', 'A2': 'A2.mp3', 'A4': 'A4.mp3', 'A#3': 'As3.mp3', 'C3': 'C3.mp3' },
-                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/trumpet/" } );
+                                release : 4, baseUrl : instURL + "trumpet/" } );
         break;
 
       case "Violin":
@@ -150,13 +166,13 @@ function createSynths() // create all synths and connect them to globals.masterL
                                           'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3', 'C7': 'C7.mp3',
                                           'E4': 'E4.mp3', 'E5': 'E5.mp3', 'E6': 'E6.mp3',
                                           'G4': 'G4.mp3', 'G5': 'G5.mp3', 'G6': 'G6.mp3' },
-                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/violin/" } );
+                                release : 4, baseUrl : instURL + "violin/" } );
         break;
 
       case "Xylo":
         s = new Tone.Sampler( { urls :  { 'G3': 'G3.mp3', 'G4': 'G4.mp3', 'G5': 'G5.mp3', 'G6': 'G6.mp3',
                                           'C4': 'C4.mp3', 'C5': 'C5.mp3', 'C6': 'C6.mp3','C7': 'C7.mp3' },
-                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/xylophone/" } );
+                                release : 4, baseUrl : instURL + "xylophone/" } );
         break;
 
       case "Harp":
@@ -167,7 +183,7 @@ function createSynths() // create all synths and connect them to globals.masterL
                                           'G1': 'G1.mp3', 'G3': 'G3.mp3', 'G5': 'G5.mp3',
                                           'A2': 'A2.mp3', 'A4': 'A4.mp3', 'A6': 'A6.mp3',
                                           'B1': 'B1.mp3', 'B3': 'B3.mp3', 'B5': 'B5.mp3', 'B6': 'B6.mp3' },
-                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/harp/" } );
+                                release : 4, baseUrl : instURL + "harp/" } );
         break;
 
       case "Organ":
@@ -175,7 +191,7 @@ function createSynths() // create all synths and connect them to globals.masterL
                                           'D#1': 'Ds1.mp3', 'D#2': 'Ds2.mp3', 'D#3': 'Ds3.mp3', 'D#4' : 'Ds4.mp3', 'D#5' : 'Ds5.mp3',
                                           'F#1': 'Fs1.mp3', 'F#2': 'Fs2.mp3', 'F#3': 'Fs3.mp3', 'F#4' : 'Fs4.mp3', 'F#5' : 'Fs5.mp3',
                                           'A1': 'A1.mp3', 'A2': 'A2.mp3', 'A3': 'A3.mp3', 'A4': 'A4.mp3', 'A5': 'A5.mp3' },
-                                release : 4, baseUrl : "http://127.0.0.1:8080/instruments/organ/" } );
+                                release : 4, baseUrl : instURL + "organ/" } );
         break;
 
       case "SynthPipe":

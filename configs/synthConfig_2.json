@@ -1,0 +1,516 @@
+{
+  "groups": [
+    {
+      "objType": "CGroup",
+      "elementName": "LLS",
+      "instrument": "Sawtooth",
+      "chained": false,
+      "thickenFlag": true,
+      "tempoMs": 500,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Med",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "B",
+          "playBeats": 4,
+          "notes": 296960,
+          "octave": -1,
+          "group": 16
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "playBeats": 4,
+          "notes": 74242,
+          "octave": -1,
+          "group": 16
+        }
+      ],
+      "masterLevel": 35,
+      "distortionLevel": 0,
+      "chorusLevel": 29,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 45,
+      "delayLevel": 52
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Hotel",
+      "instrument": "Piano",
+      "chained": false,
+      "thickenFlag": false,
+      "tempoMs": 857.1428571428571,
+      "seqMode": "Cont",
+      "arpFlag": true,
+      "arpNPB": 4,
+      "arpSequence": "1324",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "Bm",
+          "playBeats": 4,
+          "notes": 8669184,
+          "octave": 0,
+          "group": 11
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F#",
+          "playBeats": 4,
+          "notes": 271424,
+          "octave": 0,
+          "group": 11
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "playBeats": 4,
+          "notes": 2171392,
+          "octave": 0,
+          "group": 11
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Em",
+          "playBeats": 4,
+          "notes": 329872,
+          "octave": 0,
+          "group": 11
+        },
+        {
+          "objType": "CChord",
+          "elementName": "G",
+          "playBeats": 4,
+          "notes": 542848,
+          "octave": 0,
+          "group": 13
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": 4,
+          "notes": 16964,
+          "octave": 0,
+          "group": 13
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Em",
+          "playBeats": 4,
+          "notes": 329872,
+          "octave": 0,
+          "group": 13
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F#",
+          "playBeats": 4,
+          "notes": 271424,
+          "octave": 0,
+          "group": 13
+        }
+      ],
+      "masterLevel": 47,
+      "distortionLevel": 0,
+      "chorusLevel": 25,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 31,
+      "delayLevel": 0,
+      "chordMode": false
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Part",
+      "instrument": "Piano",
+      "chained": true,
+      "thickenFlag": false,
+      "tempoMs": 857.1428571428571,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 2,
+      "arpSequence": "1324",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "G",
+          "playBeats": 4,
+          "notes": 542848,
+          "octave": 0,
+          "group": 14
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": 4,
+          "notes": 16964,
+          "octave": 0,
+          "group": 14
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Em",
+          "playBeats": 4,
+          "notes": 329872,
+          "octave": 0,
+          "group": 14
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F#",
+          "playBeats": 4,
+          "notes": 271424,
+          "octave": 0,
+          "group": 14
+        }
+      ],
+      "masterLevel": 47,
+      "distortionLevel": 0,
+      "chorusLevel": 25,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 31,
+      "delayLevel": 0,
+      "chordMode": false
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Killing Moon",
+      "instrument": "Sawtooth",
+      "chained": false,
+      "thickenFlag": false,
+      "tempoMs": 500,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Med",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "Em",
+          "playBeats": 4,
+          "notes": 67728,
+          "octave": 0,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "playBeats": 4,
+          "notes": 2193,
+          "octave": 0,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "G",
+          "playBeats": 4,
+          "notes": 542848,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Cm",
+          "playBeats": 4,
+          "notes": 17338496,
+          "octave": -1,
+          "group": 23
+        }
+      ],
+      "masterLevel": 38,
+      "distortionLevel": 0,
+      "chorusLevel": 37,
+      "phaserLevel": 41,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 58,
+      "delayLevel": 51
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "SummerOf69",
+      "instrument": "Sawtooth",
+      "thickenFlag": true,
+      "tempoMs": 461.53846153846155,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 2,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "Bm",
+          "playBeats": 4,
+          "notes": 8669184,
+          "octave": 0,
+          "group": 0
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 2171392,
+          "octave": -1,
+          "group": 0
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 16964,
+          "octave": 0,
+          "group": 0
+        },
+        {
+          "objType": "CChord",
+          "elementName": "G",
+          "playBeats": 4,
+          "notes": 542848,
+          "octave": 0,
+          "group": 0
+        }
+      ],
+      "masterLevel": 100,
+      "distortionLevel": 0,
+      "chorusLevel": 13,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 23,
+      "delayLevel": 0,
+      "partFlag": false,
+      "chained": false,
+      "chordMode": true
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Bridge",
+      "instrument": "Sawtooth",
+      "chained": true,
+      "thickenFlag": true,
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Med",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "F",
+          "subGroupStart": true,
+          "playBeats": 4,
+          "notes": 135712,
+          "octave": -1,
+          "group": 1
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Bb",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 4342784,
+          "octave": -1,
+          "group": 1
+        },
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "subGroupStart": false,
+          "playBeats": 4,
+          "notes": 16846976,
+          "octave": -1,
+          "group": 1
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Bb",
+          "playBeats": 4,
+          "notes": 4342784,
+          "octave": -1,
+          "group": 1
+        }
+      ],
+      "masterLevel": 47,
+      "distortionLevel": 0,
+      "chorusLevel": 26,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 23,
+      "delayLevel": 0,
+      "chordMode": true
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "All These Things",
+      "instrument": "Triangle",
+      "chained": false,
+      "thickenFlag": true,
+      "tempoMs": 447.76119402985074,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 2,
+      "envelope": "Slow",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "F#",
+          "playBeats": 4,
+          "notes": 74816,
+          "octave": -1,
+          "group": 16
+        },
+        {
+          "objType": "CChord",
+          "elementName": "B",
+          "playBeats": 4,
+          "notes": 297024,
+          "octave": -1,
+          "group": 16
+        },
+        {
+          "objType": "CChord",
+          "elementName": "Ebm",
+          "playBeats": 4,
+          "notes": 9288,
+          "octave": 0,
+          "group": 16
+        }
+      ],
+      "masterLevel": 76,
+      "distortionLevel": 12,
+      "chorusLevel": 17,
+      "phaserLevel": 12,
+      "tremoloLevel": 48,
+      "dryLevel": 42,
+      "reverbLevel": 66,
+      "delayLevel": 33
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Bad",
+      "instrument": "Bell",
+      "chained": false,
+      "thickenFlag": true,
+      "tempoMs": 545.4545454545455,
+      "seqMode": "Cont",
+      "arpFlag": true,
+      "arpNPB": 4,
+      "arpSequence": "12324323",
+      "tremRate": 1,
+      "envelope": "Hard",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": 8,
+          "notes": 67856,
+          "octave": 1,
+          "group": 7
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "playBeats": 8,
+          "notes": 74256,
+          "octave": 1,
+          "group": 7
+        }
+      ],
+      "masterLevel": 50,
+      "distortionLevel": 0,
+      "chorusLevel": 47,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 61,
+      "delayLevel": 38
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Free",
+      "instrument": "Piano",
+      "chained": false,
+      "thickenFlag": false,
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "playBeats": 4,
+          "notes": 528529,
+          "octave": -1,
+          "group": 8
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F",
+          "playBeats": 4,
+          "notes": 553718305,
+          "octave": -1,
+          "group": 8
+        }
+      ],
+      "masterLevel": 100,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 37,
+      "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Clipboard",
+      "instrument": "Piano",
+      "thickenFlag": false,
+      "tempoMs": 500,
+      "seqMode": "None",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [],
+      "masterLevel": 100,
+      "distortionLevel": 0,
+      "chorusLevel": 0,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 0,
+      "delayLevel": 0
+    }
+  ]
+}

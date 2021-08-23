@@ -1,28 +1,13 @@
-/* Foot switch handling for two buttons. Assume the buttons are mapped to UP and DOWN.
- Tap L,R,LR, RL Double Tap L+R, Hold L+R
- Airturn doesn't allow using both switches at the same time so can't do
+/* Foot switch handling.
+   Airturn doesn't allow using both switches at the same time so can't do that.
 
-          | Start Timer       clickHoldTO
-  Time -----------------------|   Trigger Hold at 'up' for determinism.
-B1  ______/-------------------|---\_ Hold
-    ______/----------\________| Single Tap
-    ______/--\___/ <- Double Tap 
-          ^--- Button pressed
-B2 ___________________________|
-
-***
-
-B1  ______/-------------------| 
-B2  ___________/ <-- Button12  Not used.
-
-
-In Tempo mode we bypass these features for accuracy.
+  In Tempo mode we bypass these features for accuracy.
 */
 
 const MIN_TEMPO_MS = 20; 
 const MAX_TEMPO_MS = 2000;
 
-var clickHoldTO = 200;
+var clickHoldTO = 250; // ms. Can reduce if your down/up is fast enough.
 
 var footSwitchButtons = []; // array of buttons
 
@@ -33,15 +18,13 @@ function initFootswitch()
 
   for( var id = 1;id <= 6;id++ )
     footSwitchButtons[ id ] = new FootSwitchButton( id );
+  
+  changeMode( "NavLR" );
 }
 
 /*
   Button Modes: (affect the function of buttons)
-    NavUD
-    NavLR
-    Modifier
-    Tempo
-    Chord
+    NavUD, NavLR, Modifier, Tempo, Chord
 
   Arp is a flag. Doesn't change mode.
  */
@@ -50,84 +33,73 @@ var fsButtonMap =
 {
   "EVENT_TAP" : { // Event type.
     1 : { // Event source
-      id : 'fsB1Tap', // the DOM element to highlight
-      Default : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
-      NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } }, // Nav Up down
-      Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
-      Tempo : { html : "-1", action : function() { adjustTempoBPM( -1 ); } },
+      id : 'fsB1Tap',
+      NavLR : { html : ">", action : function() { playElement( 'START' ); } },
+      Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
+      Tempo : { html : "-5", action : function() { adjustTempoBPM( -5 ); } },
       Chord : { html : "1", action : function() { playElemIx( 0 ); } },
     },
     2 : {
       id : 'fsB2Tap',
-      Default : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
-      NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
-      Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
-      Tempo : { html : "+1", action : function() { adjustTempoBPM( 1 ); } },
+      Default : { html : "&#8800;", action : function() { playElement( 'STOP' ); } },
+      Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
+      Tempo : { html : "+5", action : function() { adjustTempoBPM( 5 ); } },
       Chord : { html : "2", action : function() { playElemIx( 1 ); } },
     },
     3 : {
-      id : 'fsB3Tap',
-      Default : { html : ">", action : function() { playElement( 'START' ); } },
-      Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
-      Tempo : { html : "-5", action : function() { adjustTempoBPM( -5 ); } },
+      id : 'fsB3Tap', // the DOM element to highlight
+      Default : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
+      NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } }, // Nav Up down
+      Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
+      Tempo : { html : "-1", action : function() { adjustTempoBPM( -1 ); } },
       Chord : { html : "3", action : function() { playElemIx( 2 ); } },
     },
     4 : {
       id : 'fsB4Tap',
-      Default : { html : "&#8800;", action : function() { playElement( 'STOP' ); } },
-      Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
-      Tempo : { html : "+5", action : function() { adjustTempoBPM( 5 ); } },
+      NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
+      NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
+      Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
+      Tempo : { html : "+1", action : function() { adjustTempoBPM( 1 ); } },
       Chord : { html : "4", action : function() { playElemIx( 3 ); } },
     },
     5 : {
       id : 'fsB5Tap',
-      Default : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
+      NavLR : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
       Tempo : { html : "Done", action : function() { exitTempoMode();changeMode( "NavLR" ); } },
       Modifier : { html : "-", action : function() { } },
       Chord : { html : "5", action : function() { playElemIx( 4 ); } },
     },
     6 : {
       id : 'fsB6Tap',
-      Default : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
+      NavLR : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
       Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
-      Modifier : { html : "FX", action : function() { toggleModifier( "off" );changeMode( "NavLR" ); } },
-      Chord : { html : "6", action : function() { playElemIx( 5 ); } },
+      Modifier : { html : "&larr;&rarr;", action : function() { toggleModifier( "off" );changeMode( "NavLR" ); } },
+      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      Chord : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
     },
   },
 
   "EVENT_HOLD" : {
-    1 : {
-      id : 'fsB1Hold',
-      Default : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
-      NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
-      Tempo : { html : "-", action : function() { } },
-    },
+    1 : { id : 'fsB1Hold', },
     2 : {
       id : 'fsB2Hold',
-      Default : { html : "FX", action : function() { changeMode( "Modifier" ); } },
-      Modifier : { html : "FX", action : function() { toggleModifier( "off" );changeMode( "NavLR" ); } },
-      Tempo : { html : "-", action : function() { } },
+      NavLR : { html : "FX", action : function() { changeMode( "Modifier" ); } },
     },
     3 : {
       id : 'fsB3Hold',
+      NavLR : { html : "&uarr;&darr;", action : function() { changeMode( "NavUD" ); } },
     },
     4 : {
       id : 'fsB4Hold',
-      Default : { html : "Crd", action : function() { changeMode( "Chord" ); } },
-      Chord : { html : "Crd", action : function() { changeMode( "NavLR" ); } },
+      NavLR : { html : "Crd", action : function() { changeMode( "Chord" ); } },
     },
     5 : {
       id : 'fsB5Hold',
-      Default : { html : "Arp", action : function() { setArpState( -1 ); } },
-      Chord : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
-      Tempo : { html : "-", action : function() { } }, // tap tempo
+      NavLR : { html : "Arp", action : function() { setArpState( -1 ); } },
     },
     6 : {
       id : 'fsB6Hold',
-      Default : { html : "Tempo", action : function() { changeMode( "Tempo" ); } },
-      Chord : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
-
-      Tempo : { html : "-", action : function() { } }, // tap tempo
+      NavLR : { html : "Tempo", action : function() { changeMode( "Tempo" ); } },
     },
   },
 };
@@ -155,10 +127,9 @@ class FootSwitchButton
     {
       this.buttonState = newState;
 
-      // Take action on down immediately if necessary.
-      if( globals.fsMode == "Tempo" )
+      // Take action on down immediately if there is no HOLD function.
+      if( !fsButtonMap[ "EVENT_HOLD" ][ this.buttonID ][ globals.fsMode ] )
       {
-        // Button presses need to be accurate and deterministic when setting tempo, so no hold
         if( newState )
           buttonEvent( "EVENT_TAP", this.buttonID );
       }
@@ -301,7 +272,7 @@ function setChordLabels()
 
   var g = globals.cfg.groups[ globals.cursor.cg ];
 
-  for( var crdIx = 1;crdIx <= 6;crdIx++ )
+  for( var crdIx = 1;crdIx <= 5;crdIx++ )
   {
     elem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ crdIx ].id );
     var str = "-";
@@ -319,31 +290,31 @@ function toggleModifier( modifier )
 
   switch( modifier )
   {
-    case "filter":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 1 ].id );
-      globals.modFilterState = !globals.modFilterState;
-      if( globals.modFilterState )
-        state = true;
-      break;
-
-    case "chorus":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 2 ].id );
-      globals.modChorusState = !globals.modChorusState;
-      if( globals.modChorusState )
-        state = true;
-      break;
-
     case "tremolo":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 3 ].id );
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 1 ].id );
       globals.modTremoloState = !globals.modTremoloState;
       if( globals.modTremoloState )
         state = true;
       break;
 
     case "distortion":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 4 ].id );
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 2 ].id );
       globals.modDistState = !globals.modDistState;
       if( globals.modDistState )
+        state = true;
+      break;
+
+    case "filter":
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 3 ].id );
+      globals.modFilterState = !globals.modFilterState;
+      if( globals.modFilterState )
+        state = true;
+      break;
+
+    case "chorus":
+      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 4 ].id );
+      globals.modChorusState = !globals.modChorusState;
+      if( globals.modChorusState )
         state = true;
       break;
 
@@ -435,7 +406,7 @@ function moveCursor( dir )
         while( globals.cfg.groups[ c.cg ].chained && c.cg )
           c.cg -= 1;
 
-        c.ce = 0; // almost certain want to start from the beginning
+        c.ce = undefined; // almost certain want to start from the beginning
 
         setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
         setArpState( globals.cfg.groups[ c.cg ].arpFlag );
@@ -453,7 +424,7 @@ function moveCursor( dir )
         if( tmpGrp < globals.cfg.groups.length )
         {
           c.cg = tmpGrp;
-          c.ce = 0;
+          c.ce = undefined;
 
           setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
           setArpState( globals.cfg.groups[ c.cg ].arpFlag );
@@ -467,15 +438,21 @@ function moveCursor( dir )
       break;
 
     case 'RIGHT':
-      c.ce += 1;
-      if( c.ce == gLen )
-        c.ce = 0; // go to start
+      if( c.ce == undefined )
+        c.ce = 0;
+      else
+      {
+        c.ce += 1;
+        if( c.ce == gLen )
+          c.ce = 0; // go to start
+      }
       break;
 
     case 'NEXT': // next part. (Group chained to a song)
       if( ( globals.cfg.groups[ c.cg + 1 ].chained ) && ( c.cg < globals.cfg.groups.length - 1 ) )
       {
-        c.cg += 1;
+        if( c.ce != undefined )
+          c.cg += 1;
         c.ce = 0;
       }
       break;

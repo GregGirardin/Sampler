@@ -3,7 +3,7 @@
   border: 2px solid white;
   background-color: #def;
   color: #444;
-  padding: 6px;
+  padding: 2px;
   text-align: left;
   font-size: 10px;
 }
@@ -47,26 +47,29 @@
 
 .css_menuButton:hover { border: 2px solid black; }
 
-.css_modeButton
-{
-  border: 2px solid white;
-  background-color: #bbf;
-  color: #444;
-  padding: 6px;
-  text-align: left;
-  font-size: 10px;
-}
-
-.css_modeButton:hover { border: 2px solid black; }
-
 .css_FSButton
 {
   border: 2px solid white;
+  border-color: #888;
   background-color: #bbf;
   color: #444;
-  padding: 6px;
+  padding: 2px;
   text-align: center;
-  font-size: 14px;
+  font-size: 20px;
+  width : 100px;
+  height : 40px;
+}
+
+.css_FSButton2
+{
+  border: 5px;
+  border-color: #888;
+  background-color: #222;
+  color: #fff;
+  padding: 2px;
+  text-align: center;
+  font-size: 15px;
+  width : 100px;
 }
 
 .css_keyboard

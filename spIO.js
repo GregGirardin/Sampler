@@ -4,7 +4,11 @@
 
 var serverURL = 'http://127.0.0.1:8080/'; // this is where samples.json and all the samples live.
 
-const configFile = 'sampleConfig.json';
+function configFileName()
+{
+  var fName = 'configs/synthConfig_' + globals.currentConfigIx + '.json';
+  return fName;
+}
 
 function gotSamples( file, data )
 {
@@ -17,10 +21,9 @@ function gotConfig( file, data )
   if( data )
     globals.cfg = JSON.parse( data );
   else
-    console.log( "No config." );
+    globals.cfg = new CConfig();
 
   genElementConfigHTML();
-  changeMode( "NavLR" ); // FS mode has a behavioral dependency on the config so must be done here.
 }
 
 function getFileFromServer( filename, callback )
@@ -29,7 +32,8 @@ function getFileFromServer( filename, callback )
 
   xhr.overrideMimeType( "application/json" );
   xhr.open( "GET", serverURL + filename, true );
-  xhr.onreadystatechange = function() {
+  xhr.onreadystatechange = function()
+  {
     if ( xhr.readyState === 4 )
       if( xhr.status == "200" )
         callback( filename, xhr.responseText );
@@ -64,22 +68,10 @@ function sampleConfigSave()
     formData.append( "data", configData );
 
     var xhr = new XMLHttpRequest();
-    xhr.open( 'post', serverURL + configFile );
+    xhr.open( 'post', serverURL + configFileName() );
     xhr.send( formData );
 
     globals.configEditedFlag = false;
-  }
-
-  if( globals.chordEditedFlag )
-  {
-    configData = JSON.stringify( globals.chordLibrary, null, "  " );
-    formData = new FormData();
-    formData.append( "data", configData );
-
-    var xhr = new XMLHttpRequest();
-    xhr.open( 'post', serverURL + chordConfigFile );
-    xhr.send( formData );
-    globals.chordEditedFlag = false;
   }
 
   document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );

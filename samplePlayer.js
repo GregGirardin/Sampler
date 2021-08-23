@@ -5,13 +5,13 @@ class CGlobals // Global consts and stuff in here just to be cleaner. Not saved.
   constructor()
   {
     this.cursor = new cursorPosition();
+    this.currentConfigIx = 1;
     this.configEditedFlag = false;
-    this.chordEditedFlag = false;
     this.sampleLibrary = {}; // object of ClLibrarySample
     this.chordLibrary = []; // array of CChord
     this.editElement = {}; // What we're editing if "Mode_Edit" Used a lot so keep as it's own var 
-    this.currentTempo = 500;
-    this.cfg = {}; // The CConfig. This is saved.
+    this.currentTempo = 500; // ms
+    this.cfg = {}; // The CConfig. This is what is saved.
     this.instruments = {};
     this.fsMode == "NavLR";
     this.editMode = false;
@@ -35,10 +35,11 @@ CGlobals.tremRates = [ 1, 2, 4, 8 ]; // trems per beat.
 CGlobals.playBeats = [ 1, 2, 4, 8, 16, 32 ];
 CGlobals.arpSequences = [ "1234", "4321", "1324", "4231", "12324323", "B-T", "T-B" ]; 
 CGlobals.seqModes = [ "None", "Manual", "Cont" ];
-CGlobals.envelopeLabels = [ "Fast", "Med", "Slow" ];
-CGlobals.envelopeParams = { Fast : { attack : .1, decay :  0, sustain:    1, release: .1 },
-                            Med  : { attack :  2, decay :  1, sustain: 0.95, release:  2 },
-                            Slow : { attack :  5, decay : .9, sustain: 0.95, release:  4 } };
+CGlobals.envelopeLabels = [ "Hard", "Fast", "Med", "Slow" ];
+CGlobals.envelopeParams = { Hard : { attack :  0, decay :  0, sustain:   1, release: .1 },
+                            Fast : { attack : .1, decay : .1, sustain:  .9, release: .1 },
+                            Med  : { attack :  2, decay : .5, sustain: 0.9, release:  2 },
+                            Slow : { attack :  5, decay :  2, sustain: 0.9, release:  4 } };
 
 var globals; // a CGlobals to contain everything
 
@@ -46,6 +47,7 @@ class CConfig
 {
   constructor( )
   {
+    this.name = "Config";
     this.groups = [];
     this.groups.push( new CGroup( "Group" ) );
     this.groups.push( new CGroup( "Clipboard" ) );
@@ -133,16 +135,15 @@ function sampleListInit()
   // }
 
   globals = new CGlobals();
-
   globals.configEditedFlag = false;
   globals.cfg = new CConfig();
 
-  getFileFromServer( "samples.json", gotSamples );
-  getFileFromServer( configFile, gotConfig );
-
-  initFootswitch();
   flashTempo();
   initWebAudio();
+  genButtonHTML();
+  initFootswitch();
+  getFileFromServer( "samples.json", gotSamples );
+  selectConfig();
 
   setTempoMs( 500 );
 }
