@@ -140,7 +140,7 @@ function dropElem( ev )
       globals.cfg.groups[ globals.cfg.groups.length - 1 ].elements = [];
   }
 
-  globals.configEditedFlag = true;
+  configEdited( true );
 
   genElementConfigHTML();
 }
@@ -154,7 +154,7 @@ function setSampleConfigName()
     if( name )
     {
       globals.cfg.name = name;
-      globals.configEditedFlag = true;
+      configEdited( true );
       genConfigNameDiv();
     }
   }
@@ -238,7 +238,7 @@ function groupAdd()
   if( globals.cfg.groups.length < CGlobals.MAX_GROUPS )
   {
     globals.cfg.groups.splice( globals.cfg.groups.length - 1, 0, new CGroup( "Group" ) );
-    globals.configEditedFlag = true;
+    configEdited( true );
     genElementConfigHTML();
   }
   else

@@ -109,11 +109,6 @@ function genElementConfigHTML()
 
   document.getElementById( 'audioElements' ).innerHTML = tempHtml;
 
-  if( globals.configEditedFlag )
-    document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
-  else
-    document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
-
   var elem;
   if( globals.cursor.cg >= 0 && globals.cursor.ce >= 0 )
     elem = document.getElementById( 'slElement.' + globals.cursor.cg + '.' + globals.cursor.ce );
@@ -121,6 +116,16 @@ function genElementConfigHTML()
     elem = document.getElementById( 'slGroup.' + globals.cursor.cg );
   if( elem )
     elem.classList.add( 'css_cursor' );
+}
+
+function configEdited( state )
+{
+  //globals.configEditedFlag = state; // if we need to keep this.
+
+  if( state )
+    document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
+  else
+    document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -341,7 +346,7 @@ function saveEdits()
         break;
     }
 
-    globals.configEditedFlag = true;
+    configEdited( true );
 
     globals.editElement = undefined;
     document.getElementById( 'multiuse' ).innerHTML = "";

@@ -6,10 +6,9 @@ class CGlobals // Global consts and stuff in here just to be cleaner. Not saved.
   {
     this.cursor = new cursorPosition();
     this.currentConfigIx = 1;
-    this.configEditedFlag = false;
     this.sampleLibrary = {}; // object of ClLibrarySample
     this.chordLibrary = []; // array of CChord
-    this.editElement = {}; // What we're editing if "Mode_Edit" Used a lot so keep as it's own var 
+    this.editElement = undefined; // What we're editing if "Mode_Edit" Used a lot so keep as it's own var 
     this.currentTempo = 500; // ms
     this.cfg = {}; // The CConfig. This is what is saved.
     this.instruments = {};
@@ -134,7 +133,6 @@ function sampleListInit()
   // }
 
   globals = new CGlobals();
-  globals.configEditedFlag = false;
   globals.cfg = new CConfig();
 
   initWebAudio();

@@ -54,7 +54,7 @@ function initWebAudio()
   globals.tremoloBlock = new Tone.Tremolo( { frequency : 4, depth : 1, wet : 0, spread : 0 } );
   globals.tremoloBlock.connect( globals.limiterBlock );
 
-  globals.phaserBlock = new Tone.Phaser( { frequency : .4, octaves : 4, baseFrequency : 700, wet : 0 } );
+  globals.phaserBlock = new Tone.Phaser( { frequency : 1, octaves : 5, baseFrequency : 1000, wet : 0 } );
   globals.phaserBlock.connect( globals.tremoloBlock );
 
   globals.chorusBlock = new Tone.Chorus( { frequency : .5, delayTime : 2.5, depth : 1, wet : 0 } );
@@ -405,7 +405,7 @@ function playCSample( audioElem )
       // We put the Player in the ClLibrarySample so there is only 1 instance per sample.
       // The same sample may be in multiple groups.
       // First time we need to create the player and connect it.
-      player = new Tone.Player( serverURL + "/" + libSample.filename );
+      player = new Tone.Player( serverURL + libSample.filename );
       player.volume.level = 0;
       player.onstop = samplePlayCompleteCB;
       player.autostart = true;

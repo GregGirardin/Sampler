@@ -172,7 +172,10 @@ function tapTempo()
   {
     var diff = currentTime - lastTapTime;
     if( ( diff > MIN_TEMPO_MS ) && ( diff < MAX_TEMPO_MS ) )
+    {
+      configEdited( true );
       setTempoMs( diff );
+    }
     lastTapTime = undefined;
   }
   else
@@ -183,6 +186,7 @@ function adjustTempoBPM( bpm )
 {
   var tempoBPM = Math.round( 60000 / globals.currentTempo );
   tempoBPM += bpm;
+  configEdited( true );
   setTempoMs( 60000 / tempoBPM );
 }
 
@@ -194,7 +198,7 @@ function setTempoMs( newTempoMs )
   if( globals.cfg.groups[ globals.cursor.cg ].tempoMs != newTempoMs )
   {
     globals.cfg.groups[ globals.cursor.cg ].tempoMs = newTempoMs;
-    globals.configEditedFlag = true;
+    configEdited( true );
   }
 
   globals.delayBlock.set( { delayTime : globals.currentTempo / 1000 } );

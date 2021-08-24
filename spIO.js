@@ -23,7 +23,7 @@ function gotConfig( file, data )
   else
     globals.cfg = new CConfig();
 
-  globals.configEditedFlag = false;
+  configEdited( false );
 
   genConfigNameDiv();
   genElementConfigHTML();
@@ -56,28 +56,23 @@ function sampleConfigSave()
 {
   saveEdits();
 
-  if( globals.configEditedFlag )
+  // clear any state that shouldn't be saved in the config json.
+  for( var i = 0;i < globals.cfg.groups.length;i++ )
   {
-    // clear any state that shouldn't be saved in the config json.
-    for( var i = 0;i < globals.cfg.groups.length;i++ )
-    {
-      var g = globals.cfg.groups[ i ];
-      for( var j = 0;j < g.elements.length;j++ )
-        g.elements[ j ].playing = undefined;
-    }
-
-    var configData = JSON.stringify( globals.cfg, null, "  " );
-    var formData = new FormData();
-    formData.append( "data", configData );
-
-    var xhr = new XMLHttpRequest();
-    xhr.open( 'post', serverURL + configFileName() );
-    xhr.send( formData );
-
-    globals.configEditedFlag = false;
+    var g = globals.cfg.groups[ i ];
+    for( var j = 0;j < g.elements.length;j++ )
+      g.elements[ j ].playing = undefined;
   }
 
-  document.getElementById( 'saveConfigButton' ).classList.remove( 'css_highlight_red' );
+  var configData = JSON.stringify( globals.cfg, null, "  " );
+  var formData = new FormData();
+  formData.append( "data", configData );
+
+  var xhr = new XMLHttpRequest();
+  xhr.open( 'post', serverURL + configFileName() );
+  xhr.send( formData );
+
+  configEdited( false );
 
   return true;
 }

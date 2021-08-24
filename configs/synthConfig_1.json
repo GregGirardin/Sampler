@@ -6,19 +6,18 @@
       "instrument": "Sawtooth",
       "thickenFlag": true,
       "tempoMs": 689.6551724137931,
-      "seqMode": "None",
+      "seqMode": "Manual",
       "arpFlag": false,
       "arpNPB": 4,
       "arpSequence": "1234",
       "tremRate": 2,
-      "envelope": "Fast",
+      "envelope": "Med",
       "elements": [
         {
           "objType": "CChord",
-          "elementName": "D",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 16964,
+          "elementName": "Bm",
+          "playBeats": "4",
+          "notes": 8669184,
           "octave": 0,
           "group": 0
         },
@@ -33,9 +32,10 @@
         },
         {
           "objType": "CChord",
-          "elementName": "Bm",
-          "playBeats": 4,
-          "notes": 8669184,
+          "elementName": "D",
+          "subGroupStart": false,
+          "playBeats": "4",
+          "notes": 16964,
           "octave": 0,
           "group": 0
         },
@@ -48,13 +48,13 @@
           "group": 0
         }
       ],
-      "masterLevel": 100,
+      "masterLevel": 55,
       "distortionLevel": 0,
       "chorusLevel": 13,
       "phaserLevel": 0,
       "tremoloLevel": 0,
       "dryLevel": 100,
-      "reverbLevel": 23,
+      "reverbLevel": 40,
       "delayLevel": 0,
       "partFlag": false,
       "chained": false,
@@ -140,7 +140,7 @@
           "playBeats": 4,
           "notes": 8652944,
           "octave": 0,
-          "group": 4
+          "group": 2
         },
         {
           "objType": "CChord",
@@ -181,7 +181,7 @@
           "playBeats": 4,
           "notes": 345049360,
           "octave": 0,
-          "group": 5
+          "group": 3
         },
         {
           "objType": "CChord",
@@ -190,7 +190,7 @@
           "playBeats": 4,
           "notes": 1143226948,
           "octave": 0,
-          "group": 5
+          "group": 3
         },
         {
           "objType": "CChord",
@@ -230,8 +230,8 @@
       "masterLevel": 39,
       "distortionLevel": 0,
       "chorusLevel": 0,
-      "phaserLevel": 0,
-      "tremoloLevel": 0,
+      "phaserLevel": 36,
+      "tremoloLevel": 33,
       "dryLevel": 100,
       "reverbLevel": 45,
       "delayLevel": 44,
@@ -364,7 +364,7 @@
       "elementName": "Paralyzer",
       "instrument": "Triangle",
       "chained": false,
-      "thickenFlag": true,
+      "thickenFlag": false,
       "tempoMs": 500,
       "seqMode": "Manual",
       "arpFlag": false,
@@ -376,7 +376,7 @@
         {
           "objType": "CChord",
           "elementName": "Em",
-          "playBeats": 4,
+          "playBeats": "4",
           "notes": 276891792,
           "octave": -1,
           "group": 8
@@ -390,14 +390,14 @@
           "group": 8
         }
       ],
-      "masterLevel": 26,
+      "masterLevel": 44,
       "distortionLevel": 0,
-      "chorusLevel": 31,
-      "phaserLevel": 60,
-      "tremoloLevel": 24,
-      "dryLevel": 37,
-      "reverbLevel": 81,
-      "delayLevel": 27,
+      "chorusLevel": 0,
+      "phaserLevel": 100,
+      "tremoloLevel": 0,
+      "dryLevel": 96,
+      "reverbLevel": 0,
+      "delayLevel": 0,
       "chordMode": false
     },
     {
@@ -766,7 +766,7 @@
           "elementName": "SeparateWays.mp3",
           "filename": "SeparateWays.mp3",
           "loopFlag": false,
-          "group": 17
+          "group": 13
         }
       ],
       "masterLevel": 59,
@@ -775,7 +775,7 @@
       "phaserLevel": 0,
       "tremoloLevel": 0,
       "dryLevel": 100,
-      "reverbLevel": 32,
+      "reverbLevel": 26,
       "delayLevel": 0
     },
     {
@@ -798,7 +798,7 @@
           "playBeats": 4,
           "notes": 67728,
           "octave": 0,
-          "group": 19
+          "group": 14
         },
         {
           "objType": "CChord",
@@ -806,7 +806,7 @@
           "playBeats": 4,
           "notes": 16964,
           "octave": 0,
-          "group": 19
+          "group": 14
         },
         {
           "objType": "CChord",
@@ -814,7 +814,7 @@
           "playBeats": 4,
           "notes": 4241,
           "octave": 0,
-          "group": 19
+          "group": 14
         },
         {
           "objType": "CChord",
@@ -822,7 +822,7 @@
           "playBeats": 4,
           "notes": 2167312,
           "octave": -1,
-          "group": 19
+          "group": 14
         },
         {
           "objType": "CChord",
@@ -830,7 +830,7 @@
           "playBeats": 4,
           "notes": 16964,
           "octave": 0,
-          "group": 19
+          "group": 14
         },
         {
           "objType": "CChord",
@@ -838,7 +838,7 @@
           "playBeats": 4,
           "notes": 294984,
           "octave": 0,
-          "group": 19
+          "group": 14
         }
       ],
       "masterLevel": 45,
@@ -891,7 +891,7 @@
         {
           "objType": "CChord",
           "elementName": "A",
-          "playBeats": "2.5",
+          "playBeats": "3",
           "notes": 2171392,
           "octave": 0,
           "group": 15
@@ -1078,7 +1078,7 @@
           "playBeats": 4,
           "notes": 16964,
           "octave": 0,
-          "group": 21
+          "group": 18
         }
       ],
       "masterLevel": 34,
@@ -1152,6 +1152,13 @@
       "tremRate": 1,
       "envelope": "Slow",
       "elements": [
+        {
+          "objType": "CSample",
+          "elementName": "Cowbell.mp3",
+          "filename": "Cowbell.mp3",
+          "loopFlag": true,
+          "group": 20
+        },
         {
           "objType": "CChord",
           "elementName": "D Drone",
