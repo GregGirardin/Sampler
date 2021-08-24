@@ -189,6 +189,7 @@ function adjustTempoBPM( bpm )
 function setTempoMs( newTempoMs )
 {
   globals.currentTempo = newTempoMs;
+  flashTempo();
 
   if( globals.cfg.groups[ globals.cursor.cg ].tempoMs != newTempoMs )
   {
@@ -266,9 +267,6 @@ function setChordLabels()
         var elem = document.getElementById( fsButtonMap[ e ][ b ].id );
         elem.classList.remove( "css_cursor" );
       }
-
-  var elem = document.getElementById( fsButtonMap[ "EVENT_HOLD" ][ 4 ].id );
-  elem.classList.add( "css_cursor" );
 
   var g = globals.cfg.groups[ globals.cursor.cg ];
 
@@ -356,6 +354,9 @@ function keyPressedHandler( e )
 {
   var ix;
 
+  if( globals.editElement )
+    return;
+
   switch( e.code )
   {
     case 'Digit1': ix = 1;break;
@@ -374,6 +375,9 @@ function keyPressedHandler( e )
 function keyRelHandler( e )
 {
   var ix;
+
+  if( globals.editElement )
+    return;
 
   switch( e.code )
   {

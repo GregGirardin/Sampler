@@ -21,7 +21,6 @@ function dropElem( ev )
   const slGroup = "slGroup.";
   const cbStr = "clipboard";
   const libSamp = "libSample.";
-  const libChordID = "libChord.";
 
   ev.preventDefault();
   var dragElem = ev.dataTransfer.getData( "dragElem" );
@@ -156,7 +155,7 @@ function setSampleConfigName()
     {
       globals.cfg.name = name;
       globals.configEditedFlag = true;
-      document.getElementById( 'sampleListName' ).innerHTML = name;
+      genConfigNameDiv();
     }
   }
 }

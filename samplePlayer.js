@@ -32,9 +32,8 @@ CGlobals.synthTypes = [ "Piano",
 
 CGlobals.arpNPBs = [ 1, 2, 3, 4, 6, 8 ]; // notes per beat
 CGlobals.tremRates = [ 1, 2, 4, 8 ]; // trems per beat.
-CGlobals.playBeats = [ 1, 2, 4, 8, 16, 32 ];
-CGlobals.arpSequences = [ "1234", "4321", "1324", "4231", "12324323", "B-T", "T-B" ]; 
-CGlobals.seqModes = [ "None", "Manual", "Cont" ];
+CGlobals.arpSequences = [ "1234", "4321", "1324", "4231", "12324323", "31213141", "B-T", "T-B" ]; 
+CGlobals.seqModes = [ "None", "Manual", "Once", "Loop" ];
 CGlobals.envelopeLabels = [ "Hard", "Fast", "Med", "Slow" ];
 CGlobals.envelopeParams = { Hard : { attack :  0, decay :  0, sustain:   1, release: .1 },
                             Fast : { attack : .1, decay : .1, sustain:  .9, release: .1 },
@@ -138,7 +137,6 @@ function sampleListInit()
   globals.configEditedFlag = false;
   globals.cfg = new CConfig();
 
-  flashTempo();
   initWebAudio();
   genButtonHTML();
   initFootswitch();

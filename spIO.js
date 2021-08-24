@@ -23,6 +23,9 @@ function gotConfig( file, data )
   else
     globals.cfg = new CConfig();
 
+  globals.configEditedFlag = false;
+
+  genConfigNameDiv();
   genElementConfigHTML();
 }
 

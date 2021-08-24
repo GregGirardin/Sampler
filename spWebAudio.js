@@ -321,7 +321,8 @@ function samplePlayCompleteCB()
     playComplete( globals.ae );
   }
 
-  if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )
+  if( ( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] && globals.cursor.ce ) ||
+        globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 3 ] )
     playElement( "START" );
 }
 
@@ -384,7 +385,11 @@ var playNextTimer;
 function playNextElementCB()
 {
   playNextTimer = undefined;
-  playElement( "START" );
+
+  if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] &&  !globals.cursor.ce )
+    playElement( "STOP" );
+  else
+    playElement( "START" );
 }
 
 function playCSample( audioElem )
@@ -443,53 +448,10 @@ function playCChord( audioElem )
   globals.ae.chordNotes = frequencies;
   globals.ae.synth.triggerAttack( frequencies );
   globals.ae.group = globals.cfg.groups[ globals.cursor.cg ];
+  const sMode = globals.cfg.groups[ globals.cursor.cg ].seqMode;
 
-  if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )
+  if( sMode == CGlobals.seqModes[ 2 ] || sMode == CGlobals.seqModes[ 3 ] )
     playNextTimer = setTimeout( playNextElementCB, globals.currentTempo * audioElem.playBeats );
-}
-
-// Play group placed in other groups.
-// Play each CChord for CChord.playBeats beats. Repeat if loopFlag.
-function grpPlayTimerCB()
-{
-  if( !globals.ae ) // This is our flag to stop playing the sequence.
-    return;
-
-  if( globals.ae.beatsRemaining-- > 0 )
-  {
-    // Are we done playing this Chord? If not return.
-    globals.ae.grpTimer = setTimeout( grpPlayTimerCB, globals.currentTempo );
-    return;
-  }
-  if( globals.ae.chordNotes )
-    globals.ae.synth.triggerRelease( globals.ae.chordNotes );
-
-  if( ( globals.ae.grpChordIndex == globals.ae.group.elements.length ) && !globals.ae.loopFlag )
-  {
-    if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] )
-      playNextTimer = setTimeout( playNextElementCB, 0 ); // just to loosly couple. Maybe could call directly.
-    return; // this was the last chord. We're done.
-  }
-  var playElem = globals.ae.group.elements[ globals.ae.grpChordIndex ];
-  if( playElem.objType == "CChord" ) // Group must be all CChord. TBD, skip groups and samples.
-  {
-    globals.ae.chordNotes = [];
-    for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
-      if( playElem.notes & ( 1 << noteIx ) ) // notes are a bit field
-      {
-        var noteOffset = noteIx - 9 + playElem.octave * 12; // semitone offset from A440
-        globals.ae.chordNotes.push( 440 * Math.pow( 2, noteOffset / 12 ) );
-      }
-
-    globals.ae.beatsRemaining = playElem.playBeats;
-    globals.ae.synth.triggerAttack( globals.ae.chordNotes );
-
-    globals.ae.grpChordIndex += 1;
-    if( ( globals.ae.grpChordIndex >= globals.ae.group.elements.length ) && globals.ae.loopFlag )
-      globals.ae.grpChordIndex = 0; // loop
-
-    globals.ae.grpTimer = setTimeout( grpPlayTimerCB, globals.currentTempo );
-  }
 }
 
 function arpTimerCB() // call once per beat. We queue all notes for the next beat.
@@ -519,12 +481,14 @@ function arpTimerCB() // call once per beat. We queue all notes for the next bea
         globals.ae.arpNoteIndex = 0;
       noteTime += noteLength;
     }
-    if( globals.ae.group.seqMode == CGlobals.seqModes[ 2 ] )
-      if( --globals.ae.beatsRemaining == 0 )
-      {
+
+    if( --globals.ae.beatsRemaining == 0 )
+    {
+      if( ( globals.ae.group.seqMode == CGlobals.seqModes[ 2 ] && globals.cursor.ce ) || 
+            globals.ae.group.seqMode == CGlobals.seqModes[ 3 ] )
         playNextTimer = setTimeout( playNextElementCB, globals.currentTempo ); 
-        return;
-      }
+      return;
+    }
     
     globals.ae.arpTimer = setTimeout( arpTimerCB, globals.currentTempo );
   }
@@ -596,6 +560,12 @@ function arpChord( chord, seq )
         case "12324323":
           arpNotes = [ arpNotes[ 0 ], arpNotes[ 1 ], arpNotes[ 2 ], arpNotes[ 1 ],
                        arpNotes[ 3 ], arpNotes[ 2 ], arpNotes[ 1 ], arpNotes[ 2 ] ];
+          break;
+      
+        case "31213141": // Bad
+          arpNotes = [ arpNotes[ 2 ], arpNotes[ 0 ], arpNotes[ 1 ], arpNotes[ 0 ],
+                       arpNotes[ 2 ], arpNotes[ 0 ], arpNotes[ 3 ], arpNotes[ 2 ] ];
+          break;
         default:
           break;
       }

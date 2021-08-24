@@ -17,8 +17,12 @@ function genButtonHTML()
 
   document.getElementById( 'footSwitchButtons' ).innerHTML = tempHtml;
 
-  tempHtml = "";
-  tempHtml += "Config:<select id='configDropdownSelection'>";
+  genConfigNameDiv();
+}
+
+function genConfigNameDiv()
+{
+  var tempHtml = "<div id='sampleListName' onClick='setSampleConfigName()'>" + globals.cfg.name + ":<select id='configDropdownSelection'>";
 
   for( i = 1;i <= 5;i++ )
   {
@@ -27,9 +31,10 @@ function genButtonHTML()
       tempHtml += "selected='selected'";
     tempHtml += ">" + i + "</option>";
   }
-  tempHtml += "</select>";
 
-   document.getElementById( 'configDropdown' ).innerHTML = tempHtml;
+  tempHtml += "</select></div>";
+
+  document.getElementById( 'configDropdown' ).innerHTML = tempHtml;
 }
 
 /////////////// /////////////// /////////////// ///////////////
@@ -53,7 +58,7 @@ function genElementConfigHTML()
       globals.cursor.ce = 0;
   }
 
-  var tempHtml = ""; // "<div id='sampleListName' onClick='setSampleConfigName()'>" + globals.cfg.name + "</div><br>";
+  var tempHtml = "";
 
   for( var i = 0;i < globals.cfg.groups.length;i++ )
   {
@@ -250,16 +255,7 @@ function genEditChordHTML()
 {
   var tempHtml = "Name: <input contenteditable='true' id='editChordName' value='" + globals.editElement.elementName + "'><br>";
 
-  tempHtml += "Play beats:<select id='editChordBeats'>";
-
-  for( i = 0;i < CGlobals.playBeats.length;i++ )
-  {
-    tempHtml += "<option value='" + CGlobals.playBeats[ i ] + "' ";
-    if( globals.editElement.playBeats == CGlobals.playBeats[ i ] )
-      tempHtml += "selected='selected'";
-    tempHtml += ">" + CGlobals.playBeats[ i ] + "</option>";
-  }
-  tempHtml += "</select><br>";
+  tempHtml += "Beats: <input type='number' step='.25' id='editChordBeats' min='.5' max='16' value='" + globals.editElement.playBeats + "'><br>";
 
   tempHtml += "Octave:<select id='editChordOctave'>";
   for( i = 3;i >= -3;i-- )
@@ -340,9 +336,8 @@ function saveEdits()
 
       case "CChord":
         globals.editElement.elementName   = document.getElementById( "editChordName" ).value;
-        globals.editElement.playBeats     = parseInt( document.getElementById( "editChordBeats" ).value );
+        globals.editElement.playBeats     = document.getElementById( "editChordBeats" ).value;
         globals.editElement.octave        = parseInt( document.getElementById( "editChordOctave" ).value );
-
         break;
     }
 
