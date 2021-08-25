@@ -69,9 +69,10 @@ function genElementConfigHTML()
       tempHtml += "<br>\n";
     switch( g.seqMode )
     {
-      case "None": break;
-      case "Manual": classes += ' css_groupSeqMan'; break;
-      case "Cont": classes += ' css_groupSeqCont'; break;
+      case "None":    classes += ' css_groupSeqNone'; break;
+      case "Manual":  classes += ' css_groupSeqMan'; break;
+      case "Once":    classes += ' css_groupSeqOnce'; break;
+      case "Loop":    classes += ' css_groupSeqLoop'; break;
     }
 
     if( g.chained )
@@ -104,8 +105,11 @@ function genElementConfigHTML()
                   "  ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>&nbsp+&nbsp</button>\n";
   }
 
-  tempHtml += "<br><button onclick='groupAdd()'> Add Group </button>\n<br>\n<br>";
-  tempHtml += "<input id='trashCan' type='image' ondragover='sl_allowDrop( event )' ondrop='dropElem( event )' src='" + serverURL + "images/trashcan.png'/>\n";
+  if( globals.editMode )
+  {
+    tempHtml += "<br><br><button onclick='groupAdd()'> Add Group </button><br><br>\n";
+    tempHtml += "<input id='trashCan' type='image' ondragover='sl_allowDrop( event )' ondrop='dropElem( event )' src='" + serverURL + "images/trashcan.png'/>\n";
+  }
 
   document.getElementById( 'audioElements' ).innerHTML = tempHtml;
 
@@ -120,8 +124,7 @@ function genElementConfigHTML()
 
 function configEdited( state )
 {
-  //globals.configEditedFlag = state; // if we need to keep this.
-
+  // globals.configEditedFlag = state; // if we need to keep this.
   if( state )
     document.getElementById( 'saveConfigButton' ).classList.add( 'css_highlight_red' );
   else
