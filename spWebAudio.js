@@ -46,7 +46,7 @@ function initWebAudio()
   globals.reverbLevelBlock = new Tone.Gain( 0 ).connect( globals.reverbBlock );
   globals.delayLevelBlock = new Tone.Gain( 0 ).connect( globals.delayBlock );
 
-  globals.limiterBlock = new Tone.Compressor( -40, 10 ); // just for sanity
+  globals.limiterBlock = new Tone.Compressor( -10, 10 ); // just for sanity
   globals.limiterBlock.connect( globals.dryLevelBlock );
   globals.limiterBlock.connect( globals.delayLevelBlock );
   globals.limiterBlock.connect( globals.reverbLevelBlock );
