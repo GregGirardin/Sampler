@@ -1,11 +1,12 @@
 // Button / click handlers
 
-
 function selectConfig()
 {
   var presetIx = document.getElementById( "configDropdownSelection" ).value;
   globals.currentConfigIx = presetIx;
   getFileFromServer( configFileName(), gotConfig );
+  var elem = document.getElementById( 'appBody' );
+  elem.requestFullscreen();
 }
 
 function sl_allowDrop( ev ) { ev.preventDefault(); }

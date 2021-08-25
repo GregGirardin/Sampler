@@ -797,7 +797,7 @@
           "elementName": "SeparateWays.mp3",
           "filename": "SeparateWays.mp3",
           "loopFlag": false,
-          "group": 13
+          "group": 14
         }
       ],
       "masterLevel": 59,
@@ -815,8 +815,8 @@
       "instrument": "Sawtooth",
       "chained": true,
       "thickenFlag": true,
-      "tempoMs": 500,
-      "seqMode": "Manual",
+      "tempoMs": 461.53846153846155,
+      "seqMode": "Once",
       "arpFlag": false,
       "arpNPB": 4,
       "arpSequence": "1234",
@@ -826,50 +826,50 @@
         {
           "objType": "CChord",
           "elementName": "Em",
-          "playBeats": 4,
+          "playBeats": "8",
           "notes": 67728,
           "octave": 0,
-          "group": 14
+          "group": 15
         },
         {
           "objType": "CChord",
           "elementName": "D",
-          "playBeats": 4,
+          "playBeats": "8",
           "notes": 16964,
           "octave": 0,
-          "group": 14
+          "group": 15
         },
         {
           "objType": "CChord",
           "elementName": "C",
-          "playBeats": 4,
+          "playBeats": "8",
           "notes": 4241,
           "octave": 0,
-          "group": 14
+          "group": 15
         },
         {
           "objType": "CChord",
           "elementName": "Am",
-          "playBeats": 4,
+          "playBeats": "4",
           "notes": 2167312,
           "octave": -1,
-          "group": 14
+          "group": 15
         },
         {
           "objType": "CChord",
           "elementName": "D",
-          "playBeats": 4,
+          "playBeats": "2",
           "notes": 16964,
           "octave": 0,
-          "group": 14
+          "group": 15
         },
         {
           "objType": "CChord",
           "elementName": "D#dim",
-          "playBeats": 4,
+          "playBeats": "2",
           "notes": 294984,
           "octave": 0,
-          "group": 14
+          "group": 15
         }
       ],
       "masterLevel": 45,
@@ -901,7 +901,7 @@
           "playBeats": "1.5",
           "notes": 16964,
           "octave": 0,
-          "group": 15
+          "group": 16
         },
         {
           "objType": "CChord",
@@ -909,7 +909,7 @@
           "playBeats": "2.5",
           "notes": 2192,
           "octave": 0,
-          "group": 15
+          "group": 16
         },
         {
           "objType": "CChord",
@@ -917,7 +917,7 @@
           "playBeats": "1.5",
           "notes": 542848,
           "octave": 0,
-          "group": 15
+          "group": 16
         },
         {
           "objType": "CChord",
@@ -925,7 +925,7 @@
           "playBeats": "3",
           "notes": 2171392,
           "octave": 0,
-          "group": 15
+          "group": 16
         }
       ],
       "masterLevel": 43,
@@ -957,7 +957,7 @@
           "playBeats": "2",
           "notes": 2192,
           "octave": 0,
-          "group": 16
+          "group": 17
         },
         {
           "objType": "CChord",
@@ -965,7 +965,7 @@
           "playBeats": 2,
           "notes": 69776,
           "octave": 0,
-          "group": 16
+          "group": 17
         },
         {
           "objType": "CChord",
@@ -973,7 +973,7 @@
           "playBeats": 2,
           "notes": 16964,
           "octave": 0,
-          "group": 16
+          "group": 17
         },
         {
           "objType": "CChord",
@@ -981,7 +981,7 @@
           "playBeats": 2,
           "notes": 280644,
           "octave": 0,
-          "group": 16
+          "group": 17
         }
       ],
       "masterLevel": 57,
@@ -1053,7 +1053,7 @@
           "playBeats": 4,
           "notes": 8466,
           "octave": -1,
-          "group": 18
+          "group": 19
         },
         {
           "objType": "CChord",
@@ -1061,7 +1061,7 @@
           "playBeats": 4,
           "notes": 271360,
           "octave": -1,
-          "group": 18
+          "group": 19
         },
         {
           "objType": "CChord",
@@ -1069,7 +1069,7 @@
           "playBeats": 4,
           "notes": 2171394,
           "octave": -1,
-          "group": 18
+          "group": 19
         },
         {
           "objType": "CChord",
@@ -1077,7 +1077,7 @@
           "playBeats": 4,
           "notes": 67856,
           "octave": -1,
-          "group": 18
+          "group": 19
         },
         {
           "objType": "CChord",
@@ -1085,7 +1085,7 @@
           "playBeats": 4,
           "notes": 271360,
           "octave": -1,
-          "group": 18
+          "group": 19
         },
         {
           "objType": "CChord",
@@ -1093,7 +1093,7 @@
           "playBeats": 4,
           "notes": 2171394,
           "octave": -1,
-          "group": 18
+          "group": 19
         },
         {
           "objType": "CChord",
@@ -1101,7 +1101,7 @@
           "playBeats": 4,
           "notes": 17371264,
           "octave": 0,
-          "group": 18
+          "group": 19
         },
         {
           "objType": "CChord",
