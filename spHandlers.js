@@ -308,7 +308,8 @@ function playElement( action, elemIx )
       ce.group = globals.cursor.cg;
 
       playElemAudio( ce );
-      if( globals.cfg.groups[ globals.cursor.cg ].seqMode != CGlobals.seqModes[ 0 ] )
+      if( ( globals.cfg.groups[ globals.cursor.cg ].seqMode != CGlobals.seqModes[ 0 ] ) &&
+          ( globals.fsMode  != "Chord" ) ) // tbd. this functionality shouln't be here.
         moveCursor( "RIGHT" );
     }
     else if( action == "STOP" )

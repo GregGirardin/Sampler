@@ -77,8 +77,8 @@ function genElementConfigHTML()
     }
 
     if( g.chained )
-      tempHtml += "<button id='slGroup." + i + "' class='css_groupClass' onclick='groupClick( " + i + " )' draggable='true' " +
-                  "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>:|:</button>\n";
+      tempHtml += "<button id='slGroup." + i + "' class='css_groupClassSmall' onclick='groupClick( " + i + " )' draggable='true' " +
+                  "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + g.elementName + "</button>\n";
     else if( i == globals.cfg.groups.length - 1 )
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
