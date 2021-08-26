@@ -161,7 +161,7 @@ function setSampleConfigName()
     {
       globals.cfg.name = name;
       configEdited( true );
-      genConfigNameDiv();
+      document.getElementById( 'configName' ).innerHTML = globals.cfg.name;
     }
   }
 }

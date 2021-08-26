@@ -22,7 +22,7 @@ function genButtonHTML()
 
 function genConfigNameDiv()
 {
-  var tempHtml = "<div id='sampleListName' onClick='setSampleConfigName()'>" + globals.cfg.name + ":<select id='configDropdownSelection'>";
+  var tempHtml = "<select id='configDropdownSelection'>";
 
   for( i = 1;i <= 5;i++ )
   {
@@ -35,6 +35,7 @@ function genConfigNameDiv()
   tempHtml += "</select></div>";
 
   document.getElementById( 'configDropdown' ).innerHTML = tempHtml;
+  document.getElementById( 'configName' ).innerHTML = globals.cfg.name;
 }
 
 /////////////// /////////////// /////////////// ///////////////
