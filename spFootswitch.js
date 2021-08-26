@@ -32,7 +32,7 @@ var fsButtonMap =
   "EVENT_TAP" : { // Event type.
     1 : { // Event source
       id : 'fsB1Tap',
-      NavLR : { html : ">", action : function() { playElement( 'START' ); } },
+      NavLR : { html : ">", action : function() { cancelPlayNext();playElement( 'START' ); } },
       Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
       Tempo : { html : "-5", action : function() { adjustTempoBPM( -5 ); } },
       Chord : { html : "1", action : function() { playElemIx( 0 ); } },

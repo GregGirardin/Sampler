@@ -282,13 +282,19 @@ function releaseAudio()
     playComplete( globals.ae.elem );
   }
 
+  cancelPlayNext();
+
+  globals.ae = undefined;
+}
+
+function cancelPlayNext()
+{
   if( playNextTimer )
   {
     clearTimeout( playNextTimer );
+    globals.stopFlag = false;
     playNextTimer = undefined;
   }
-
-   globals.ae = undefined;
 }
 
 function setEffectLevels( g, t )
@@ -457,7 +463,7 @@ function playCChord( audioElem )
     const t = globals.currentTempo * audioElem.playBeats;
 
     if( sMode == CGlobals.seqModes[ 2 ] && ( globals.cursor.ce == globals.ae.group.elements.length - 1 ) )
-      globals.stopFlag = true; // at the end of Loop or this is a manual play. Stop unless we change groups in the meantime.
+      globals.stopFlag = true; // at the end of Loop. Stop unless we change groups or hit play in the meantime.
     playNextTimer = setTimeout( playNextElementCB, t );
   }
 }
