@@ -25,8 +25,6 @@ function initFootswitch()
 /*
   Button Modes: (affect the function of buttons)
     NavUD, NavLR, Modifier, Tempo, Chord
-
-  Arp is a flag. Doesn't change mode.
  */
 
 var fsButtonMap =
@@ -95,7 +93,7 @@ var fsButtonMap =
     },
     5 : {
       id : 'fsB5Hold',
-      NavLR : { html : "Arp", action : function() { setArpState( -1 ); } },
+      // NavLR : { html : "Arp", action : function() { setArpState( -1 ); } },
     },
     6 : {
       id : 'fsB6Hold',
@@ -186,7 +184,6 @@ function adjustTempoBPM( bpm )
 {
   var tempoBPM = Math.round( 60000 / globals.currentTempo );
   tempoBPM += bpm;
-  configEdited( true );
   setTempoMs( 60000 / tempoBPM );
 }
 
@@ -236,8 +233,8 @@ function changeMode( newTapMode )
         else 
           elem.innerHTML = '-';
       }
-  if( newTapMode != "Tempo" )
-    setArpState( -2 );
+  // if( newTapMode != "Tempo" )
+  //   setArpState( -2 );
   if( newTapMode == "Chord" )
     setChordLabels();
 }
@@ -398,6 +395,13 @@ function keyRelHandler( e )
   footSwitchButtons[ ix ].setState( false );
 }
 
+function changeGroup()
+{
+  var c = globals.cursor;
+  setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
+  setArpState( globals.cfg.groups[ c.cg ].arpFlag );
+}
+
 function moveCursor( dir )
 {
   var c = globals.cursor; // c is cursor, just for readability.
@@ -415,9 +419,7 @@ function moveCursor( dir )
           c.cg -= 1;
 
         c.ce = undefined; // almost certain want to start from the beginning
-
-        setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
-        setArpState( globals.cfg.groups[ c.cg ].arpFlag );
+        changeGroup();
       }
       break;
 
@@ -434,8 +436,7 @@ function moveCursor( dir )
           c.cg = tmpGrp;
           c.ce = undefined;
 
-          setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
-          setArpState( globals.cfg.groups[ c.cg ].arpFlag );
+          changeGroup();
         }
       }
       break;
@@ -462,6 +463,8 @@ function moveCursor( dir )
         if( c.ce != undefined )
           c.cg += 1;
         c.ce = 0;
+        globals.stopFlag = false;
+        changeGroup();
       }
       break;
 
@@ -470,6 +473,9 @@ function moveCursor( dir )
       {
         c.cg -= 1;
         c.ce = 0;
+        globals.stopFlag = false;
+
+        changeGroup();
       }
       break;
   }

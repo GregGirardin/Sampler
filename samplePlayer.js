@@ -14,8 +14,8 @@ class CGlobals // Global consts and stuff in here just to be cleaner. Not saved.
     this.instruments = {};
     this.fsMode == "NavLR";
     this.editMode = false;
+    this.stopFlag = false;
     this.ae = undefined; // The active element being played.
-
     this.modFilterState = false;
     this.modTremoloState = false;
     this.modChorusState = false;
@@ -71,6 +71,7 @@ class CGroup
     this.instrument = CGlobals.synthTypes[ 0 ];
     this.chained = false; // is this group a part of a previous group?
     this.thickenFlag = false;
+    this.smallFlag = false; // if this is a melody or a sequence display smaller to save space.
 
     this.tempoMs = 500;
     this.seqMode = CGlobals.seqModes[ 0 ];

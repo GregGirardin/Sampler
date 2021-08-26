@@ -87,18 +87,27 @@ function genElementConfigHTML()
 
     for( var j = 0;j < g.elements.length;j++ )
     {
-      var classes = 'css_slElement';
 
-      if( g.elements[ j ].playing )
-        classes += ' css_playing';
-      if( g.elements[ j ].objType == "CChordRef" )
-        classes += " css_Chord";
-      else if( g.elements[ j ].objType == "CSample" )
-        classes += " css_Sample";
+      if( g.smallFlag && !globals.editMode )
+      {
+        tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slSmallElement'>|</button>\n";
+        //tempHtml += "<div id='slElement." + i + "." + j + "' class='css_slSmallElement'>|</div>\n";
+      }
+      else
+      {
+        var classes = 'css_slElement';
 
-      tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
-                  " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
-                  g.elements[ j ].elementName + "</button>\n";
+        if( g.elements[ j ].playing )
+          classes += ' css_playing';
+        if( g.elements[ j ].objType == "CChordRef" )
+          classes += " css_Chord";
+        else if( g.elements[ j ].objType == "CSample" )
+          classes += " css_Sample";
+
+        tempHtml += "<button id='slElement." + i + "." + j + "' class='" + classes + "' onclick='elemClick( " + i + ", " + j + " )'" +
+                    " draggable='true' ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )''>" +
+                    g.elements[ j ].elementName + "</button>\n";
+      }
     }
     if( globals.editMode )
       tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slElement' onclick='addToGroup( " + i + " )'" +
@@ -163,6 +172,9 @@ function genEditGroupHTML()
 
   c = globals.editElement.chained ? "checked" : "";
   tempHtml += "<br>Chain: <input type='checkbox' id='editGroupChain' " + c + "><br>";
+
+  c = globals.editElement.smallFlag ? "checked" : "";
+  tempHtml += "Shrink: <input type='checkbox' id='editGroupSmall' " + c + "><br>";
 
   tempHtml += "Instrument:<select id='editGroupInstrument'>";
 
@@ -311,6 +323,7 @@ function saveEdits()
     
       case "CGroup":
         globals.editElement.chained = document.getElementById( "editGroupChain" ).checked;
+        globals.editElement.smallFlag = document.getElementById( "editGroupSmall" ).checked;
         globals.editElement.elementName = document.getElementById( "editGroupName" ).value;
         globals.editElement.instrument  = document.getElementById( "editGroupInstrument" ).value;
         globals.editElement.thickenFlag = document.getElementById( "editGroupThickenFlag" ).checked;

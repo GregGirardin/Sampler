@@ -61,13 +61,12 @@ function initWebAudio()
   globals.chorusBlock.connect( globals.phaserBlock );
 
   // globals.cabBlock = new Tone.Convolver( serverURL + "irs/CabIR02.wav" );
-  // globals.cabBlock.set( { wet : 1,
-  //                         volume : 0 } );
+  // globals.cabBlock.set( { wet : 1, volume : 0 } );
   // globals.cabBlock.connect( globals.chorusBlock );
 
   globals.distortionBlock = new Tone.Chebyshev( 50 );
   globals.distortionBlock.connect( globals.chorusBlock );
-  //globals.distortionBlock.connect( globals.cabBlock );
+  // globals.distortionBlock.connect( globals.cabBlock );
   globals.distortionBlock.wet.value = 0;
 
   globals.filterBlock = new Tone.AutoFilter();
@@ -110,13 +109,13 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "Triangle":
         var oType = sType.toLowerCase();
         s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
-        s.set( { volume : -16, oscillator : { type : oType }, } );
+        s.set( { volume : -10, oscillator : { type : oType }, } );
         break;
 
       case "Bell":
         var oType = sType.toLowerCase();
         s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
-        s.set( { volume : -16, oscillator : { type : "sine" },
+        s.set( { volume : -3, oscillator : { type : "sine" },
                  envelope : { attack: 0, decay: 1, sustain: .2, release: 1 } } );
         break;
 
@@ -197,7 +196,7 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "SynthPipe":
         s = new Tone.PolySynth( Tone.FMSynth );
         s.set( {  polyphony : 24,
-                  volume : -6,
+                  volume : 0,
                   harmonicity : 3.01,
                   modulationIndex : 14,
                   oscillator : { type: "triangle" },
@@ -209,7 +208,7 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "SynReed":
         s = new Tone.PolySynth( Tone.AMSynth );
         s.set( {  polyphony : 24,
-                  volume : -6,
+                  volume : 0,
                   harmonicity : 3.999,
                   oscillator : { type: "square" },
                   envelope : { attack: 0.03, decay: 0.3, sustain: 0.7, release: 0.8 },
@@ -220,7 +219,7 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "SynKeys":
         s = new Tone.PolySynth( Tone.Synth );
         s.set( {  polyphony : 24,
-                  volume : -12,
+                  volume : -6,
                   harmonicity : 2,
                   oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
                   modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
@@ -230,7 +229,7 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "Pluck":
         s = new Tone.PolySynth( Tone.AMSynth );
         s.set( {  polyphony : 12,
-                  volume : -3,
+                  volume : 0,
                   harmonicity : 2,
                   oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
                   envelope : { attack: 0.006, decay: 4, sustain: 0.04, release: 1.2 },
@@ -240,13 +239,13 @@ function createSynths() // create all synths and connect them to globals.masterL
   
       case "MiscE":
         s = new Tone.PolySynth( Tone.Synth );
-        s.set({ volume : -8,
+        s.set({ volume : 0,
                 oscillator: { type: "fatsine4", spread: 60, count: 10 },
                 envelope: { attack: 0.4, decay: 0.01, sustain: 1, attackCurve: "sine", releaseCurve: "sine", release: 0.4 } });
         break;
 
       case "noise":
-        s = new Tone.NoiseSynth( {  volume : -18 } );
+        s = new Tone.NoiseSynth( {  volume : -12 } );
         break;
 
       default:
@@ -386,8 +385,11 @@ function playNextElementCB()
 {
   playNextTimer = undefined;
 
-  if( globals.cfg.groups[ globals.cursor.cg ].seqMode == CGlobals.seqModes[ 2 ] &&  !globals.cursor.ce )
+  if( globals.stopFlag )
+  {
+    globals.stopFlag = false;
     playElement( "STOP" );
+  }
   else
     playElement( "START" );
 }
@@ -450,8 +452,14 @@ function playCChord( audioElem )
   globals.ae.group = globals.cfg.groups[ globals.cursor.cg ];
   const sMode = globals.cfg.groups[ globals.cursor.cg ].seqMode;
 
-  if( sMode == CGlobals.seqModes[ 2 ] || sMode == CGlobals.seqModes[ 3 ] )
-    playNextTimer = setTimeout( playNextElementCB, globals.currentTempo * audioElem.playBeats );
+  if( ( sMode == CGlobals.seqModes[ 2 ] ) || ( sMode == CGlobals.seqModes[ 3 ] ) )
+  {
+    const t = globals.currentTempo * audioElem.playBeats;
+
+    if( sMode == CGlobals.seqModes[ 2 ] && ( globals.cursor.ce == globals.ae.group.elements.length - 1 ) )
+      globals.stopFlag = true; // at the end of Loop or this is a manual play. Stop unless we change groups in the meantime.
+    playNextTimer = setTimeout( playNextElementCB, t );
+  }
 }
 
 function arpTimerCB() // call once per beat. We queue all notes for the next beat.
