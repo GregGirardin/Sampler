@@ -64,7 +64,10 @@ function genElementConfigHTML()
   for( var i = 0;i < globals.cfg.groups.length;i++ )
   {
     var g = globals.cfg.groups[ i ];
-    var classes = "css_groupClass";
+    if( g.chained )
+      var classes = "css_groupSeqChained";
+    else
+      var classes = "css_groupClass";
 
     if( i && !g.chained )
       tempHtml += "<br>\n";
@@ -77,8 +80,12 @@ function genElementConfigHTML()
     }
 
     if( g.chained )
-      tempHtml += "<button id='slGroup." + i + "' class='css_groupClassSmall' onclick='groupClick( " + i + " )' draggable='true' " +
+    {
+      // tempHtml += "<button id='slGroup." + i + "' class='css_groupClassSmall' onclick='groupClick( " + i + " )' draggable='true' " +
+      //             "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + g.elementName + "</button>\n";
+      tempHtml += "<button id='slGroup." + i + "' class='" + classes + "' onclick='groupClick( " + i + " )' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'>" + g.elementName + "</button>\n";
+    }
     else if( i == globals.cfg.groups.length - 1 )
       tempHtml += "<button id='clipboard' class='css_Clipboard' draggable='true' " +
                   "ondrop='dropElem( event )' ondragover='sl_allowDrop( event )' ondragstart='dragElem( event )'> Clipboard </button>\n";
@@ -88,12 +95,8 @@ function genElementConfigHTML()
 
     for( var j = 0;j < g.elements.length;j++ )
     {
-
       if( g.smallFlag && !globals.editMode )
-      {
         tempHtml += "<button id='slElement." + i + "." + j + "' class='css_slSmallElement'>|</button>\n";
-        //tempHtml += "<div id='slElement." + i + "." + j + "' class='css_slSmallElement'>|</div>\n";
-      }
       else
       {
         var classes = 'css_slElement';

@@ -63,25 +63,24 @@ var fsButtonMap =
       Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
       Tempo : { html : "+1", action : function() { adjustTempoBPM( 1 ); } },
       Chord : { html : "4", action : function() { playElemIx( 3 ); } },
-      Volume : { html : "+5", action : function() { adjustVolumeLevel( 5 ); } },
-
+      Volume : { html : "-5", action : function() { adjustVolumeLevel( -5 ); } },
     },
     5 : {
       id : 'fsB5Tap',
       NavLR : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
-      Tempo : { html : "Done", action : function() { exitTempoMode();changeMode( "NavLR" ); } },
+      Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
       Modifier : { html : "-", action : function() { } },
       Chord : { html : "5", action : function() { playElemIx( 4 ); } },
-      Volume : { html : "-5", action : function() { adjustVolumeLevel( -5 ); } },
+      Volume : { html : "+5", action : function() { adjustVolumeLevel( 5 ); } },
     },
     6 : {
       id : 'fsB6Tap',
       NavLR : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
-      Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
+      Tempo : { html : "&larr;&rarr;", action : function() { exitTempoMode();changeMode( "NavLR" ); } },
       Modifier : { html : "&larr;&rarr;", action : function() { toggleModifier( "off" );changeMode( "NavLR" ); } },
       NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       Chord : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
-      Volume : { html : "Done", action : function() { changeMode( "NavLR" ); } },
+      Volume : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
     },
   },
 

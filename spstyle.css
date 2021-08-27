@@ -187,6 +187,12 @@
   min-width: 15%;
 }
 
+.css_groupSeqChained
+{
+  font-size: 12px;
+  min-width: 0%;
+}
+
 .css_playing
 {
   position:relative;
