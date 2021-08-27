@@ -316,6 +316,29 @@ function setEffectLevels( g, t )
     globals.chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
 }
 
+function adjustVolumeLevel( diff )
+{
+  var l = globals.cfg.groups[ globals.cursor.cg ].masterLevel;
+  l += diff;
+  if( l < 0 )
+    l = 0;
+  else if( l > 100 )
+    l = 100;
+  setVolumeLevel( l );
+}
+
+function setVolumeLevel( level )
+{
+  globals.cfg.groups[ globals.cursor.cg ].masterLevel = level;
+  globals.masterLevelBlock.gain.rampTo( level / 100, 1 );
+  configEdited( true );
+  // tweaking UI here is kind of aside effect.
+  const newHtml =  "Vol:" + level;
+  fsButtonMap[ "EVENT_HOLD" ][ 5 ].NavLR.html = newHtml; 
+  var elem = document.getElementById( fsButtonMap[ "EVENT_HOLD"  ][ 5 ].id );
+  elem.innerHTML = newHtml;
+}
+
 var firstTime = true;
 
 function samplePlayCompleteCB()

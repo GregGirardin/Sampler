@@ -37,6 +37,7 @@ var fsButtonMap =
       Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
       Tempo : { html : "-5", action : function() { adjustTempoBPM( -5 ); } },
       Chord : { html : "1", action : function() { playElemIx( 0 ); } },
+      Volume : { html : "50", action : function() { setVolumeLevel( 50 ); } },
     },
     2 : {
       id : 'fsB2Tap',
@@ -44,6 +45,7 @@ var fsButtonMap =
       Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
       Tempo : { html : "+5", action : function() { adjustTempoBPM( 5 ); } },
       Chord : { html : "2", action : function() { playElemIx( 1 ); } },
+      Volume : { html : "75%", action : function() { setVolumeLevel( 75 ); } },
     },
     3 : {
       id : 'fsB3Tap', // the DOM element to highlight
@@ -52,6 +54,7 @@ var fsButtonMap =
       Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
       Tempo : { html : "-1", action : function() { adjustTempoBPM( -1 ); } },
       Chord : { html : "3", action : function() { playElemIx( 2 ); } },
+      Volume : { html : "100%", action : function() { setVolumeLevel( 100 ); } },
     },
     4 : {
       id : 'fsB4Tap',
@@ -60,6 +63,8 @@ var fsButtonMap =
       Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
       Tempo : { html : "+1", action : function() { adjustTempoBPM( 1 ); } },
       Chord : { html : "4", action : function() { playElemIx( 3 ); } },
+      Volume : { html : "+5", action : function() { adjustVolumeLevel( 5 ); } },
+
     },
     5 : {
       id : 'fsB5Tap',
@@ -67,6 +72,7 @@ var fsButtonMap =
       Tempo : { html : "Done", action : function() { exitTempoMode();changeMode( "NavLR" ); } },
       Modifier : { html : "-", action : function() { } },
       Chord : { html : "5", action : function() { playElemIx( 4 ); } },
+      Volume : { html : "-5", action : function() { adjustVolumeLevel( -5 ); } },
     },
     6 : {
       id : 'fsB6Tap',
@@ -75,6 +81,7 @@ var fsButtonMap =
       Modifier : { html : "&larr;&rarr;", action : function() { toggleModifier( "off" );changeMode( "NavLR" ); } },
       NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       Chord : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
+      Volume : { html : "Done", action : function() { changeMode( "NavLR" ); } },
     },
   },
 
@@ -94,7 +101,7 @@ var fsButtonMap =
     },
     5 : {
       id : 'fsB5Hold',
-      // NavLR : { html : "Arp", action : function() { setArpState( -1 ); } },
+      NavLR : { html : "Vol:", action : function() { changeMode( "Volume" ); } }, // "Volume" will get overwritten
     },
     6 : {
       id : 'fsB6Hold',
@@ -398,9 +405,10 @@ function keyRelHandler( e )
 
 function changeGroup()
 {
-  var c = globals.cursor;
-  setTempoMs( globals.cfg.groups[ c.cg ].tempoMs );
-  setArpState( globals.cfg.groups[ c.cg ].arpFlag );
+  var g = globals.cfg.groups[ globals.cursor.cg ];
+  setTempoMs( g.tempoMs );
+  setArpState( g.arpFlag );
+  fsButtonMap[ "EVENT_HOLD" ][ 5 ].NavLR.html = "Vol:" + g.masterLevel; 
 }
 
 function moveCursor( dir )
