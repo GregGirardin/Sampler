@@ -562,7 +562,7 @@
         {
           "objType": "CChord",
           "elementName": "Bm",
-          "playBeats": 4,
+          "playBeats": "4",
           "notes": 8669184,
           "octave": 0,
           "group": 10
@@ -624,9 +624,9 @@
           "group": 10
         }
       ],
-      "masterLevel": 100,
+      "masterLevel": 37,
       "distortionLevel": 0,
-      "chorusLevel": 25,
+      "chorusLevel": 19,
       "phaserLevel": 0,
       "tremoloLevel": 0,
       "dryLevel": 100,
@@ -653,7 +653,7 @@
         {
           "objType": "CChord",
           "elementName": "G",
-          "playBeats": 4,
+          "playBeats": "4",
           "notes": 542848,
           "octave": 0,
           "group": 11
@@ -1478,7 +1478,7 @@
       "thickenFlag": false,
       "tempoMs": 512.8205128205128,
       "seqMode": "Once",
-      "arpFlag": false,
+      "arpFlag": true,
       "arpNPB": 2,
       "arpSequence": "T-B",
       "tremRate": 1,
@@ -1488,10 +1488,10 @@
           "objType": "CChord",
           "elementName": "E",
           "subGroupStart": false,
-          "playBeats": 4,
+          "playBeats": "4",
           "notes": 67856,
           "octave": 0,
-          "group": 0
+          "group": 24
         },
         {
           "objType": "CChord",
@@ -1500,7 +1500,7 @@
           "playBeats": 4,
           "notes": 8423488,
           "octave": 0,
-          "group": 0
+          "group": 24
         },
         {
           "objType": "CChord",
@@ -1509,7 +1509,7 @@
           "playBeats": 4,
           "notes": 34676736,
           "octave": 0,
-          "group": 0
+          "group": 24
         },
         {
           "objType": "CChord",
@@ -1518,7 +1518,7 @@
           "playBeats": 4,
           "notes": 2171392,
           "octave": 0,
-          "group": 0
+          "group": 24
         },
         {
           "objType": "CChord",
@@ -1527,7 +1527,7 @@
           "playBeats": 4,
           "notes": 67856,
           "octave": 0,
-          "group": 0
+          "group": 24
         },
         {
           "objType": "CChord",
@@ -1536,7 +1536,7 @@
           "playBeats": 4,
           "notes": 8423488,
           "octave": 0,
-          "group": 0
+          "group": 24
         },
         {
           "objType": "CChord",
@@ -1545,7 +1545,7 @@
           "playBeats": 4,
           "notes": 1083648,
           "octave": 0,
-          "group": 0
+          "group": 24
         },
         {
           "objType": "CChord",
@@ -1554,10 +1554,10 @@
           "playBeats": 4,
           "notes": 2171392,
           "octave": 0,
-          "group": 0
+          "group": 24
         }
       ],
-      "masterLevel": 100,
+      "masterLevel": 42,
       "distortionLevel": 0,
       "chorusLevel": 24,
       "phaserLevel": 0,
