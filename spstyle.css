@@ -76,20 +76,18 @@
   padding: 2px;
   text-align: center;
   font-size: 20px;
-  width : 100px;
+  min-width : 10%;
   height : 40px;
 }
 
 .css_FSButton2
 {
-  border: 5px;
-  border-color: #888;
-  background-color: #222;
+  border: 2px solid #888;
+  background-color: #000;
   color: #fff;
-  padding: 2px;
   text-align: center;
-  font-size: 15px;
-  width : 100px;
+  font-size: 25px;
+  min-width : 10%;
 }
 
 .css_keyboard
