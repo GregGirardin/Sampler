@@ -176,6 +176,7 @@ function setCursor( g, e )
   setArpState( g.arpFlag ); // need to update the highlight status
   setTempoMs( g.tempoMs ); // set the tempo to this group
   setChordLabels();
+  adjustVolumeLevel( 0 );
 }
 
 function groupClick( groupIndex )
