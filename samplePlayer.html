@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="./Tone.js"></script>
+<script src="./samplePlayer.js" type="text/javascript"></script>
+<script src="./spFootswitch.js" type="text/javascript"></script>
+<script src="./spIO.js" type="text/javascript"></script>
+<script src="./spHTML.js" type="text/javascript"></script>
+<script src="./spHandlers.js" type="text/javascript"></script>
+<script src="./spWebAudio.js" type="text/javascript"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sample Player</title>
+<link rel="stylesheet" href="spstyle.css">
+</head>
+
+<body align="left" id='appBody' style="background-color:#000">
+<div class='css_sl_pane' style="background-color:#000">
+  <button class='css_menuButton' id='saveConfigButton'  onclick='sampleConfigSave();'>Save</button>
+  <button class='css_menuButton' id='editButton'        onclick='toggleEdit();'>Edit</button>
+  <button class='css_menuButton' id='tempoButton'       onclick='tapTempo();'>Tempo</button>
+  <button class='css_menuButton' id='configName'        onclick='setSampleConfigName();'></button>
+  <button class='css_menuButton' id='configDropdown'    onchange='selectConfig();'></button>
+  <button class='css_menuButton'                        onclick='fullScreen();'>Full Screen</button>
+
+  <hr>
+  <div id='footSwitchButtons' align='left'></div>
+  <div id='audioElements'></div>
+  <hr>
+  <h3> Samples </h3>
+  <div id='libraryDiv'></div>
+  <hr>
+  <div id='multiuse' class='css_editPane'></div>
+</div>
+</body>
+</html>
