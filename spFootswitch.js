@@ -37,7 +37,7 @@ var fsButtonMap =
       Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
       Tempo : { html : "-5", action : function() { adjustTempoBPM( -5 ); } },
       Chord : { html : "1", action : function() { playElemIx( 0 ); } },
-      Volume : { html : "50", action : function() { setVolumeLevel( 50 ); } },
+      Volume : { html : "50%", action : function() { setVolumeLevel( 50 ); } },
     },
     2 : {
       id : 'fsB2Tap',
@@ -88,7 +88,7 @@ var fsButtonMap =
     1 : { id : 'fsB1Hold', },
     2 : {
       id : 'fsB2Hold',
-      NavLR : { html : "FX", action : function() { changeMode( "Modifier" ); } },
+      // NavLR : { html : "FX", action : function() { changeMode( "Modifier" ); } },
     },
     3 : {
       id : 'fsB3Hold',

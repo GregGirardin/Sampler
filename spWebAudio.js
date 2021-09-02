@@ -24,14 +24,14 @@
     |
     |\
     | \
-    |  \_______________
-    |         |        |
-    Dry       RGain    DGain <- FX levels
-    |         |        |
-    |         Reverb   Delay <- Parallel FX so we play trails
-    |         |        |
-    |         /       /
-    Out  <-----------  
+    |  \_____________
+    |       |        |
+    Dry     RGain    DGain <- FX levels
+    |       |        |
+    |       Reverb   Delay <- Parallel FX so we play trails
+    |       |        |
+    |       /       /
+    Out  <---------  
 */
 
 var audioSource;
@@ -108,14 +108,14 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "Sawtooth":
       case "Triangle":
         var oType = sType.toLowerCase();
-        s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
+        s = new Tone.PolySynth( Tone.Synth, { polyphony : 15, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
         s.set( { volume : -10, oscillator : { type : oType }, } );
         break;
 
       case "Bell":
         var oType = sType.toLowerCase();
         s = new Tone.PolySynth( Tone.Synth, { polyphony : 12, oscillator: { partials : [ 0, 2, 3, 6 ], } } );
-        s.set( { volume : -3, oscillator : { type : "sine" },
+        s.set( { volume : -10, oscillator : { type : "sine" },
                  envelope : { attack: 0, decay: 1, sustain: .2, release: 1 } } );
         break;
 
@@ -196,7 +196,7 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "SynthPipe":
         s = new Tone.PolySynth( Tone.FMSynth );
         s.set( {  polyphony : 24,
-                  volume : 0,
+                  volume : -6,
                   harmonicity : 3.01,
                   modulationIndex : 14,
                   oscillator : { type: "triangle" },
@@ -208,7 +208,7 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "SynReed":
         s = new Tone.PolySynth( Tone.AMSynth );
         s.set( {  polyphony : 24,
-                  volume : 0,
+                  volume : -6,
                   harmonicity : 3.999,
                   oscillator : { type: "square" },
                   envelope : { attack: 0.03, decay: 0.3, sustain: 0.7, release: 0.8 },
@@ -218,8 +218,8 @@ function createSynths() // create all synths and connect them to globals.masterL
 
       case "SynKeys":
         s = new Tone.PolySynth( Tone.Synth );
-        s.set( {  polyphony : 24,
-                  volume : -6,
+        s.set( {  polyphony : 12,
+                  volume : -10,
                   harmonicity : 2,
                   oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
                   modulation : { volume: 13, type: "amsine2", modulationType: "sine", harmonicity: 12 },
@@ -229,7 +229,7 @@ function createSynths() // create all synths and connect them to globals.masterL
       case "Pluck":
         s = new Tone.PolySynth( Tone.AMSynth );
         s.set( {  polyphony : 12,
-                  volume : 0,
+                  volume : -6,
                   harmonicity : 2,
                   oscillator : { type: "amsine2", modulationType: "sine", harmonicity: 1.01 },
                   envelope : { attack: 0.006, decay: 4, sustain: 0.04, release: 1.2 },
@@ -252,6 +252,7 @@ function createSynths() // create all synths and connect them to globals.masterL
         continue;
     }
 
+    s.canThickenFlag = ( s instanceof Tone.PolySynth ) ? true : false;
     s.connect( globals.masterLevelBlock );
     globals.instruments[ sType ] = s;
   }
@@ -301,8 +302,12 @@ function setEffectLevels( g, t )
 {
   globals.instruments[ g.instrument ].set( { envelope : CGlobals.envelopeParams[ g.envelope ] } );
 
-  // volume to be immediate or may cause high volume after a switch.
-  globals.masterLevelBlock.gain.rampTo( g.masterLevel / 100, 0 ); 
+  var mBlockLevel = .5 * g.masterLevel / 100; // bring volume down a bit.
+  if( g.thickenFlag && globals.instruments[ g.instrument ].canThickenFlag )
+    mBlockLevel *= .5; // thickening creates 2 extra voices, so reduce volume to normalize.
+
+  // volume needs to be immediate or may cause high volume after a switch.
+  globals.masterLevelBlock.gain.rampTo( mBlockLevel, 0 ); 
   globals.dryLevelBlock.gain.rampTo( g.dryLevel / 100, t );
   globals.delayLevelBlock.gain.rampTo( g.delayLevel / 100, t );
   globals.reverbLevelBlock.gain.rampTo( g.reverbLevel / 100, t );
@@ -464,6 +469,8 @@ function playCSample( audioElem )
 function playCChord( audioElem )
 {
   instrument = globals.cfg.groups[ audioElem.group ].instrument;
+  globals.ae.synth = globals.instruments[ instrument ];
+  globals.ae.group = globals.cfg.groups[ globals.cursor.cg ];
 
   var frequencies = [];
   for( var noteIx = 0;noteIx < 32;noteIx++ ) // noteIx 0, ocatve 0 is C4
@@ -471,14 +478,13 @@ function playCChord( audioElem )
     {
       var noteOffset = noteIx - 9 + audioElem.octave * 12; // semitone offset from A440
       var freq = 440 * Math.pow( 2, noteOffset / 12 );
-      var voices = globals.cfg.groups[ globals.cursor.cg ].thickenFlag ? [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // detuned voices for thickness
+      var voices = ( globals.ae.group.thickenFlag && globals.instruments[ instrument ].canThickenFlag ) ? 
+                   [ freq *.996, freq, freq * 1.004 ] : [ freq ]; // detuned voices for thickness
       frequencies = frequencies.concat( voices );
     }
 
-  globals.ae.synth = globals.instruments[ instrument ];
   globals.ae.chordNotes = frequencies;
   globals.ae.synth.triggerAttack( frequencies );
-  globals.ae.group = globals.cfg.groups[ globals.cursor.cg ];
   const sMode = globals.cfg.groups[ globals.cursor.cg ].seqMode;
 
   if( ( sMode == CGlobals.seqModes[ 2 ] ) || ( sMode == CGlobals.seqModes[ 3 ] ) )

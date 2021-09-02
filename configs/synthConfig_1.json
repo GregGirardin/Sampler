@@ -4,7 +4,7 @@
       "objType": "CGroup",
       "elementName": "SummerOf69",
       "instrument": "Sawtooth",
-      "thickenFlag": true,
+      "thickenFlag": false,
       "tempoMs": 689.6551724137931,
       "seqMode": "Manual",
       "arpFlag": false,
@@ -15,9 +15,10 @@
       "elements": [
         {
           "objType": "CChord",
-          "elementName": "Bm",
+          "elementName": "D",
+          "subGroupStart": false,
           "playBeats": "4",
-          "notes": 8669184,
+          "notes": 580,
           "octave": 0,
           "group": 0
         },
@@ -26,29 +27,12 @@
           "elementName": "A",
           "subGroupStart": false,
           "playBeats": "4",
-          "notes": 2171392,
+          "notes": 2170880,
           "octave": -1,
-          "group": 0
-        },
-        {
-          "objType": "CChord",
-          "elementName": "D",
-          "subGroupStart": false,
-          "playBeats": "4",
-          "notes": 16964,
-          "octave": 0,
-          "group": 0
-        },
-        {
-          "objType": "CChord",
-          "elementName": "G",
-          "playBeats": 4,
-          "notes": 542848,
-          "octave": 0,
           "group": 0
         }
       ],
-      "masterLevel": 100,
+      "masterLevel": 50,
       "distortionLevel": 0,
       "chorusLevel": 13,
       "phaserLevel": 0,
@@ -58,72 +42,13 @@
       "delayLevel": 0,
       "partFlag": false,
       "chained": false,
-      "chordMode": true
+      "chordMode": true,
+      "smallFlag": false
     },
     {
       "objType": "CGroup",
-      "elementName": "Bridge",
-      "instrument": "Sawtooth",
-      "chained": true,
-      "thickenFlag": true,
-      "tempoMs": 500,
-      "seqMode": "Manual",
-      "arpFlag": false,
-      "arpNPB": 4,
-      "arpSequence": "1234",
-      "tremRate": 1,
-      "envelope": "Med",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "F",
-          "subGroupStart": true,
-          "playBeats": 4,
-          "notes": 135712,
-          "octave": -1,
-          "group": 1
-        },
-        {
-          "objType": "CChord",
-          "elementName": "Bb",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 4342784,
-          "octave": -1,
-          "group": 1
-        },
-        {
-          "objType": "CChord",
-          "elementName": "C",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 16846976,
-          "octave": -1,
-          "group": 1
-        },
-        {
-          "objType": "CChord",
-          "elementName": "Bb",
-          "playBeats": 4,
-          "notes": 4342784,
-          "octave": -1,
-          "group": 1
-        }
-      ],
-      "masterLevel": 47,
-      "distortionLevel": 0,
-      "chorusLevel": 26,
-      "phaserLevel": 0,
-      "tremoloLevel": 0,
-      "dryLevel": 100,
-      "reverbLevel": 23,
-      "delayLevel": 0,
-      "chordMode": true
-    },
-    {
-      "objType": "CGroup",
-      "elementName": "Hungry Like",
-      "instrument": "Sawtooth",
+      "elementName": "Paralyzer",
+      "instrument": "SynKeys",
       "chained": false,
       "thickenFlag": false,
       "tempoMs": 500,
@@ -131,111 +56,34 @@
       "arpFlag": false,
       "arpNPB": 2,
       "arpSequence": "1234",
-      "tremRate": 2,
+      "tremRate": 4,
       "envelope": "Med",
       "elements": [
         {
           "objType": "CChord",
           "elementName": "Em",
           "playBeats": "4",
-          "notes": 8652944,
-          "octave": 0,
-          "group": 2
-        },
-        {
-          "objType": "CChord",
-          "elementName": "Em9",
-          "playBeats": 4,
-          "notes": 268961936,
+          "notes": 2192,
           "octave": -1,
-          "group": 2
+          "group": 1
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F#",
+          "playBeats": "4",
+          "notes": 9280,
+          "octave": -1,
+          "group": 1
         }
       ],
-      "masterLevel": 42,
-      "distortionLevel": 19,
-      "chorusLevel": 19,
-      "phaserLevel": 36,
-      "tremoloLevel": 69,
-      "dryLevel": 0,
-      "reverbLevel": 87,
-      "delayLevel": 82,
-      "chordMode": false,
-      "smallFlag": false
-    },
-    {
-      "objType": "CGroup",
-      "elementName": "Chords",
-      "instrument": "Sawtooth",
-      "chained": true,
-      "thickenFlag": true,
-      "tempoMs": 500,
-      "seqMode": "None",
-      "arpFlag": false,
-      "arpNPB": 4,
-      "arpSequence": "1234",
-      "tremRate": 1,
-      "envelope": "Fast",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "E",
-          "playBeats": 4,
-          "notes": 345049360,
-          "octave": 0,
-          "group": 3
-        },
-        {
-          "objType": "CChord",
-          "elementName": "D",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 1143226948,
-          "octave": 0,
-          "group": 3
-        },
-        {
-          "objType": "CChord",
-          "elementName": "C",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 4241,
-          "octave": 0,
-          "group": 5
-        },
-        {
-          "objType": "CChord",
-          "elementName": "G",
-          "subGroupStart": false,
-          "playBeats": 4,
-          "notes": 542848,
-          "octave": 0,
-          "group": 5
-        },
-        {
-          "objType": "CChord",
-          "elementName": "F",
-          "playBeats": 4,
-          "notes": 135712,
-          "octave": 0,
-          "group": 5
-        },
-        {
-          "objType": "CChord",
-          "elementName": "D",
-          "playBeats": 4,
-          "notes": 16964,
-          "octave": 0,
-          "group": 5
-        }
-      ],
-      "masterLevel": 17,
+      "masterLevel": 50,
       "distortionLevel": 0,
-      "chorusLevel": 0,
-      "phaserLevel": 36,
-      "tremoloLevel": 33,
-      "dryLevel": 100,
-      "reverbLevel": 45,
-      "delayLevel": 44,
+      "chorusLevel": 36,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 96,
+      "reverbLevel": 0,
+      "delayLevel": 36,
       "chordMode": false,
       "smallFlag": false
     },
@@ -259,7 +107,7 @@
           "playBeats": "4",
           "notes": 67728,
           "octave": 0,
-          "group": 4
+          "group": 2
         },
         {
           "objType": "CChord",
@@ -278,7 +126,7 @@
           "group": 4
         }
       ],
-      "masterLevel": 39,
+      "masterLevel": 50,
       "distortionLevel": 0,
       "chorusLevel": 0,
       "phaserLevel": 0,
@@ -388,225 +236,43 @@
     },
     {
       "objType": "CGroup",
-      "elementName": "Your Love",
-      "instrument": "Sawtooth",
-      "chained": false,
-      "thickenFlag": true,
-      "tempoMs": 500,
-      "seqMode": "Manual",
-      "arpFlag": false,
-      "arpNPB": 4,
-      "arpSequence": "1234",
-      "tremRate": 1,
-      "envelope": "Med",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "G",
-          "playBeats": "4",
-          "notes": 542720,
-          "octave": -1,
-          "group": 6
-        },
-        {
-          "objType": "CChord",
-          "elementName": "A",
-          "playBeats": 4,
-          "notes": 2170880,
-          "octave": -1,
-          "group": 6
-        }
-      ],
-      "masterLevel": 40,
-      "distortionLevel": 0,
-      "chorusLevel": 39,
-      "phaserLevel": 0,
-      "tremoloLevel": 0,
-      "dryLevel": 100,
-      "reverbLevel": 52,
-      "delayLevel": 39,
-      "chordMode": false,
-      "smallFlag": false
-    },
-    {
-      "objType": "CGroup",
-      "elementName": "Solo",
-      "instrument": "Sawtooth",
-      "chained": true,
-      "thickenFlag": false,
-      "tempoMs": 428.57142857142856,
-      "seqMode": "Manual",
-      "arpFlag": false,
-      "arpNPB": 1,
-      "arpSequence": "1324",
-      "tremRate": 1,
-      "envelope": "Fast",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "C#m",
-          "playBeats": "4",
-          "notes": 9510912,
-          "octave": -2,
-          "group": 7
-        },
-        {
-          "objType": "CChord",
-          "elementName": "A",
-          "playBeats": "4",
-          "notes": 2170880,
-          "octave": -2,
-          "group": 7
-        },
-        {
-          "objType": "CChord",
-          "elementName": "B",
-          "playBeats": "10",
-          "notes": 8685568,
-          "octave": -1,
-          "group": 7
-        }
-      ],
-      "masterLevel": 36,
-      "distortionLevel": 0,
-      "chorusLevel": 64,
-      "phaserLevel": 0,
-      "tremoloLevel": 0,
-      "dryLevel": 100,
-      "reverbLevel": 52,
-      "delayLevel": 0,
-      "smallFlag": false
-    },
-    {
-      "objType": "CGroup",
-      "elementName": "Paralyzer",
-      "instrument": "Triangle",
-      "chained": false,
-      "thickenFlag": false,
-      "tempoMs": 500,
-      "seqMode": "Manual",
-      "arpFlag": false,
-      "arpNPB": 2,
-      "arpSequence": "1234",
-      "tremRate": 4,
-      "envelope": "Slow",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "Em",
-          "playBeats": "4",
-          "notes": 276891792,
-          "octave": -1,
-          "group": 8
-        },
-        {
-          "objType": "CChord",
-          "elementName": "F#",
-          "playBeats": 4,
-          "notes": 271424,
-          "octave": -1,
-          "group": 8
-        }
-      ],
-      "masterLevel": 62,
-      "distortionLevel": 0,
-      "chorusLevel": 69,
-      "phaserLevel": 0,
-      "tremoloLevel": 0,
-      "dryLevel": 96,
-      "reverbLevel": 0,
-      "delayLevel": 36,
-      "chordMode": false,
-      "smallFlag": false
-    },
-    {
-      "objType": "CGroup",
-      "elementName": "Group",
-      "instrument": "Sawtooth",
-      "chained": true,
-      "thickenFlag": true,
-      "tempoMs": 500,
-      "seqMode": "Manual",
-      "arpFlag": false,
-      "arpNPB": 4,
-      "arpSequence": "1234",
-      "tremRate": 1,
-      "envelope": "Fast",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "Em",
-          "playBeats": 4,
-          "notes": 67728,
-          "octave": 0,
-          "group": 9
-        },
-        {
-          "objType": "CChord",
-          "elementName": "A",
-          "playBeats": 4,
-          "notes": 2171392,
-          "octave": 0,
-          "group": 9
-        },
-        {
-          "objType": "CChord",
-          "elementName": "G",
-          "playBeats": 4,
-          "notes": 542848,
-          "octave": 0,
-          "group": 9
-        }
-      ],
-      "masterLevel": 25,
-      "distortionLevel": 0,
-      "chorusLevel": 15,
-      "phaserLevel": 31,
-      "tremoloLevel": 0,
-      "dryLevel": 100,
-      "reverbLevel": 43,
-      "delayLevel": 0,
-      "smallFlag": false
-    },
-    {
-      "objType": "CGroup",
       "elementName": "Billy Jean",
       "instrument": "SynKeys",
       "chained": false,
-      "thickenFlag": true,
+      "thickenFlag": false,
       "tempoMs": 500,
       "seqMode": "Manual",
       "arpFlag": false,
       "arpNPB": 4,
       "arpSequence": "1234",
       "tremRate": 2,
-      "envelope": "Med",
+      "envelope": "Slow",
       "elements": [
         {
           "objType": "CChord",
-          "elementName": "F#5",
+          "elementName": "F#m",
           "playBeats": "4",
-          "notes": 270912,
-          "octave": -1,
-          "group": 9
+          "notes": 336448,
+          "octave": 0,
+          "group": 4
         },
         {
           "objType": "CChord",
           "elementName": "Bm",
           "playBeats": "4",
-          "notes": 8667136,
+          "notes": 8669248,
           "octave": -1,
-          "group": 9
+          "group": 4
         }
       ],
-      "masterLevel": 50,
+      "masterLevel": 34,
       "distortionLevel": 0,
-      "chorusLevel": 21,
-      "phaserLevel": 54,
+      "chorusLevel": 38,
+      "phaserLevel": 0,
       "tremoloLevel": 0,
       "dryLevel": 100,
       "reverbLevel": 49,
-      "delayLevel": 23,
+      "delayLevel": 18,
       "chordMode": false,
       "smallFlag": false
     },
@@ -671,7 +337,7 @@
           "playBeats": "4",
           "notes": 8669184,
           "octave": 0,
-          "group": 12
+          "group": 6
         },
         {
           "objType": "CChord",
@@ -679,7 +345,7 @@
           "playBeats": "4",
           "notes": 8660032,
           "octave": 0,
-          "group": 12
+          "group": 6
         },
         {
           "objType": "CChord",
@@ -730,7 +396,7 @@
           "group": 12
         }
       ],
-      "masterLevel": 62,
+      "masterLevel": 50,
       "distortionLevel": 0,
       "chorusLevel": 19,
       "phaserLevel": 0,
@@ -819,7 +485,7 @@
           "playBeats": 4,
           "notes": 542848,
           "octave": -1,
-          "group": 12
+          "group": 8
         },
         {
           "objType": "CChord",
@@ -827,7 +493,7 @@
           "playBeats": 4,
           "notes": 74256,
           "octave": -1,
-          "group": 13
+          "group": 8
         }
       ],
       "masterLevel": 25,
@@ -837,7 +503,8 @@
       "tremoloLevel": 0,
       "dryLevel": 100,
       "reverbLevel": 75,
-      "delayLevel": 41
+      "delayLevel": 41,
+      "smallFlag": false
     },
     {
       "objType": "CGroup",
@@ -859,7 +526,7 @@
           "playBeats": "4",
           "notes": 33824832,
           "octave": 1,
-          "group": 15
+          "group": 9
         },
         {
           "objType": "CChord",
@@ -867,7 +534,7 @@
           "playBeats": 4,
           "notes": 16964,
           "octave": 0,
-          "group": 15
+          "group": 9
         },
         {
           "objType": "CChord",
@@ -875,7 +542,7 @@
           "playBeats": 4,
           "notes": 2320,
           "octave": 0,
-          "group": 15
+          "group": 9
         }
       ],
       "masterLevel": 53,
@@ -909,7 +576,7 @@
           "playBeats": ".5",
           "notes": 65536,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -917,7 +584,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -925,7 +592,7 @@
           "playBeats": ".5",
           "notes": 2048,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -933,7 +600,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -941,7 +608,7 @@
           "playBeats": ".5",
           "notes": 262144,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -949,7 +616,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -957,7 +624,7 @@
           "playBeats": ".5",
           "notes": 2048,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -965,7 +632,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -973,7 +640,7 @@
           "playBeats": ".5",
           "notes": 524288,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -981,7 +648,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -989,7 +656,7 @@
           "playBeats": ".5",
           "notes": 2048,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -997,7 +664,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -1005,7 +672,7 @@
           "playBeats": ".5",
           "notes": 2048,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -1013,7 +680,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -1021,7 +688,7 @@
           "playBeats": ".5",
           "notes": 2048,
           "octave": 0,
-          "group": 16
+          "group": 10
         },
         {
           "objType": "CChord",
@@ -1029,7 +696,7 @@
           "playBeats": ".5",
           "notes": 16,
           "octave": 0,
-          "group": 16
+          "group": 10
         }
       ],
       "masterLevel": 60,
@@ -1167,95 +834,6 @@
     },
     {
       "objType": "CGroup",
-      "elementName": "SW VerseB",
-      "instrument": "Sawtooth",
-      "chained": false,
-      "thickenFlag": true,
-      "smallFlag": false,
-      "tempoMs": 444.44444444444446,
-      "seqMode": "Manual",
-      "arpFlag": false,
-      "arpNPB": 4,
-      "arpSequence": "1234",
-      "tremRate": 1,
-      "envelope": "Hard",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "C",
-          "playBeats": "4",
-          "notes": 4241,
-          "octave": 0,
-          "group": 18
-        },
-        {
-          "objType": "CChord",
-          "elementName": "D",
-          "playBeats": "4",
-          "notes": 16964,
-          "octave": 0,
-          "group": 18
-        },
-        {
-          "objType": "CChord",
-          "elementName": "Am",
-          "playBeats": "8",
-          "notes": 2167296,
-          "octave": -1,
-          "group": 18
-        },
-        {
-          "objType": "CChord",
-          "elementName": "C",
-          "playBeats": "4",
-          "notes": 4241,
-          "octave": 0,
-          "group": 18
-        },
-        {
-          "objType": "CChord",
-          "elementName": "D",
-          "playBeats": "4",
-          "notes": 16964,
-          "octave": 0,
-          "group": 18
-        },
-        {
-          "objType": "CChord",
-          "elementName": "Am",
-          "playBeats": "4",
-          "notes": 2167296,
-          "octave": -1,
-          "group": 18
-        },
-        {
-          "objType": "CChord",
-          "elementName": "B",
-          "playBeats": "1",
-          "notes": 296960,
-          "octave": -1,
-          "group": 18
-        },
-        {
-          "objType": "CChord",
-          "elementName": "C",
-          "playBeats": "7",
-          "notes": 4241,
-          "octave": 0,
-          "group": 18
-        }
-      ],
-      "masterLevel": 37,
-      "distortionLevel": 0,
-      "chorusLevel": 30,
-      "phaserLevel": 0,
-      "tremoloLevel": 0,
-      "dryLevel": 100,
-      "reverbLevel": 49,
-      "delayLevel": 34
-    },
-    {
-      "objType": "CGroup",
       "elementName": "LandOfC",
       "instrument": "Sawtooth",
       "chained": false,
@@ -1274,7 +852,7 @@
           "playBeats": "1.5",
           "notes": 16964,
           "octave": 0,
-          "group": 20
+          "group": 13
         },
         {
           "objType": "CChord",
@@ -1282,7 +860,7 @@
           "playBeats": "2.5",
           "notes": 2192,
           "octave": 0,
-          "group": 20
+          "group": 13
         },
         {
           "objType": "CChord",
@@ -1290,7 +868,7 @@
           "playBeats": "1.5",
           "notes": 542848,
           "octave": 0,
-          "group": 20
+          "group": 13
         },
         {
           "objType": "CChord",
@@ -1298,10 +876,10 @@
           "playBeats": "3",
           "notes": 2171392,
           "octave": 0,
-          "group": 20
+          "group": 13
         }
       ],
-      "masterLevel": 43,
+      "masterLevel": 50,
       "distortionLevel": 0,
       "chorusLevel": 43,
       "phaserLevel": 0,
@@ -1426,10 +1004,10 @@
         {
           "objType": "CChord",
           "elementName": "C#m",
-          "playBeats": 4,
+          "playBeats": "4",
           "notes": 8466,
           "octave": -1,
-          "group": 19
+          "group": 16
         },
         {
           "objType": "CChord",
@@ -1495,55 +1073,8 @@
       "tremoloLevel": 0,
       "dryLevel": 100,
       "reverbLevel": 55,
-      "delayLevel": 26
-    },
-    {
-      "objType": "CGroup",
-      "elementName": "Kryptonite",
-      "instrument": "Sawtooth",
-      "chained": false,
-      "thickenFlag": true,
-      "tempoMs": 500,
-      "seqMode": "None",
-      "arpFlag": false,
-      "arpNPB": 4,
-      "arpSequence": "1234",
-      "tremRate": 1,
-      "envelope": "Fast",
-      "elements": [
-        {
-          "objType": "CChord",
-          "elementName": "Bm",
-          "playBeats": 4,
-          "notes": 8669184,
-          "octave": -1,
-          "group": 24
-        },
-        {
-          "objType": "CChord",
-          "elementName": "G",
-          "playBeats": 4,
-          "notes": 542848,
-          "octave": -1,
-          "group": 24
-        },
-        {
-          "objType": "CChord",
-          "elementName": "A",
-          "playBeats": 4,
-          "notes": 2165248,
-          "octave": -1,
-          "group": 24
-        }
-      ],
-      "masterLevel": 16,
-      "distortionLevel": 0,
-      "chorusLevel": 41,
-      "phaserLevel": 61,
-      "tremoloLevel": 0,
-      "dryLevel": 19,
-      "reverbLevel": 99,
-      "delayLevel": 80
+      "delayLevel": 26,
+      "smallFlag": false
     },
     {
       "objType": "CGroup",
@@ -1565,7 +1096,7 @@
           "playBeats": 4,
           "notes": 67108868,
           "octave": -2,
-          "group": 23
+          "group": 17
         }
       ],
       "masterLevel": 81,
@@ -1583,8 +1114,8 @@
       "elementName": "Dont Stop",
       "instrument": "Piano",
       "thickenFlag": false,
-      "tempoMs": 512.8205128205128,
-      "seqMode": "Once",
+      "tempoMs": 500,
+      "seqMode": "Loop",
       "arpFlag": true,
       "arpNPB": 2,
       "arpSequence": "T-B",
@@ -1598,7 +1129,7 @@
           "playBeats": "4",
           "notes": 67856,
           "octave": 0,
-          "group": 24
+          "group": 18
         },
         {
           "objType": "CChord",
@@ -1607,7 +1138,7 @@
           "playBeats": 4,
           "notes": 8423488,
           "octave": 0,
-          "group": 24
+          "group": 18
         },
         {
           "objType": "CChord",
@@ -1616,7 +1147,7 @@
           "playBeats": 4,
           "notes": 34676736,
           "octave": 0,
-          "group": 24
+          "group": 18
         },
         {
           "objType": "CChord",
@@ -1625,7 +1156,7 @@
           "playBeats": 4,
           "notes": 2171392,
           "octave": 0,
-          "group": 24
+          "group": 18
         },
         {
           "objType": "CChord",
@@ -1634,7 +1165,7 @@
           "playBeats": 4,
           "notes": 67856,
           "octave": 0,
-          "group": 24
+          "group": 18
         },
         {
           "objType": "CChord",
@@ -1643,7 +1174,7 @@
           "playBeats": 4,
           "notes": 8423488,
           "octave": 0,
-          "group": 24
+          "group": 18
         },
         {
           "objType": "CChord",
@@ -1652,7 +1183,7 @@
           "playBeats": 4,
           "notes": 1083648,
           "octave": 0,
-          "group": 24
+          "group": 18
         },
         {
           "objType": "CChord",
@@ -1661,16 +1192,16 @@
           "playBeats": 4,
           "notes": 2171392,
           "octave": 0,
-          "group": 24
+          "group": 18
         }
       ],
       "masterLevel": 42,
       "distortionLevel": 0,
-      "chorusLevel": 24,
+      "chorusLevel": 14,
       "phaserLevel": 0,
       "tremoloLevel": 0,
       "dryLevel": 100,
-      "reverbLevel": 38,
+      "reverbLevel": 19,
       "delayLevel": 0,
       "chained": false,
       "chordMode": false,
@@ -1721,14 +1252,14 @@
       "elementName": "Dragula",
       "instrument": "SynKeys",
       "chained": false,
-      "thickenFlag": true,
+      "thickenFlag": false,
       "tempoMs": 500,
-      "seqMode": "Loop",
+      "seqMode": "Once",
       "arpFlag": false,
       "arpNPB": 4,
       "arpSequence": "1234",
       "tremRate": 2,
-      "envelope": "Fast",
+      "envelope": "Med",
       "elements": [
         {
           "objType": "CChord",
@@ -1736,7 +1267,7 @@
           "playBeats": "4",
           "notes": 16781312,
           "octave": 0,
-          "group": 26
+          "group": 20
         },
         {
           "objType": "CChord",
@@ -1744,7 +1275,7 @@
           "playBeats": "4",
           "notes": 8390656,
           "octave": 0,
-          "group": 26
+          "group": 20
         },
         {
           "objType": "CChord",
@@ -1752,25 +1283,25 @@
           "playBeats": "4",
           "notes": 134250496,
           "octave": 0,
-          "group": 26
+          "group": 20
         },
         {
           "objType": "CChord",
           "elementName": "D",
-          "playBeats": "4",
+          "playBeats": "8",
           "notes": 67125248,
           "octave": 0,
-          "group": 26
+          "group": 20
         }
       ],
       "masterLevel": 35,
-      "distortionLevel": 63,
+      "distortionLevel": 69,
       "chorusLevel": 0,
       "phaserLevel": 27,
-      "tremoloLevel": 20,
+      "tremoloLevel": 16,
       "dryLevel": 80,
       "reverbLevel": 100,
-      "delayLevel": 58,
+      "delayLevel": 25,
       "smallFlag": false
     },
     {
@@ -1813,6 +1344,306 @@
       "dryLevel": 80,
       "reverbLevel": 100,
       "delayLevel": 0
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Rio",
+      "instrument": "Sawtooth",
+      "chained": false,
+      "thickenFlag": true,
+      "smallFlag": false,
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Med",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "C#m",
+          "playBeats": "4",
+          "notes": 34668546,
+          "octave": -1,
+          "group": 22
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "playBeats": "4",
+          "notes": 74240,
+          "octave": -1,
+          "group": 22
+        },
+        {
+          "objType": "CChord",
+          "elementName": "F#",
+          "playBeats": "4",
+          "notes": 9280,
+          "octave": -1,
+          "group": 22
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "playBeats": "4",
+          "notes": 2170880,
+          "octave": -1,
+          "group": 22
+        }
+      ],
+      "masterLevel": 50,
+      "distortionLevel": 0,
+      "chorusLevel": 16,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 37,
+      "delayLevel": 20
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Dont Forget",
+      "instrument": "Sawtooth",
+      "chained": false,
+      "thickenFlag": true,
+      "smallFlag": true,
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Fast",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": "4",
+          "notes": 67856,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": "4",
+          "notes": 67856,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "playBeats": "4",
+          "notes": 17371136,
+          "octave": -2,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": "4",
+          "notes": 67856,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": "4",
+          "notes": 67856,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "playBeats": "4",
+          "notes": 17371136,
+          "octave": -2,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": "4",
+          "notes": 67856,
+          "octave": -1,
+          "group": 23
+        }
+      ],
+      "masterLevel": 34,
+      "distortionLevel": 0,
+      "chorusLevel": 23,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 55,
+      "delayLevel": 26
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Verse",
+      "instrument": "Sawtooth",
+      "chained": true,
+      "thickenFlag": true,
+      "smallFlag": false,
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Slow",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "E",
+          "playBeats": "4",
+          "notes": 67856,
+          "octave": -1,
+          "group": 24
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 24
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "playBeats": "4",
+          "notes": 8720,
+          "octave": -1,
+          "group": 23
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 23
+        }
+      ],
+      "masterLevel": 34,
+      "distortionLevel": 0,
+      "chorusLevel": 23,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 55,
+      "delayLevel": 26
+    },
+    {
+      "objType": "CGroup",
+      "elementName": "Bridge",
+      "instrument": "Sawtooth",
+      "chained": true,
+      "thickenFlag": true,
+      "smallFlag": false,
+      "tempoMs": 500,
+      "seqMode": "Manual",
+      "arpFlag": false,
+      "arpNPB": 4,
+      "arpSequence": "1234",
+      "tremRate": 1,
+      "envelope": "Slow",
+      "elements": [
+        {
+          "objType": "CChord",
+          "elementName": "C",
+          "playBeats": "4",
+          "notes": 17371152,
+          "octave": -1,
+          "group": 24
+        },
+        {
+          "objType": "CChord",
+          "elementName": "G",
+          "playBeats": "4",
+          "notes": 542848,
+          "octave": -1,
+          "group": 24
+        },
+        {
+          "objType": "CChord",
+          "elementName": "D",
+          "playBeats": "4",
+          "notes": 16964,
+          "octave": -1,
+          "group": 24
+        },
+        {
+          "objType": "CChord",
+          "elementName": "A",
+          "playBeats": "4",
+          "notes": 74256,
+          "octave": -1,
+          "group": 24
+        }
+      ],
+      "masterLevel": 34,
+      "distortionLevel": 0,
+      "chorusLevel": 23,
+      "phaserLevel": 0,
+      "tremoloLevel": 0,
+      "dryLevel": 100,
+      "reverbLevel": 55,
+      "delayLevel": 26
     },
     {
       "objType": "CGroup",
