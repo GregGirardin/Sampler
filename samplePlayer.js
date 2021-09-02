@@ -156,6 +156,13 @@ function flashTempo()
 
   globals.clearTempoTimer = setTimeout( clearTempoFlash, 100 );
   globals.flashTempoTimer = setTimeout( flashTempo, globals.currentTempo );
+
+  var volDB = Math.trunc( globals.meterBlock.getValue()[ 0 ] );
+  var tempHtml = "-";
+  if( volDB > -50 )
+    tempHtml = volDB + "dB";
+
+  document.getElementById( 'volumeLevel' ).innerHTML = tempHtml;
 }
 
 function clearTempoFlash()

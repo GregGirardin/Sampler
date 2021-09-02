@@ -78,8 +78,10 @@ function initWebAudio()
   globals.filterBlock.wet.value = 0;
   globals.filterBlock.connect( globals.distortionBlock );
 
+	globals.meterBlock = new Tone.Meter({ channels: 2, });
   globals.masterLevelBlock = new Tone.Gain( 0 );
   globals.masterLevelBlock.connect( globals.filterBlock );
+  globals.masterLevelBlock.connect( globals.meterBlock );
 
   createSynths();
 }
