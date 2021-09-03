@@ -24,7 +24,7 @@ function initFootswitch()
 
 /*
   Button Modes: (affect the function of buttons)
-    NavUD, NavLR, Modifier, Tempo, Chord
+    NavUD, NavLR, Tempo, Chord
  */
 
 var fsButtonMap =
@@ -34,7 +34,6 @@ var fsButtonMap =
       id : 'fsB1Tap',
       NavLR : { html : ">", action : function() { cancelPlayNext();playElement( 'START' ); } },
       NavUD : { html : ">", action : function() { cancelPlayNext();playElement( 'START' );changeMode( "NavLR" ); } },
-      Modifier : { html : "Tremolo", action : function() { toggleModifier( "tremolo" ); } },
       Tempo : { html : "-5", action : function() { adjustTempoBPM( -5 ); } },
       Chord : { html : "1", action : function() { playElemIx( 0 ); } },
       Volume : { html : "50%", action : function() { setVolumeLevel( 50 ); } },
@@ -42,7 +41,6 @@ var fsButtonMap =
     2 : {
       id : 'fsB2Tap',
       Default : { html : "&#8800;", action : function() { playElement( 'STOP' ); } },
-      Modifier : { html : "Distortion", action : function() { toggleModifier( "distortion" ); } },
       Tempo : { html : "+5", action : function() { adjustTempoBPM( 5 ); } },
       Chord : { html : "2", action : function() { playElemIx( 1 ); } },
       Volume : { html : "75%", action : function() { setVolumeLevel( 75 ); } },
@@ -51,7 +49,6 @@ var fsButtonMap =
       id : 'fsB3Tap', // the DOM element to highlight
       Default : { html : "&larr;", action : function() { moveCursor( 'LEFT' ); } },
       NavUD : { html : "&uarr;", action : function() { moveCursor( 'UP' ); } }, // Nav Up down
-      Modifier : { html : "Filter", action : function() { toggleModifier( "filter" ); } },
       Tempo : { html : "-1", action : function() { adjustTempoBPM( -1 ); } },
       Chord : { html : "3", action : function() { playElemIx( 2 ); } },
       Volume : { html : "100%", action : function() { setVolumeLevel( 100 ); } },
@@ -60,7 +57,6 @@ var fsButtonMap =
       id : 'fsB4Tap',
       NavLR : { html : "&rarr;", action : function() { moveCursor( 'RIGHT' ); } },
       NavUD : { html : "&darr;", action : function() { moveCursor( 'DOWN' ); } },
-      Modifier : { html : "Chorus", action : function() { toggleModifier( "chorus" ); } },
       Tempo : { html : "+1", action : function() { adjustTempoBPM( 1 ); } },
       Chord : { html : "4", action : function() { playElemIx( 3 ); } },
       Volume : { html : "-5", action : function() { adjustVolumeLevel( -5 ); } },
@@ -69,7 +65,6 @@ var fsButtonMap =
       id : 'fsB5Tap',
       NavLR : { html : "<<", action : function() { moveCursor( 'PREV' ); } },
       Tempo : { html : "Tap", action : function() { tapTempo(); } }, // tap tempo
-      Modifier : { html : "-", action : function() { } },
       Chord : { html : "5", action : function() { playElemIx( 4 ); } },
       Volume : { html : "+5", action : function() { adjustVolumeLevel( 5 ); } },
     },
@@ -77,7 +72,6 @@ var fsButtonMap =
       id : 'fsB6Tap',
       NavLR : { html : ">>", action : function() { moveCursor( 'NEXT' ); } },
       Tempo : { html : "&larr;&rarr;", action : function() { exitTempoMode();changeMode( "NavLR" ); } },
-      Modifier : { html : "&larr;&rarr;", action : function() { toggleModifier( "off" );changeMode( "NavLR" ); } },
       NavUD : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       Chord : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
       Volume : { html : "&larr;&rarr;", action : function() { changeMode( "NavLR" ); } },
@@ -88,7 +82,6 @@ var fsButtonMap =
     1 : { id : 'fsB1Hold', },
     2 : {
       id : 'fsB2Hold',
-      // NavLR : { html : "FX", action : function() { changeMode( "Modifier" ); } },
     },
     3 : {
       id : 'fsB3Hold',
@@ -287,57 +280,6 @@ function setChordLabels()
     
     elem.innerHTML = str;
   }
-}
-
-function toggleModifier( modifier )
-{
-  var domElem;
-  var state = false;
-
-  switch( modifier )
-  {
-    case "tremolo":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 1 ].id );
-      globals.modTremoloState = !globals.modTremoloState;
-      if( globals.modTremoloState )
-        state = true;
-      break;
-
-    case "distortion":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 2 ].id );
-      globals.modDistState = !globals.modDistState;
-      if( globals.modDistState )
-        state = true;
-      break;
-
-    case "filter":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 3 ].id );
-      globals.modFilterState = !globals.modFilterState;
-      if( globals.modFilterState )
-        state = true;
-      break;
-
-    case "chorus":
-      domElem = document.getElementById( fsButtonMap[ "EVENT_TAP" ][ 4 ].id );
-      globals.modChorusState = !globals.modChorusState;
-      if( globals.modChorusState )
-        state = true;
-      break;
-
-    case "off":
-      if( globals.modFilterState ) toggleModifier( "filter" );
-      if( globals.modTremoloState ) toggleModifier( "tremolo" );
-      if( globals.modChorusState ) toggleModifier( "chorus" );
-      if( globals.modDistState ) toggleModifier( "distortion" );
-      break;
-  }
-  if( domElem )
-    if( state )
-      domElem.classList.add( "css_cursor" ); // TBD. this is to highlight that it's on.
-    else
-      domElem.classList.remove( "css_cursor" );
-
-  doModAudio( modifier, state );
 }
 
 function buttonEvent( event, buttonID )

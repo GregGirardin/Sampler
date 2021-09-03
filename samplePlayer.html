@@ -20,8 +20,10 @@
   <button class='css_menuButton' id='tempoButton'       onclick='tapTempo();'>Tempo</button>
   <button class='css_menuButton' id='configName'        onclick='setSampleConfigName();'></button>
   <button class='css_menuButton' id='configDropdown'    onchange='selectConfig();'></button>
-  <button class='css_menuButton' id='volumeLevel'></button>
   <button class='css_menuButton'                        onclick='fullScreen();'>Full Screen</button>
+
+  <label for="volumeLevel">Volume:</label>
+  <meter id="volumeLevel" min="-50" max="0" value="-50"> </meter>
 
   <hr>
   <div id='footSwitchButtons' align='left'></div>

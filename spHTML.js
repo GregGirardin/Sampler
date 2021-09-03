@@ -250,6 +250,7 @@ function genEditGroupHTML()
   tempHtml += "Master: <input type='range' id='editGroupMasterLevel' min='0' max='100' value='" + globals.editElement.masterLevel + "'><br>";
   tempHtml += "Chorus: <input type='range' id='editGroupChorusLevel' min='0' max='100' value='" + globals.editElement.chorusLevel + "'><br>";
   tempHtml += "Phaser: <input type='range' id='editGroupPhaserLevel' min='0' max='100' value='" + globals.editElement.phaserLevel + "'><br>";
+  tempHtml += "Filter: <input type='range' id='editGroupFilterLevel' min='0' max='100' value='" + globals.editElement.filterLevel + "'><br>";
   tempHtml += "Tremolo: <input type='range' id='editGroupTremoloLevel' min='0' max='100' value='" + globals.editElement.tremoloLevel + "'><br>";
   tempHtml += "Dist: <input type='range' id='editGroupDistortionLevel' min='0' max='100' value='" + globals.editElement.distortionLevel + "'><br>";
   tempHtml += "Dry: <input type='range' id='editGroupDryLevel' min='0' max='100' value='" + globals.editElement.dryLevel + "'><br>";
@@ -353,6 +354,7 @@ function saveEdits()
         globals.editElement.distortionLevel = parseInt( document.getElementById( "editGroupDistortionLevel" ).value );
         globals.editElement.chorusLevel     = parseInt( document.getElementById( "editGroupChorusLevel" ).value );
         globals.editElement.phaserLevel     = parseInt( document.getElementById( "editGroupPhaserLevel" ).value );
+        globals.editElement.filterLevel     = parseInt( document.getElementById( "editGroupFilterLevel" ).value );
         globals.editElement.tremoloLevel    = parseInt( document.getElementById( "editGroupTremoloLevel" ).value );
         globals.editElement.dryLevel        = parseInt( document.getElementById( "editGroupDryLevel" ).value );
         globals.editElement.delayLevel      = parseInt( document.getElementById( "editGroupDelayLevel" ).value );

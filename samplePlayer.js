@@ -16,10 +16,6 @@ class CGlobals // Global consts and stuff in here just to be cleaner. Not saved.
     this.editMode = false;
     this.stopFlag = false;
     this.ae = undefined; // The active element being played.
-    this.modFilterState = false;
-    this.modTremoloState = false;
-    this.modChorusState = false;
-    this.modDistState = false;
   }
 }
 
@@ -86,6 +82,7 @@ class CGroup
     this.distortionLevel = 0;
     this.chorusLevel = 0;
     this.phaserLevel = 0;
+    this.filterLevel = 0;
     this.tremoloLevel = 0;
     this.dryLevel = 100;
     this.reverbLevel = 0;
@@ -158,11 +155,10 @@ function flashTempo()
   globals.flashTempoTimer = setTimeout( flashTempo, globals.currentTempo );
 
   var volDB = Math.trunc( globals.meterBlock.getValue()[ 0 ] );
-  var tempHtml = "-";
-  if( volDB > -50 )
-    tempHtml = volDB + "dB";
+  if( volDB < -50 )
+    volDB = -50;
 
-  document.getElementById( 'volumeLevel' ).innerHTML = tempHtml;
+  document.getElementById( 'volumeLevel' ).value = volDB.toString();
 }
 
 function clearTempoFlash()

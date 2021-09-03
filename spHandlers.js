@@ -367,6 +367,7 @@ function cloneGroup()
   newGroup.distortionLevel = copyGroup.distortionLevel;
   newGroup.chorusLevel = copyGroup.chorusLevel;
   newGroup.phaserLevel = copyGroup.phaserLevel;
+  newGroup.filterLevel = copyGroup.filterLevel;
   newGroup.tremoloLevel = copyGroup.tremoloLevel;
   newGroup.dryLevel = copyGroup.dryLevel;
   newGroup.reverbLevel = copyGroup.reverbLevel;
