@@ -331,7 +331,7 @@ function setEffectLevels( g, t )
 {
   globals.instruments[ g.instrument ].set( { envelope : CGlobals.envelopeParams[ g.envelope ] } );
 
-  var mBlockLevel = .25 * g.masterLevel / 100; // bring volume down a bit.
+  var mBlockLevel = g.masterLevel / 100; // bring volume down a bit.
   if( g.thickenFlag && globals.instruments[ g.instrument ].canThickenFlag )
     mBlockLevel *= .9; // thickening creates 2 extra voices, so reduce volume to normalize.
 
@@ -341,7 +341,7 @@ function setEffectLevels( g, t )
   globals.delayLevelBlock.gain.rampTo( g.delayLevel / 100, t );
   globals.reverbLevelBlock.gain.rampTo( g.reverbLevel / 100, t );
   globals.phaserBlock.wet.rampTo( g.phaserLevel / 100, t );
-  //globals.filterBlock.wet.rampTo( g.filterLevel / 100, t );
+  globals.filterBlock.wet.rampTo( g.filterLevel / 100, t );
   globals.distortionBlock.wet.rampTo( g.distortionLevel / 100, t );
   globals.tremoloBlock.wet.rampTo( g.tremoloLevel / 100, t );
   globals.chorusBlock.wet.rampTo( g.chorusLevel / 100, t );
@@ -363,12 +363,11 @@ function setVolumeLevel( level )
   var g = globals.cfg.groups[ globals.cursor.cg ];
   g.masterLevel = level;
  
-  var mBlockLevel = .25 * level / 100; // bring volume down a bit.
+  var mBlockLevel = level / 100; // bring volume down a bit.
   if( g.thickenFlag && globals.instruments[ g.instrument ].canThickenFlag )
     mBlockLevel *= .9; // thickening creates 2 extra voices, so reduce volume to normalize.
 
-  // volume needs to be immediate or may cause high volume after a switch.
-  globals.masterLevelBlock.gain.rampTo( mBlockLevel, 0 ); 
+  globals.masterLevelBlock.gain.rampTo( mBlockLevel, .5 ); 
  
   configEdited( true );
   // tweaking UI here is kind of aside effect.
